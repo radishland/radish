@@ -1,0 +1,42 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "core script",
+      "request": "launch",
+      "type": "node",
+      "runtimeExecutable": "deno",
+      "cwd": "${workspaceFolder}",
+      "program": "${file}",
+      "runtimeArgs": [
+        "run",
+        "--unstable",
+        "--inspect-wait",
+        "--allow-all"
+      ],
+      "env": {},
+      "attachSimplePort": 9229
+    },
+    {
+      "name": "app script",
+      "request": "launch",
+      "type": "node",
+      "runtimeExecutable": "deno",
+      "cwd": "${workspaceFolder}/app",
+      "program": "${file}",
+      "runtimeArgs": [
+        "run",
+        "--unstable",
+        "--inspect-wait",
+        "--allow-all",
+        "--config",
+        "${workspaceFolder}/app/deno.json"
+      ],
+      "env": {},
+      "attachSimplePort": 9229
+    }
+  ]
+}

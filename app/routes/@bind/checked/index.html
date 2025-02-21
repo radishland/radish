@@ -1,0 +1,22 @@
+<handle-bind-checked>
+  <section>
+    <h2>Checked</h2>
+    <input
+      type="checkbox"
+      @prop="ariaChecked:checked"
+      @bind:checked
+    >
+    <button @on="click:inspectChecked">inspect</button>
+    <button @on="click:turnOn">turn on</button>
+    <button @on="click:turnOff">turn off</button>
+    <p>
+      the checkbox is checked: <span @text="checked"></span>
+    </p>
+  </section>
+</handle-bind-checked>
+
+<script
+  type="module"
+  src="/routes/@bind/checked/handle-bind-checked.js"
+>
+</script>

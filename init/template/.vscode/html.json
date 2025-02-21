@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vscode-html-languageservice/main/docs/customData.schema.json",
+  "version": 1.1,
+  "globalAttributes": [
+    {
+      "name": "@on",
+      "description": "# @on directive\n\nDeclare event handlers on an element.\n\n## Syntax\n\n A comma separated list of `event_type:event_handler` \n\n## Examples\n```html\n\n<!-- Single handler -->\n<button @on=\"click:handleClick\">click me</button>\n\n<!-- Shorthand syntax (handler named click) -->\n<button @on=\"click\">click me</button>\n\n<!-- Multiple handlers -->\n<button @on=\"click:handleClick, mouseover:handleMouseOver\">click me</button>\n\n```"
+    },
+    {
+      "name": "@use",
+      "description": "# @use directive\n\nAdd a lifecyle hook to an element.\n\n## Syntax\n\n A comma separated list of hooks \n## Example\n```html\n<input @use=\"hook1, hook2\">\n```"
+    },
+    {
+      "name": "@set",
+      "description": "# @set directive\n\nDeclaratively set the properties of an element to the values referenced by given identifiers. The assignment is reactive if the referenced value is a reactive signal.\n\n## Syntax\n\n A comma separated list of `property:identifer` \n\n## Example\n```html\n<span @set=\"textContent:content\"></span>\n```"
+    }
+  ]
+}

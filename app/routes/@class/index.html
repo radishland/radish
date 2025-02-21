@@ -1,0 +1,48 @@
+<style>
+  .btn {
+    padding: 10px 20px;
+  }
+
+  .red {
+    color: red;
+  }
+
+  .bold {
+    font-weight: 900;
+  }
+
+  .outline {
+    outline: 1px solid red;
+  }
+</style>
+
+<handle-class>
+  <h2>@class</h2>
+  <p>
+    The class directive takes an object with string keys and booleanish values
+    or reactive booleanish values, allowing the object to be updated directly in
+    the former case, or indirectly in the later. Which amounts to having
+    writable derived objects.
+  </p>
+  <p>
+    Example with a $state object updated directly
+    <button class="btn" @class="state" @on="click:toggleStateColor">
+      toggle color
+    </button>
+  </p>
+
+  <p>
+    Example with a reactive $object updated directly
+    <button class="btn" @class="object" @on="click:toggleObjectColor">
+      toggle color
+    </button>
+  </p>
+  <p>
+    <button class="btn" @on="click:toggleOutline">toggle outline</button>
+  </p>
+</handle-class>
+
+<script
+  type="module"
+  src="/routes/@class/handle-class.js"
+></script>

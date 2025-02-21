@@ -1,0 +1,14 @@
+{
+  "deno.enable": true,
+  "deno.lint": true,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "denoland.vscode-deno",
+  "css.styleSheets": ["elements/**/*.css", "static/**/*.css"],
+  "html.customData": ["./.vscode/html.json"],
+  "typescript.preferences.autoImportSpecifierExcludeRegexes": [],
+  "typescript.preferences.autoImportFileExcludePatterns": [
+    "./build/**",
+    "**/posix/**",
+    "**/windows/**"
+  ]
+}

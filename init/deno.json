@@ -1,0 +1,14 @@
+{
+  "name": "@radish/init",
+  "version": "1.0.0-alpha.13",
+  "license": "MIT",
+  "tasks": {
+    "check": "deno fmt --check && deno lint && deno check **/*.ts"
+  },
+  "fmt": {
+    "exclude": ["**/*.md"]
+  },
+  "exports": {
+    ".": "./mod.ts"
+  }
+}

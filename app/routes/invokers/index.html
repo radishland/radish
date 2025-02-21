@@ -1,0 +1,17 @@
+<button commandfor="dialog" command="show-modal">Open dialog</button>
+<dialog id="dialog">
+  I'm a dialog
+  <button commandfor="dialog" command="close">close</button>
+</dialog>
+
+<my-invoke id="state" @text="state"></my-invoke>
+
+<button commandfor="state" command="--increment">increment</button>
+<button commandfor="state" command="--decrement">decrement</button>
+
+<script
+  type="module"
+  async
+  src="https://unpkg.com/invokers-polyfill@latest/invoker.min.js"
+></script>
+<script type="module" src="/routes/invokers/my-invoke.js"></script>

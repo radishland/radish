@@ -1,0 +1,15 @@
+<template shadowrootmode="open">
+  <style>
+    h1 {
+      color: red;
+    }
+    ::slotted(p) {
+      color: green;
+    }
+  </style>
+
+  <article>
+    <h1><slot name="title"></slot></h1>
+    <slot></slot>
+  </article>
+</template>

@@ -1,0 +1,20 @@
+<template shadowrootmode="open">
+  <link rel="stylesheet" href="/elements/my-counter/my-counter.css" />
+
+  <div part="display"></div>
+  <button part="trigger">increment</button>
+
+  <style>
+    div {
+      color: red;
+    }
+
+    :host(:state(even)) div {
+      color: green;
+    }
+
+    [part="trigger"] {
+      background-color: magenta;
+    }
+  </style>
+</template>

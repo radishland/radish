@@ -1,0 +1,14 @@
+# environment variable files
+.env
+
+# macOS Desktop Service files
+.DS_Store
+
+# build directory
+build/
+
+# radish folders
+_generated/
+
+# npm dependencies
+node_modules/

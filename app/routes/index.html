@@ -1,0 +1,40 @@
+<p>
+  Hi
+  <a href="/profile"> link </a>
+</p>
+
+<my-container>
+  <article slot="children">
+    <section>
+      <p>I'm in the container</p>
+    </section>
+  </article>
+</my-container>
+
+<p>
+  <my-counter count="10"></my-counter>
+  <my-counter count="5"></my-counter>
+  <my-counter class="bold">
+    hello
+    <style>
+      .bold {
+        &:state(even)::part(display) {
+          background-color: yellow;
+        }
+
+        & {
+          font-weight: 900;
+        }
+      }
+    </style>
+  </my-counter>
+</p>
+
+<script
+  type="module"
+  src="/elements/my-container/my-container.js"
+></script>
+<script
+  type="module"
+  src="/elements/my-counter/my-counter.js"
+></script>

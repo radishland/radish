@@ -1,0 +1,19 @@
+{
+  "tasks": {
+    "check": "deno fmt --check && deno lint && deno check **/*.ts",
+    "generate": "deno run scripts/generate.ts",
+    "build": "deno run --allow-read --allow-write --allow-env scripts/generate.ts --manifest && deno run --allow-read --allow-write --allow-env --allow-net scripts/generate.ts --importmap && deno run --allow-read --allow-write --allow-env scripts/generate.ts --build && deno fmt build",
+    "dev": "deno run -A scripts/start.ts --dev",
+    "start": "deno run -A scripts/start.ts"
+  },
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"],
+    "noImplicitOverride": true
+  },
+  "nodeModulesDir": "auto",
+  "imports": {
+    "$runtime/": "./static/_runtime/",
+    "radish": "jsr:@radish/core@^1.0.0-alpha.28",
+    "signal-polyfill": "npm:signal-polyfill@^0.2.2"
+  }
+}

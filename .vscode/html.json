@@ -1,0 +1,50 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vscode-html-languageservice/main/docs/customData.schema.json",
+  "version": 1.1,
+  "tags": [
+    {
+      "name": "c-badge",
+      "description": "My custom badge. Here is its [documentation](https://github.com/microsoft/vscode-custom-data/blob/master/samples/webcomponents/src/components/my-component/docs.md).\nUse it like this:\n```html\n<my-component type='text'></my-component>\n<my-component\n  type='color'\n  color='#00bb00'\n></my-component>\n```",
+      "references": [
+        {
+          "name": "WebComponents.org",
+          "url": "https://www.webcomponents.org"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "type",
+          "description": "Type of the component. Can be either `text` or `color`.\nIf type is `color`, it needs to have a `color` attribute as well.",
+          "values": [
+            {
+              "name": "text",
+              "description": "For textual content."
+            },
+            {
+              "name": "color",
+              "description": "For colorful content."
+            }
+          ]
+        },
+        {
+          "name": "color",
+          "description": "Color of the component. Only applies when `type` is `color`."
+        }
+      ]
+    }
+  ],
+  "globalAttributes": [
+    {
+      "name": "@on",
+      "description": "# @on directive\n\nDeclare event handlers on an element.\n\n## Syntax\n\n A comma separated list of `event_type:event_handler` \n\n## Examples\n```html\n\n<!-- Single handler -->\n<button @on=\"click:handleClick\">click me</button>\n\n<!-- Shorthand syntax (handler named click) -->\n<button @on=\"click\">click me</button>\n\n<!-- Multiple handlers -->\n<button @on=\"click:handleClick, mouseover:handleMouseOver\">click me</button>\n\n```"
+    },
+    {
+      "name": "@use",
+      "description": "# @use directive\n\nAdd a lifecyle hook to an element.\n\n## Syntax\n\n A comma separated list of hooks \n## Example\n```html\n<input @use=\"hook1, hook2\">\n```"
+    },
+    {
+      "name": "@set",
+      "description": "# @set directive\n\nDeclaratively set the properties of an element to the values referenced by given identifiers. The assignment is reactive if the referenced value is a reactive signal.\n\n## Syntax\n\n A comma separated list of `property:identifer` \n\n## Example\n```html\n<span @set=\"textContent:content\"></span>\n```"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+<handle-prop>
+  <div>
+    <button @on="click:toggleColor" @prop="ariaPressed:pressed">
+      toggle
+    </button>
+    <span @use="manageColor">hello</span>
+  </div>
+  <p>
+    The toggle button has a client-side reactive ariaPressed property and the
+    hello span uses an effect inside a hook to react to the press state change
+  </p>
+</handle-prop>
+
+<script
+  type="module"
+  src="/routes/@prop/handle-prop.js"
+></script>

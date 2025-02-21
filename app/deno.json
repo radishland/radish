@@ -1,0 +1,20 @@
+{
+  "license": "MIT",
+  "tasks": {
+    "check": "deno fmt --check && deno lint && deno check **/*.ts",
+    "generate": "deno run -A scripts/generate.ts",
+    "build": "deno run -A scripts/generate.ts --manifest && deno run -A scripts/generate.ts --importmap && deno run -A scripts/generate.ts --build && deno fmt build",
+    "dev": "deno run -A scripts/start.ts --dev",
+    "start": "deno run -A scripts/start.ts"
+  },
+  "fmt": {
+    "exclude": ["**/*.md"]
+  },
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"],
+    "noImplicitOverride": true
+  },
+  "imports": {
+    "$runtime/": "./static/_runtime/"
+  }
+}
