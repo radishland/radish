@@ -39,8 +39,10 @@ export type ElementManifest =
     kind: "unknown-element";
     tagName: string;
     path: string[];
+    class?: never;
     templateLoader: () => MFragment;
     dependencies: string[];
+    imports?: never;
   };
 
 export type RouteManifest = {
@@ -105,10 +107,10 @@ const crawlComponentsFolder = () => {
       kind: "",
       tagName: elementName,
       path: [] as string[],
-      class: "",
+      class: "undefined",
       templateLoader: "undefined",
       dependencies: [] as string[],
-      imports: [] as string[],
+      imports: undefined as undefined | string[],
     };
     const className = kebabToPascal(elementName);
 
@@ -178,7 +180,7 @@ const crawlComponentsFolder = () => {
       kind: "${elementMetaData.kind}",
       tagName: "${elementMetaData.tagName}",
       path: ${JSON.stringify(elementMetaData.path)},
-      class: ${elementMetaData.class || '""'},
+      class: ${elementMetaData.class},
       templateLoader: ${elementMetaData.templateLoader},
       dependencies: ${JSON.stringify(elementMetaData.dependencies)},
       imports: ${JSON.stringify(elementMetaData.imports)}
