@@ -25,14 +25,14 @@ A full-stack framework built around Web Components and Web Standards:
   - [Scoped Handler Registry](#scoped-handler-registry)
   - [Signals](#signals)
   - [Directives](#directives)
-  - [@attr directive](#attr-directive)
-  - [@bind directive: declarative two-way bindings](#bind-directive-declarative-two-way-bindings)
-  - [@class directive](#class-directive)
-  - [@html directive](#html-directive)
-  - [@text directive](#text-directive)
-  - [@on directive: declarative event handlers](#on-directive-declarative-event-handlers)
-  - [@prop directive](#prop-directive)
-  - [@use directive: declarative hooks](#use-directive-declarative-hooks)
+    - [@attr directive](#attr-directive)
+    - [@bind directive: declarative two-way bindings](#bind-directive-declarative-two-way-bindings)
+    - [@class directive](#class-directive)
+    - [@html directive](#html-directive)
+    - [@text directive](#text-directive)
+    - [@on directive: declarative event handlers](#on-directive-declarative-event-handlers)
+    - [@prop directive](#prop-directive)
+    - [@use directive: declarative hooks](#use-directive-declarative-hooks)
 
 ## Try out the alpha
 
@@ -199,7 +199,7 @@ The following directives are available:
 
 @on, @prop and @use only have client-only semantics while the other directives are universal: they have both server and client semantics and can be restricted with |server and |client.
 
-## @attr directive
+### @attr directive
 
 The @attr directive allow to set attributes on an element to the value of a given identifier. If the identifier is a signal, then the assignment is reactive
 
@@ -217,7 +217,7 @@ If the attribute and the identifier have the same name we can use a shorthand no
 
 The `value` attribute of the input is bound to the `value` property of its handling registry
 
-## @bind directive: declarative two-way bindings
+### @bind directive: declarative two-way bindings
 
 The `@bind` directive allows to declare a two-way binding between a reactive js value and a stateful HTML property.
 
@@ -244,7 +244,7 @@ The resumability of the state on the client prevents janky hydration and provide
 
 The `@bind` directive allow cross-component bindings at any filiation level: parents, grand-parents, grand-grand-parents etc.
 
-## @class directive
+### @class directive
 
 The @class directive accepts a reactive object where keys are strings of space separated class names and values are boolean values or signals.
 
@@ -278,15 +278,15 @@ export class HandleClass extends HandlerRegistry {
 </handle-class>
 ```
 
-## @html directive
+### @html directive
 
 The @html directive sets the `innerHTML` property of an element, and runs on the server.
 
-## @text directive
+### @text directive
 
 The @text directive sets the `textContent` property of an element, and runs on the server.
 
-## @on directive: declarative event handlers
+### @on directive: declarative event handlers
 
 The `@on` directive allows to declaratively add event-handlers to any element in your markup. It accepts a comma separated list of `<event type>:<handler name>`:
 
@@ -300,13 +300,13 @@ You can add multiple event handlers, even with the same event type, as under the
 <button @on="click:handleClick, click:log">click me</button>
 ```
 
-## @prop directive
+### @prop directive
 
 The @prop directive sets an element properties on the client.
 
 It also gives fine grained control when you want to make sure js is available like when toggling an aria property. In case js is not available the `@prop` effect doesn't run, so the property is not set and the element doesn't end-up stuck in the wrong accessibility state.
 
-## @use directive: declarative hooks
+### @use directive: declarative hooks
 
 The `@use` directive lets you declare a lifecycle hook on any element.
 
