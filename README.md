@@ -15,8 +15,11 @@ A full-stack framework built around Web Components and Web Standards:
 
 - [Radish!](#radish)
   - [Try out the alpha](#try-out-the-alpha)
-  - [Getting Started](#getting-started)
+  - [Project structure](#project-structure)
   - [Routing](#routing)
+    - [Dynamic routes](#dynamic-routes)
+    - [Non-capturing groups](#non-capturing-groups)
+    - [Regex matchers](#regex-matchers)
   - [Elements](#elements)
   - [Type-safety](#type-safety)
   - [Scoped Handler Registry](#scoped-handler-registry)
@@ -33,7 +36,7 @@ A full-stack framework built around Web Components and Web Standards:
 
 ## Try out the alpha
 
-Create a new project:
+- Create a new project:
 
 ```sh
 deno run -A jsr:@radish/init@1.0.0-alpha-13 my-rad-project
@@ -41,47 +44,94 @@ deno run -A jsr:@radish/init@1.0.0-alpha-13 my-rad-project
 
 or have a look at the /app folder of the repo for syntax examples
 
-## Getting Started
+- Build your project:
 
-The structure of a Radish project mainly consists of:
-- an `elements` folder
-- a `routes` folder
-- a `lib` folder
+```sh
+deno task build
+```
 
-More about this structure in the following sections
+- Start your project:
+
+```sh
+deno task start
+```
+
+## Project structure
+
+A Radish project structure looks like:
+
+```
+my-rad-project/
+├ elements/
+├ lib/
+├ routes/
+├ scripts/
+├ static/
+└ deno.json
+```
+
+Where:
+- `elements` contains your reusable custom elements, web components and unknown elements
+- `routes` contains your routes with optionally colocated custom elements
+- `scripts` contains your app scripts like `start` and `build`.
+- `static` contains the static assets that should be served as-is
 
 ## Routing
 
-1. Radish uses a classic file-based routing, where routes correspond to subfolders of the `routes` folder with an `index.html` file inside
+Radish uses a file-based router based on the [`URLPattern`](https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API) Web Standard. Routes correspond to subfolders of the `routes` folder with an `index.html` file inside
 
 Example: The folder structure
 
-+ routes
-  + user
-    + profile
-      + index.html
+```
+routes/
+└ user/
+  └ profile/
+    └ index.html
+```
 
-Corresponds to the route `/user/profile`.
+corresponds to the route `/user/profile`.
 
-<!-- 1. Routes follow the [`URLPattern`](https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API) Web Standard syntax, so a dynamic segment can be provided with a column:
+### Dynamic routes
 
-+ app
-  + routes
-    + user
-      + :id
-        + index.html
+A dynamic segment can be provided with square brackets:
 
-This folder structure corresponds to the route `/user/:id` and will match `/user/123` for example
+Example:
 
-We can also add a regex match inside parenthesis (which are not themselves part of the pattern):
+```
+routes/
+└ user/
+  └ [id]/
+    └ index.html
+```
 
-+ app
-  + routes
-    + user
-      + :id(\d+)
-        + index.html
+This folder structure corresponds to the named group `/user/:id` and will match against `/user/123` for example
 
-Only non-empty numeric ids will match against this route, like `/user/123` but not `/user/abc`. -->
+### Non-capturing groups
+
+A non-captured group is delimited by curly braces `{}`, and can be made optional with the `?` group modifier.
+
+Example: The pattern `book{s}?` matches both `/book` and `/books`
+
+```
+routes/
+└ books{s}?/
+  └ index.html
+```
+
+### Regex matchers
+
+To ensure a parameter is valid you can provide Regex matchers to the router.
+
+Example. To make sure a user id is a number, add the `router: { matchers: { number: /\d+/ } }` option to the `start` function and update the route:
+
+```
+routes/
+└ user/
+  └ [id=number]/
+    └ index.html
+```
+
+Only non-empty numeric ids will match against this route, like `/user/123` but not `/user/abc`.
 
 ## Elements
 

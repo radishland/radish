@@ -1,10 +1,16 @@
 import { UserAgent } from "@std/http/user-agent";
 import { common, dirname, extname, join, resolve } from "@std/path";
 import { buildFile } from "./build.ts";
-import { buildFolder, routesFolder } from "./conventions.ts";
+import {
+  buildFolder,
+  elementsFolder,
+  libFolder,
+  routesFolder,
+  staticFolder,
+} from "./conventions.ts";
 import { generateCSS } from "./css.ts";
 import { App, type Handle } from "./server/app.ts";
-import { initRouter } from "./server/router.ts";
+import { Router } from "./server/router.ts";
 
 export let dev = false;
 
@@ -22,6 +28,9 @@ const handle: Handle = async ({ context, resolve }) => {
 
 type StartOptions = {
   dev?: boolean;
+  router?: {
+    matchers: Record<string, RegExp>;
+  };
 };
 
 export const start = async (options?: StartOptions): Promise<void> => {
@@ -30,7 +39,30 @@ export const start = async (options?: StartOptions): Promise<void> => {
   const hostname = "127.0.0.1";
   const port = 1235;
 
-  const router = await initRouter();
+  const router = new Router({
+    routesFolder,
+    defaultHandler: () => {
+      return new Response("Not found", {
+        status: 404,
+        headers: { "Content-Type": "text/plain" },
+      });
+    },
+    matchers: options?.router?.matchers,
+  });
+
+  router.serveStatic({ pathname: `/${routesFolder}/*` }, {
+    fsRoot: buildFolder,
+  });
+  router.serveStatic({ pathname: `/${elementsFolder}/*` }, {
+    fsRoot: buildFolder,
+  });
+  router.serveStatic({ pathname: `/${libFolder}/*` }, {
+    fsRoot: buildFolder,
+  });
+  router.serveStatic({ pathname: `/${staticFolder}/*` });
+
+  await router.generateFileBasedRoutes();
+
   const app = new App(router, handle);
   const clients = new Set<WebSocket>();
 
