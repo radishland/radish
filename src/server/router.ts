@@ -73,7 +73,10 @@ export class Router {
       if (entry.name !== "index.html") continue;
 
       const regex = new RegExp(`^${routesFolder}/?`);
-      const pathname = dirname(entry.path).replace(regex, "/");
+      const pathname = dirname(entry.path).replace(regex, "/").replace(
+        /\[([^\]]+)\]/,
+        (_match, namedGroup) => `:${namedGroup}`,
+      );
       const destPath = join(buildFolder, entry.path);
       routes.push(pathname);
 
