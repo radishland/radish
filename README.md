@@ -67,6 +67,7 @@ my-rad-project/
 ├ routes/
 ├ scripts/
 ├ static/
+├ start.ts
 └ deno.json
 ```
 
@@ -75,6 +76,7 @@ Where:
 - `routes` contains your routes with optionally colocated custom elements
 - `scripts` contains your app scripts like `start` and `build`.
 - `static` contains the static assets that should be served as-is
+- the `start.ts` script calls the `start` function and passes it your config.
 
 ## Routing
 
@@ -120,9 +122,9 @@ routes/
 
 ### Regex matchers
 
-To ensure a parameter is valid you can provide Regex matchers to the router.
+To ensure a parameter is valid you can provide named Regex matchers to the router.
 
-Example. To make sure a user id is a number, add the `router: { matchers: { number: /\d+/ } }` option to the `start` function and update the route:
+Example. To make sure a user id is a number, add the `router: { matchers: { number: /\d+/ } }` option to the config and update the route:
 
 ```
 routes/
@@ -135,14 +137,19 @@ Only non-empty numeric ids will match against this route, like `/user/123` but n
 
 ## Elements
 
-1. The `elements` folder contains your web components and custom elements, with the convention that a component's folder and files are named after the component's tag name:
+The `elements` folder contains all three sorts of elements:
+- custom elements, with no template and a only a class export
+- unknown elements, with only an html template and no associated custom element
+- web components, with both an html template and a custom element
 
-- `app/components/my-element/my-element.html` contains the declarative shadow root template for the `<my-element>` element.
-- `app/components/my-element/my-element.js` contains the `MyElement` class defining the `<my-element>` custom elements.
+The convention is that an element's folder and files are named after the element's tag name:
 
-The template will be inlined at build time
+- `app/elements/my-element/my-element.html` contains the declarative shadow root template for the `<my-element>` element.
+- `app/elements/my-element/my-element.ts` contains the `MyElement` class defining the `<my-element>` custom element.
 
-1. Custom element templates inside `app/components/` must have the `shadowrootmode="open"` attribute to allow SSR.
+Declarative shadowroot templates will be inlined at build time
+
+1. Custom element templates inside `app/elements/` must have the `shadowrootmode="open"` attribute to allow SSR.
 
 <!-- ## Styles
 
