@@ -25,14 +25,14 @@ A full-stack framework built around Web Components and Web Standards:
   - [Scoped Handler Registry](#scoped-handler-registry)
   - [Signals](#signals)
   - [Directives](#directives)
-  - [@attr directive](#attr-directive)
-  - [@bind directive: declarative two-way bindings](#bind-directive-declarative-two-way-bindings)
-  - [@class directive](#class-directive)
-  - [@html directive](#html-directive)
-  - [@text directive](#text-directive)
-  - [@on directive: declarative event handlers](#on-directive-declarative-event-handlers)
-  - [@prop directive](#prop-directive)
-  - [@use directive: declarative hooks](#use-directive-declarative-hooks)
+    - [@attr directive](#attr-directive)
+    - [@bind directive: declarative two-way bindings](#bind-directive-declarative-two-way-bindings)
+    - [@class directive](#class-directive)
+    - [@html directive](#html-directive)
+    - [@text directive](#text-directive)
+    - [@on directive: declarative event handlers](#on-directive-declarative-event-handlers)
+    - [@prop directive](#prop-directive)
+    - [@use directive: declarative hooks](#use-directive-declarative-hooks)
 
 ## Try out the alpha
 
@@ -67,6 +67,7 @@ my-rad-project/
 ├ routes/
 ├ scripts/
 ├ static/
+├ start.ts
 └ deno.json
 ```
 
@@ -75,6 +76,7 @@ Where:
 - `routes` contains your routes with optionally colocated custom elements
 - `scripts` contains your app scripts like `start` and `build`.
 - `static` contains the static assets that should be served as-is
+- the `start.ts` script calls the `start` function and passes it your config.
 
 ## Routing
 
@@ -120,9 +122,9 @@ routes/
 
 ### Regex matchers
 
-To ensure a parameter is valid you can provide Regex matchers to the router.
+To ensure a parameter is valid you can provide named Regex matchers to the router.
 
-Example. To make sure a user id is a number, add the `router: { matchers: { number: /\d+/ } }` option to the `start` function and update the route:
+Example. To make sure a user id is a number, add the `router: { matchers: { number: /\d+/ } }` option to the config and update the route:
 
 ```
 routes/
@@ -135,14 +137,19 @@ Only non-empty numeric ids will match against this route, like `/user/123` but n
 
 ## Elements
 
-1. The `elements` folder contains your web components and custom elements, with the convention that a component's folder and files are named after the component's tag name:
+The `elements` folder contains all three sorts of elements:
+- custom elements, with no template and a only a class export
+- unknown elements, with only an html template and no associated custom element
+- web components, with both an html template and a custom element
 
-- `app/components/my-element/my-element.html` contains the declarative shadow root template for the `<my-element>` element.
-- `app/components/my-element/my-element.js` contains the `MyElement` class defining the `<my-element>` custom elements.
+The convention is that an element's folder and files are named after the element's tag name:
 
-The template will be inlined at build time
+- `app/elements/my-element/my-element.html` contains the declarative shadow root template for the `<my-element>` element.
+- `app/elements/my-element/my-element.ts` contains the `MyElement` class defining the `<my-element>` custom element.
 
-1. Custom element templates inside `app/components/` must have the `shadowrootmode="open"` attribute to allow SSR.
+Declarative shadowroot templates will be inlined at build time
+
+1. Custom element templates inside `app/elements/` must have the `shadowrootmode="open"` attribute to allow SSR.
 
 <!-- ## Styles
 
@@ -199,7 +206,7 @@ The following directives are available:
 
 @on, @prop and @use only have client-only semantics while the other directives are universal: they have both server and client semantics and can be restricted with |server and |client.
 
-## @attr directive
+### @attr directive
 
 The @attr directive allow to set attributes on an element to the value of a given identifier. If the identifier is a signal, then the assignment is reactive
 
@@ -217,7 +224,7 @@ If the attribute and the identifier have the same name we can use a shorthand no
 
 The `value` attribute of the input is bound to the `value` property of its handling registry
 
-## @bind directive: declarative two-way bindings
+### @bind directive: declarative two-way bindings
 
 The `@bind` directive allows to declare a two-way binding between a reactive js value and a stateful HTML property.
 
@@ -244,7 +251,7 @@ The resumability of the state on the client prevents janky hydration and provide
 
 The `@bind` directive allow cross-component bindings at any filiation level: parents, grand-parents, grand-grand-parents etc.
 
-## @class directive
+### @class directive
 
 The @class directive accepts a reactive object where keys are strings of space separated class names and values are boolean values or signals.
 
@@ -278,15 +285,15 @@ export class HandleClass extends HandlerRegistry {
 </handle-class>
 ```
 
-## @html directive
+### @html directive
 
 The @html directive sets the `innerHTML` property of an element, and runs on the server.
 
-## @text directive
+### @text directive
 
 The @text directive sets the `textContent` property of an element, and runs on the server.
 
-## @on directive: declarative event handlers
+### @on directive: declarative event handlers
 
 The `@on` directive allows to declaratively add event-handlers to any element in your markup. It accepts a comma separated list of `<event type>:<handler name>`:
 
@@ -300,13 +307,13 @@ You can add multiple event handlers, even with the same event type, as under the
 <button @on="click:handleClick, click:log">click me</button>
 ```
 
-## @prop directive
+### @prop directive
 
 The @prop directive sets an element properties on the client.
 
 It also gives fine grained control when you want to make sure js is available like when toggling an aria property. In case js is not available the `@prop` effect doesn't run, so the property is not set and the element doesn't end-up stuck in the wrong accessibility state.
 
-## @use directive: declarative hooks
+### @use directive: declarative hooks
 
 The `@use` directive lets you declare a lifecycle hook on any element.
 
