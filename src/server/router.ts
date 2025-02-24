@@ -1,13 +1,7 @@
 import { walk } from "@std/fs";
 import { serveDir, type ServeDirOptions, serveFile } from "@std/http";
 import { dirname, join } from "@std/path";
-import {
-  buildFolder,
-  elementsFolder,
-  libFolder,
-  routesFolder,
-  staticFolder,
-} from "../conventions.ts";
+import { buildFolder, routesFolder } from "../conventions.ts";
 import type { Context } from "./app.ts";
 
 type HTTPMethod = (typeof ALLOWED_METHODS)[number];
@@ -28,6 +22,12 @@ type Route = {
 
 const ALLOWED_METHODS = ["GET", "POST"] as const;
 
+/**
+ * The named group can provide an optional regex matcher name
+ */
+const square_brackets_around_named_group =
+  /\[([^\]=]+)\]|\[([^\]=]+)=([^\]]+)\]/;
+
 export class Router {
   routes: Record<string, Route[]> = {
     GET: [],
@@ -38,12 +38,20 @@ export class Router {
   post;
   defaultHandler;
   routesFolder;
+  matchers;
 
-  constructor(options: { routesFolder: string; defaultHandler: Handler }) {
+  constructor(
+    options: {
+      routesFolder: string;
+      defaultHandler: Handler;
+      matchers?: Record<string, RegExp>;
+    },
+  ) {
     this.get = this.#add.bind(this, "GET");
     this.post = this.#add.bind(this, "POST");
     this.defaultHandler = options.defaultHandler;
     this.routesFolder = options.routesFolder;
+    this.matchers = options.matchers ?? {};
   }
 
   #add = (
@@ -73,7 +81,19 @@ export class Router {
       if (entry.name !== "index.html") continue;
 
       const regex = new RegExp(`^${routesFolder}/?`);
-      const pathname = dirname(entry.path).replace(regex, "/");
+      const pathname = dirname(entry.path).replace(regex, "/").replace(
+        square_brackets_around_named_group,
+        (_match, _, namedGroup, matcherName) => {
+          if (matcherName) {
+            const matcher = this.matchers[matcherName];
+            if (!matcher) {
+              throw new Error(`Regex matcher not found: ${matcherName}`);
+            }
+            return `:${namedGroup}(${matcher.source})`;
+          }
+          return `:${namedGroup}`;
+        },
+      );
       const destPath = join(buildFolder, entry.path);
       routes.push(pathname);
 
@@ -114,30 +134,3 @@ export class Router {
     return this.defaultHandler(ctx);
   };
 }
-
-export const initRouter = async () => {
-  const router = new Router({
-    routesFolder,
-    defaultHandler: () => {
-      return new Response("Not found", {
-        status: 404,
-        headers: { "Content-Type": "text/plain" },
-      });
-    },
-  });
-
-  router.serveStatic({ pathname: `/${routesFolder}/*` }, {
-    fsRoot: buildFolder,
-  });
-  router.serveStatic({ pathname: `/${elementsFolder}/*` }, {
-    fsRoot: buildFolder,
-  });
-  router.serveStatic({ pathname: `/${libFolder}/*` }, {
-    fsRoot: buildFolder,
-  });
-  router.serveStatic({ pathname: `/${staticFolder}/*` });
-
-  await router.generateFileBasedRoutes();
-
-  return router;
-};

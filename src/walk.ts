@@ -83,7 +83,7 @@ export function applyServerEffects(
       context.push({ tagName, instance: new element.class() });
     }
     // component has a shadow root
-    if (element.kind === "web-component") {
+    if (element.kind !== "custom-element") {
       template = element.templateLoader().map(applyServerEffects);
     }
   }
@@ -232,7 +232,7 @@ export const serializeWebComponent = (
 ): string => {
   context = [];
 
-  if (component.kind !== "web-component") {
+  if (component.kind === "custom-element") {
     throw new Error(`Element ${component.tagName} doesn't have a template`);
   }
 
