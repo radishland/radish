@@ -7,7 +7,7 @@
     "check": "deno fmt --check && deno lint && deno check **/*.ts",
     "load-env": "deno run -A scripts/load-env.ts",
     "css": "deno run -A scripts/css.ts",
-    "build": "deno run -A scripts/build-manifest.ts && deno run -A scripts/build.ts && deno task css && deno fmt build",
+    "build-runtime": "deno run -A scripts/build-runtime.ts",
     "make-init-tar": "deno fmt init/template/ && tar -C init/template -czf init/template/vscode.tar.gz .vscode && tar -C init/template/base -czf init/template/base.tar.gz .",
     "create": "deno run -A scripts/create.ts",
     "dev": {
@@ -51,7 +51,7 @@
     "@std/tar": "jsr:@std/tar@^0.1.5",
 
     "@fcrozatier/monarch": "jsr:@fcrozatier/monarch@^2.5.4",
-    "@fcrozatier/type-strip": "jsr:@fcrozatier/type-strip@^1.1.0",
+    "@fcrozatier/type-strip": "jsr:@fcrozatier/type-strip@^1.2.0",
 
     "signal-polyfill": "npm:signal-polyfill@^0.2.2",
     "@jspm/generator": "npm:@jspm/generator@^2.5.1"
