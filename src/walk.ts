@@ -12,9 +12,9 @@ import {
   manifest,
   type RouteManifest,
 } from "./generate/manifest.ts";
-import { bindingConfig } from "./client/config.js";
-import { getValue, isState } from "./client/reactivity.js";
-import { spaces_sep_by_comma } from "./client/utils.js";
+import { bindingConfig } from "./client/config.ts";
+import { getValue, isState } from "./client/reactivity.ts";
+import { spaces_sep_by_comma } from "./client/utils.ts";
 
 let context: { tagName: string; instance: AutonomousCustomElement }[] = [];
 
