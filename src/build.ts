@@ -168,6 +168,8 @@ export const mockGlobals = (): void => {
   };
   // @ts-ignore no window on the server
   globalThis.window = undefined;
+  // @ts-ignore no customElements on the server
+  globalThis.customElements = undefined;
 };
 
 /**

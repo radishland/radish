@@ -70,6 +70,13 @@ export interface AutonomousCustomElement {
   formStateRestoreCallback?(): void;
 }
 
+export type ReactivityOptions = { deep: boolean };
+export type Destructor = () => void;
+export type EffectCallback = () => Destructor | void;
+export type EffectOptions = {
+  signal: AbortSignal;
+};
+
 export type Transform = (
   options: { path: string; content: string },
 ) => MaybePromise<string>;
