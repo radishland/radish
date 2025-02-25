@@ -54,9 +54,11 @@ export class Router {
     this.matchers = options.matchers ?? {};
 
     const dirname = import.meta.dirname;
+    console.log("router dirname:", dirname);
 
     if (dirname) {
       const clientPath = join(dirname, "..", "client");
+      console.log(" clientPath:", clientPath);
 
       this.serveStatic({ pathname: "/_radish/runtime/*" }, {
         fsRoot: clientPath,
