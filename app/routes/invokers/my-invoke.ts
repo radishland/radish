@@ -1,5 +1,5 @@
-import { HandlerRegistry } from "$runtime/handler-registry.js";
-import { $effect, $state } from "$runtime/reactivity.js";
+import { HandlerRegistry } from "@radish/core/runtime";
+import { $effect, $state } from "@radish/core/runtime";
 
 export class MyInvoke extends HandlerRegistry {
   state = $state(0);

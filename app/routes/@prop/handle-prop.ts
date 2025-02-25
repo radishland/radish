@@ -1,5 +1,5 @@
-import { HandlerRegistry } from "$runtime/handler-registry.js";
-import { $computed, $state } from "$runtime/reactivity.js";
+import { HandlerRegistry } from "@radish/core/runtime";
+import { $computed, $state } from "@radish/core/runtime";
 
 export class HandleProp extends HandlerRegistry {
   pressed = $state(false);

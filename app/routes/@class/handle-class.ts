@@ -1,5 +1,5 @@
-import { HandlerRegistry } from "$runtime/handler-registry.js";
-import { $object, $state } from "$runtime/reactivity.js";
+import { HandlerRegistry } from "@radish/core/runtime";
+import { $object, $state } from "@radish/core/runtime";
 
 export class HandleClass extends HandlerRegistry {
   outline = $state(false);

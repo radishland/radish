@@ -1,9 +1,8 @@
-import { HandlerRegistry } from "$runtime/handler-registry.js";
+import { HandlerRegistry } from "@radish/core/runtime";
+import { $state } from "@radish/core/runtime";
 
 export class HandleEvents extends HandlerRegistry {
-  constructor() {
-    super();
-  }
+  state = $state(1);
 
   clickHandler() {
     console.log("you clicked");
@@ -14,16 +13,14 @@ export class HandleEvents extends HandlerRegistry {
   }
 
   hook1(element: HTMLElement) {
-    const controller = new AbortController();
+    const { signal } = this.abortController;
     console.log("adding hook1 on element", element);
 
     element.addEventListener("mouseover", () => {
       console.log("hovering");
-    }, { signal: controller.signal });
+    }, { signal });
 
     element.style.color = "red";
-
-    return controller.abort;
   }
 }
 

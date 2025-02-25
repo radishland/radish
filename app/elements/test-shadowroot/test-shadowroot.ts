@@ -1,4 +1,4 @@
-import { HandlerRegistry } from "$runtime/handler-registry.js";
+import { HandlerRegistry } from "@radish/core/runtime";
 
 export class TestShadowroot extends HandlerRegistry {}
 
