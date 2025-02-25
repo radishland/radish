@@ -3,3 +3,4 @@
 _generated/
 node_modules/
 build/
+src/client/*.js

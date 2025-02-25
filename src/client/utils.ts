@@ -3,9 +3,8 @@ export const spaces_sep_by_comma = /\s*,\s*/;
 
 /**
  * Idempotent string conversion to kebab-case
- * @param {string} str
  */
-export const toKebabCase = (str) => {
+export const toKebabCase = (str: string) => {
   let kebab = "";
   for (let index = 0; index < str.length; index++) {
     const char = str[index];
@@ -21,9 +20,8 @@ export const toKebabCase = (str) => {
 
 /**
  * Idempotent string conversion to PascalCase
- * @param {string} str
  */
-export const toPascalCase = (str) => {
+export const toPascalCase = (str: string) => {
   let pascal = "";
   let toUpper = true;
 

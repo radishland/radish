@@ -1,44 +1,39 @@
-/**
- * @import {
+import { booleanAttributes } from "./utils.ts";
+import { bindingConfig } from "./config.ts";
+
+import { $effect, getValue, isComputed, isState } from "./reactivity.ts";
+import type {
   AttrRequestDetail,
+  AutonomousCustomElement,
   BindRequestDetail,
   ClassRequestDetail,
+  Destructor,
+  EffectCallback,
+  EffectOptions,
   HTMLRequestDetail,
   OnRequestDetail,
   PropRequestDetail,
   TextRequestDetail,
   UseRequestDetail,
-  EffectCallback,
-  EffectOptions,
-  Destructor,
-  AutonomousCustomElement
-} from "$types"
- */
-
-import { booleanAttributes } from "./utils.js";
-import { bindingConfig } from "./config.js";
-
-import { $effect, getValue, isComputed, isState } from "./reactivity.js";
+} from "$types";
 
 /**
  * A Scoped Handler Registry implements the logic for handling effect requests.
  *
  * Extend this class by adding new methods in your subclass to implement your own effect handlers
- *
- * @implements {AutonomousCustomElement}
  */
-export class HandlerRegistry extends HTMLElement {
-  /**
-   * @type {Destructor[]}
-   */
-  #cleanup = [];
+export class HandlerRegistry extends HTMLElement
+  implements AutonomousCustomElement {
+  [key: string]: any;
+
+  #cleanup: Destructor[] = [];
 
   /**
    * References the handler's `AbortController`.
    *
    * The `abort` method of the controller is called in the `disconnectedCallback` method. It allows to cleanup event handlers and other abortable operations
    */
-  abortController;
+  abortController: AbortController;
 
   constructor() {
     super();
@@ -49,30 +44,21 @@ export class HandlerRegistry extends HTMLElement {
    * Creates an effect that is automatically cleaned up when the component is disconnected
    *
    * An optional AbortSignal can be provided to abort the effect prematurely
-   *
-   * @param {EffectCallback} callback
-   * @param {EffectOptions|undefined} [options]
    */
-  $effect(callback, options) {
+  $effect(callback: EffectCallback, options?: EffectOptions) {
     const signals = [this.abortController.signal];
     if (options?.signal) signals.push(options.signal);
 
     $effect(callback, { ...options, signal: AbortSignal.any(signals) });
   }
 
-  /**
-   * @param {string} identifier
-   */
-  #get(identifier) {
-    //@ts-ignore handler registry has an index signature
+  #get(identifier: string) {
     return this[identifier];
   }
 
-  /** @param {Event} e */
-  #handleOn(e) {
+  #handleOn(e: Event) {
     if (e instanceof CustomEvent) {
-      /** @type {OnRequestDetail} */
-      const { handler, type } = e.detail;
+      const { handler, type }: OnRequestDetail = e.detail;
 
       if (handler in this && typeof this.#get(handler) === "function") {
         e.target?.addEventListener(type, this.#get(handler).bind(this));
@@ -81,16 +67,10 @@ export class HandlerRegistry extends HTMLElement {
     }
   }
 
-  /**
-   * @param {Event} e
-   */
-  #handleClass(e) {
+  #handleClass(e: Event) {
     const target = e.target;
     if (e instanceof CustomEvent && target) {
-      /**
-       * @type {ClassRequestDetail}
-       */
-      const { identifier } = e.detail;
+      const { identifier }: ClassRequestDetail = e.detail;
 
       if (identifier in this) {
         this.$effect(() => {
@@ -114,15 +94,9 @@ export class HandlerRegistry extends HTMLElement {
     }
   }
 
-  /**
-   * @param {Event} e
-   */
-  #handleUse(e) {
+  #handleUse(e: Event) {
     if (e instanceof CustomEvent) {
-      /**
-       * @type {UseRequestDetail}
-       */
-      const { hook } = e.detail;
+      const { hook }: UseRequestDetail = e.detail;
 
       if (hook in this && typeof this.#get(hook) === "function") {
         const cleanup = this.#get(hook).bind(this)(e.target);
@@ -134,15 +108,9 @@ export class HandlerRegistry extends HTMLElement {
     }
   }
 
-  /**
-   * @param {Event} e
-   */
-  #handleAttr(e) {
+  #handleAttr(e: Event) {
     if (e instanceof CustomEvent) {
-      /**
-       * @type {AttrRequestDetail}
-       */
-      const { identifier, attribute } = e.detail;
+      const { identifier, attribute }: AttrRequestDetail = e.detail;
       const target = e.target;
 
       if (
@@ -173,13 +141,9 @@ export class HandlerRegistry extends HTMLElement {
     }
   }
 
-  /**
-   * @param {Event} e
-   */
-  #handleProp(e) {
+  #handleProp(e: Event) {
     if (e instanceof CustomEvent) {
-      /** @type {PropRequestDetail} */
-      const { identifier, property } = e.detail;
+      const { identifier, property }: PropRequestDetail = e.detail;
       const target = e.target;
 
       if (identifier in this && target && property in target) {
@@ -202,14 +166,11 @@ export class HandlerRegistry extends HTMLElement {
     }
   }
 
-  /**
-   * @param {Event} e
-   */
-  #handleText(e) {
+  #handleText(e: Event) {
     if (e instanceof CustomEvent) {
       const target = e.target;
-      /** @type {TextRequestDetail} */
-      const { identifier } = e.detail;
+
+      const { identifier }: TextRequestDetail = e.detail;
 
       if (identifier in this && target instanceof HTMLElement) {
         const ref = this.#get(identifier);
@@ -230,13 +191,9 @@ export class HandlerRegistry extends HTMLElement {
     }
   }
 
-  /**
-   * @param {Event} e
-   */
-  #handleHTML(e) {
+  #handleHTML(e: Event) {
     if (e instanceof CustomEvent) {
-      /** @type {HTMLRequestDetail} */
-      const { identifier } = e.detail;
+      const { identifier }: HTMLRequestDetail = e.detail;
       const target = e.target;
 
       if (identifier in this && target instanceof HTMLElement) {
@@ -258,13 +215,9 @@ export class HandlerRegistry extends HTMLElement {
     }
   }
 
-  /**
-   * @param {Event} e
-   */
-  #handleBind(e) {
+  #handleBind(e: Event) {
     if (e instanceof CustomEvent) {
-      /** @type {BindRequestDetail} */
-      const { identifier, property } = e.detail;
+      const { identifier, property }: BindRequestDetail = e.detail;
       const target = e.target;
 
       if (

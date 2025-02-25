@@ -1,5 +1,5 @@
-import { HandlerRegistry } from "@radish/core/runtime";
-import { $state } from "@radish/core/runtime";
+import { HandlerRegistry } from "radish/runtime";
+import { $state } from "radish/runtime";
 
 export class HandleAttr extends HandlerRegistry {
   state = $state("red");

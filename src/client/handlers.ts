@@ -1,5 +1,5 @@
-import { bindingConfig } from "./config.js";
-import { spaces_sep_by_comma } from "./utils.js";
+import { bindingConfig } from "./config.ts";
+import { spaces_sep_by_comma } from "./utils.ts";
 
 const bindingsQueryString = Object.keys(bindingConfig).map((property) =>
   `[\\@bind\\:${property}]`

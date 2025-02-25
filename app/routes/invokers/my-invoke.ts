@@ -1,5 +1,5 @@
-import { HandlerRegistry } from "@radish/core/runtime";
-import { $effect, $state } from "@radish/core/runtime";
+import { HandlerRegistry } from "radish/runtime";
+import { $effect, $state } from "radish/runtime";
 
 export class MyInvoke extends HandlerRegistry {
   state = $state(0);

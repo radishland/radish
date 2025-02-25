@@ -3,7 +3,7 @@
   "specifiers": {
     "jsr:@fcrozatier/monarch@^2.5.3": "2.5.4",
     "jsr:@fcrozatier/monarch@^2.5.4": "2.5.4",
-    "jsr:@fcrozatier/type-strip@^1.1.0": "1.1.0",
+    "jsr:@fcrozatier/type-strip@^1.2.0": "1.2.0",
     "jsr:@std/assert@^1.0.11": "1.0.11",
     "jsr:@std/cli@^1.0.12": "1.0.13",
     "jsr:@std/cli@^1.0.13": "1.0.13",
@@ -39,8 +39,8 @@
         "jsr:@fcrozatier/monarch@^2.5.4"
       ]
     },
-    "@fcrozatier/type-strip@1.1.0": {
-      "integrity": "1ebcaae6f64fb5a18dc245a64424626dc6b5dba6675ce319166d9962421246a1",
+    "@fcrozatier/type-strip@1.2.0": {
+      "integrity": "aba8d7424787a30113cad06237badd81148b3e48125e875928a84a99339121c8",
       "dependencies": [
         "npm:typescript"
       ]
@@ -832,7 +832,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@fcrozatier/monarch@^2.5.4",
-      "jsr:@fcrozatier/type-strip@^1.1.0",
+      "jsr:@fcrozatier/type-strip@^1.2.0",
       "jsr:@std/assert@^1.0.11",
       "jsr:@std/cli@^1.0.13",
       "jsr:@std/dotenv@~0.225.3",
