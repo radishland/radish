@@ -1,7 +1,7 @@
 {
   "workspace": ["./init", "./app", "./htmlcrunch"],
   "name": "@radish/core",
-  "version": "1.0.0-alpha.28",
+  "version": "1.0.0-alpha.29",
   "license": "MIT",
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts",
