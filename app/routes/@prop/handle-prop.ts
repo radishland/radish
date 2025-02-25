@@ -1,5 +1,5 @@
-import { HandlerRegistry } from "@radish/core/runtime";
-import { $computed, $state } from "@radish/core/runtime";
+import { HandlerRegistry } from "radish/runtime";
+import { $computed, $state } from "radish/runtime";
 
 export class HandleProp extends HandlerRegistry {
   pressed = $state(false);

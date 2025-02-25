@@ -1,5 +1,5 @@
-import { $computed, $object, $state } from "@radish/core/runtime";
-import { HandlerRegistry } from "@radish/core/runtime";
+import { $computed, $object, $state } from "radish/runtime";
+import { HandlerRegistry } from "radish/runtime";
 
 export class HandleState extends HandlerRegistry {
   count = $state(0);

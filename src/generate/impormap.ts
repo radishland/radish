@@ -87,7 +87,7 @@ export const generateImportMap = async (
   // For relative imports and https: targets
   const manualImportMap = new Map<string, string>([[
     "radish/runtime",
-    "/_radish/runtime",
+    "/_radish/runtime/index.js",
   ]]);
 
   for (const [alias, specifiers] of Object.entries(projectAliasTargetMap)) {

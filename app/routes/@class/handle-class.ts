@@ -1,5 +1,5 @@
-import { HandlerRegistry } from "@radish/core/runtime";
-import { $object, $state } from "@radish/core/runtime";
+import { HandlerRegistry } from "radish/runtime";
+import { $object, $state } from "radish/runtime";
 
 export class HandleClass extends HandlerRegistry {
   outline = $state(false);
