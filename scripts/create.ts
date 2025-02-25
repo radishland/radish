@@ -3,7 +3,7 @@ import { promptSelect } from "@std/cli/unstable-prompt-select";
 import { copySync, emptyDirSync, ensureDirSync, existsSync } from "@std/fs";
 import { extname, relative } from "@std/path";
 import { elementsFolder, routesFolder } from "../src/conventions.ts";
-import { toKebabCase, toPascalCase } from "../src/runtime/utils.ts";
+import { toKebabCase, toPascalCase } from "../src/client/utils.js";
 
 const args = parseArgs(Deno.args, {
   boolean: ["help"],

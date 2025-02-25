@@ -1,5 +1,5 @@
-import { $computed, $object, $state } from "$runtime/reactivity.js";
-import { HandlerRegistry } from "$runtime/handler-registry.js";
+import { $computed, $object, $state } from "@radish/core/runtime";
+import { HandlerRegistry } from "@radish/core/runtime";
 
 export class HandleState extends HandlerRegistry {
   count = $state(0);

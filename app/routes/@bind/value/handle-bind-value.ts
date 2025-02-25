@@ -1,5 +1,5 @@
-import { HandlerRegistry } from "$runtime/handler-registry.js";
-import { $state } from "$runtime/reactivity.js";
+import { HandlerRegistry } from "@radish/core/runtime";
+import { $state } from "@radish/core/runtime";
 
 export class HandleBindValue extends HandlerRegistry {
   // Value: text

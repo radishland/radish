@@ -5,7 +5,7 @@ import {
   $object,
   $state,
   type ReactiveValue,
-} from "../src/runtime/reactivity.ts";
+} from "../src/client/reactivity.js";
 
 const inc = (signal: ReactiveValue<number>) => {
   signal.value++;

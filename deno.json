@@ -8,7 +8,7 @@
     "load-env": "deno run -A scripts/load-env.ts",
     "css": "deno run -A scripts/css.ts",
     "build": "deno run -A scripts/build-manifest.ts && deno run -A scripts/build.ts && deno task css && deno fmt build",
-    "make-init-tar": "deno run -A init/pull-runtime.ts && deno fmt init/template/ && tar -C init/template -czf init/template/vscode.tar.gz .vscode && tar -C init/template/base -czf init/template/base.tar.gz .",
+    "make-init-tar": "deno fmt init/template/ && tar -C init/template -czf init/template/vscode.tar.gz .vscode && tar -C init/template/base -czf init/template/base.tar.gz .",
     "create": "deno run -A scripts/create.ts",
     "dev": {
       "command": "deno run -A src/start.ts",
@@ -18,6 +18,7 @@
   "exports": {
     ".": "./src/exports/mod.ts",
     "./parser": "./src/exports/parser.ts",
+    "./runtime": "./src/client/index.js",
     "./utils": "./src/utils.ts"
   },
   "fmt": {
@@ -30,6 +31,7 @@
   },
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"],
+    "checkJs": true,
     "noImplicitOverride": true
   },
   "nodeModulesDir": "auto",
