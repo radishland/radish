@@ -85,7 +85,10 @@ export const generateImportMap = async (
   });
 
   // For relative imports and https: targets
-  const manualImportMap = new Map<string, string>([]);
+  const manualImportMap = new Map<string, string>([[
+    "radish/runtime",
+    "/_radish/runtime",
+  ]]);
 
   for (const [alias, specifiers] of Object.entries(projectAliasTargetMap)) {
     const target = denoImports[alias];
@@ -111,6 +114,8 @@ export const generateImportMap = async (
       });
     } else if (target?.startsWith("https:")) {
       manualImportMap.set(alias, target);
+    } else {
+      // skip jsr: imports
     }
   }
 

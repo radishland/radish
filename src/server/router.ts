@@ -52,6 +52,17 @@ export class Router {
     this.defaultHandler = options.defaultHandler;
     this.routesFolder = options.routesFolder;
     this.matchers = options.matchers ?? {};
+
+    const dirname = import.meta.dirname;
+
+    if (dirname) {
+      const clientPath = join(dirname, "..", "client");
+
+      this.serveStatic({ pathname: "/_radish/runtime/*" }, {
+        fsRoot: clientPath,
+        urlRoot: "_radish/runtime",
+      });
+    }
   }
 
   #add = (
