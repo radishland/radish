@@ -57,6 +57,6 @@
     "@jspm/generator": "npm:@jspm/generator@^2.5.1"
   },
   "publish": {
-    "exclude": ["./tests/**/*", "./.vscode/*"]
+    "exclude": ["./tests/**/*", "./.vscode/*", "!./src/client/*.js"]
   }
 }
