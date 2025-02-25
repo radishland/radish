@@ -15,6 +15,5 @@
     "noImplicitOverride": true
   },
   "imports": {
-    "$runtime/": "./static/_runtime/"
   }
 }

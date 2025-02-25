@@ -1,11 +1,24 @@
+/**
+ * @import {Destructor, EffectCallback, EffectOptions, ReactivityOptions} from "$types"
+ */
+
 import { Signal } from "signal-polyfill";
 
-// @ts-ignore we hide get and set on purpose
-export class ReactiveValue<T> extends Signal.State<T> {
-  // @ts-ignore hide get method
-  private override get;
-  // @ts-ignore hide set method
-  private override set;
+/**
+ * @template T
+ * @extends Signal.State<T>
+ */
+// @ts-ignore we're hiding get and set
+export class ReactiveValue extends Signal.State {
+  /**
+   * @private
+   */
+  // @ts-ignore see above
+  get;
+
+  /** @private  */
+  // @ts-ignore see above
+  set;
 
   get value() {
     return super.get();
@@ -16,19 +29,27 @@ export class ReactiveValue<T> extends Signal.State<T> {
   }
 }
 
-// @ts-ignore we hide get on purpose
-export class ReactiveComputation<T> extends Signal.Computed<T> {
-  // @ts-ignore hide get method
-  private override get;
+/**
+ * @template T
+ * @extends Signal.Computed<T>
+ */
+// @ts-ignore we're hiding get and set
+export class ReactiveComputation extends Signal.Computed {
+  /** @private */
+  // @ts-ignore see above
+  get;
 
   get value() {
     return super.get();
   }
 }
 
-type ReactivityOptions = { deep: boolean };
-
-const maybeReactiveObjectType = <T>(thing: T, options: ReactivityOptions) => {
+/**
+ * @template T
+ * @param {T} thing
+ * @param {ReactivityOptions} options
+ */
+const maybeReactiveObjectType = (thing, options) => {
   if (typeof thing === "object") {
     if (Array.isArray(thing)) {
       return $array(thing, options);
@@ -39,13 +60,20 @@ const maybeReactiveObjectType = <T>(thing: T, options: ReactivityOptions) => {
   return thing;
 };
 
-export const $object = <T extends object & { [key: PropertyKey]: any }>(
-  init: T,
-  options: ReactivityOptions = { deep: false },
+/**
+ * @template {Record<PropertyKey, any>} T
+ * @param {T} init
+ * @param {ReactivityOptions} options
+ */
+export const $object = (
+  init,
+  options = { deep: false },
 ) => {
   if (options.deep === true) {
     for (const [key, value] of Object.entries(init)) {
-      init[key as keyof T] = maybeReactiveObjectType(value, options);
+      /** @type {keyof T} */
+      const k = key;
+      init[k] = maybeReactiveObjectType(value, options);
     }
   }
   const state = new Signal.State(init);
@@ -66,9 +94,14 @@ export const $object = <T extends object & { [key: PropertyKey]: any }>(
   return proxy;
 };
 
-export const $array = <T>(
-  init: T[],
-  options: ReactivityOptions = { deep: false },
+/**
+ * @template T
+ * @param {T[]} init
+ * @param {ReactivityOptions} options
+ */
+export const $array = (
+  init,
+  options = { deep: false },
 ) => {
   if (options.deep) {
     for (const [key, value] of Object.entries(init)) {
@@ -95,36 +128,47 @@ export const $array = <T>(
   return proxy;
 };
 
-export const isState = (
-  s: unknown,
-): s is InstanceType<typeof ReactiveValue> => {
+/**
+ * @param {unknown} s
+ * @returns {s is InstanceType<typeof ReactiveValue>}
+ */
+export const isState = (s) => {
   return Signal.isState(s);
 };
 
-export const isComputed = (
-  s: unknown,
-): s is InstanceType<typeof ReactiveComputation> => {
+/**
+ * @param {unknown} s
+ * @returns {s is InstanceType<typeof ReactiveComputation>}
+ */
+export const isComputed = (s) => {
   return Signal.isComputed(s);
 };
 
-export const getValue = (signal: unknown) => {
+/**
+ * @param {unknown} signal
+ */
+export const getValue = (signal) => {
   if (isState(signal) || isComputed(signal)) {
     return signal.value;
   }
   return signal;
 };
 
-export const $state = <T>(
-  initialValue: T,
-  options?: Signal.Options<T | undefined>,
-) => {
+/**
+ * @template T
+ * @param {T} initialValue
+ * @param {Signal.Options<T | undefined>|undefined} [options]
+ */
+export const $state = (initialValue, options) => {
   return new ReactiveValue(initialValue, options);
 };
 
-export const $computed = <T>(
-  computation: () => T,
-  options?: Signal.Options<T>,
-) => {
+/**
+ * @template T
+ * @param {()=>T} computation
+ * @param {Signal.Options<T>|undefined} [options]
+ */
+export const $computed = (computation, options) => {
   return new ReactiveComputation(computation, options);
 };
 
@@ -142,24 +186,19 @@ const watcher = new Signal.subtle.Watcher(() => {
   }
 });
 
-type Destructor = () => void;
-export type EffectCallback = () => Destructor | void;
-export type EffectOptions = {
-  signal: AbortSignal;
-};
-
 /**
  * Create an unowned effect that must be cleanup up manually
  *
  * Accept an AbortSignal to abort the effect
+ *
+ * @param {EffectCallback} cb
+ * @param  {EffectOptions|undefined} [options]
  */
-export const $effect = (
-  cb: EffectCallback,
-  options?: EffectOptions,
-) => {
+export const $effect = (cb, options) => {
   if (options?.signal?.aborted) return () => {};
 
-  let destroy: Destructor | undefined;
+  /** @type {Destructor | undefined} */
+  let destroy;
   const c = new Signal.Computed(() => {
     destroy?.();
     destroy = cb() ?? undefined;
