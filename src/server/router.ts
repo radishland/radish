@@ -1,6 +1,6 @@
 import { walk } from "@std/fs";
 import { serveDir, type ServeDirOptions, serveFile } from "@std/http";
-import { dirname, join } from "@std/path";
+import { dirname, fromFileUrl, join } from "@std/path";
 import { buildFolder, routesFolder } from "../conventions.ts";
 import type { Context } from "./app.ts";
 
@@ -53,15 +53,13 @@ export class Router {
     this.routesFolder = options.routesFolder;
     this.matchers = options.matchers ?? {};
 
-    const dirname = import.meta.dirname;
-    console.log("router dirname:", dirname);
+    const dirName = import.meta.resolve("../client");
+    console.log("dirName:", dirName);
+    console.log("path", fromFileUrl(dirName));
 
-    if (dirname) {
-      const clientPath = join(dirname, "..", "client");
-      console.log(" clientPath:", clientPath);
-
+    if (dirName) {
       this.serveStatic({ pathname: "/_radish/runtime/*" }, {
-        fsRoot: clientPath,
+        fsRoot: fromFileUrl(dirName),
         urlRoot: "_radish/runtime",
       });
     }
