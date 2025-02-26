@@ -33,7 +33,7 @@
         "--inspect-wait",
         "--allow-all",
         "--config",
-        "${workspaceFolder}/app/deno.json"
+        "${workspaceFolder}/app/deno.jsonc"
       ],
       "env": {},
       "attachSimplePort": 9229
