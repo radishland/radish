@@ -34,7 +34,6 @@ type BindableProperty = "checked" | "value";
 export type BindRequestDetail = {
   property: BindableProperty;
   identifier: string;
-  handled: boolean;
 };
 
 export interface AutonomousCustomElement {
