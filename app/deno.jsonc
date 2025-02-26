@@ -15,6 +15,7 @@
     "noImplicitOverride": true
   },
   "imports": {
-    "radish/runtime": "npm:@radishland/runtime@^0.0.3"
+    // "radish/runtime": "npm:@radishland/runtime@^0.0.3"
+    // "radish/runtime": "https://esm.sh/@radishland/runtime@^0.0.8"
   }
 }
