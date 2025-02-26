@@ -1,13 +1,13 @@
 {
   "name": "@radishland/runtime",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "description": "The Radish runtime",
   "author": "Frédéric Crozatier",
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "prepublishOnly": "pnpm build && cp src/types.d.ts client/"
+    "prepublishOnly": "pnpm build && deno run -A dts-path-rewriting.ts && cp src/types.d.ts client/"
   },
   "main": "./client/index.js",
   "exports": {
