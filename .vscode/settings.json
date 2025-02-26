@@ -8,6 +8,7 @@
   "typescript.preferences.autoImportSpecifierExcludeRegexes": [],
   "typescript.preferences.autoImportFileExcludePatterns": [
     "./build/**",
+    "./runtime/client/**",
     "**/posix/**",
     "**/windows/**"
   ]
