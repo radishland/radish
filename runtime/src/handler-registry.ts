@@ -15,7 +15,7 @@ import type {
   PropRequestDetail,
   TextRequestDetail,
   UseRequestDetail,
-} from "$types";
+} from "./types.d.ts";
 
 /**
  * A Scoped Handler Registry implements the logic for handling effect requests.
