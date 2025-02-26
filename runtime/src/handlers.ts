@@ -161,7 +161,6 @@ setTimeout(() => {
                 detail: {
                   property,
                   identifier,
-                  handled: false,
                 },
               });
 

@@ -15,7 +15,7 @@ import type {
   PropRequestDetail,
   TextRequestDetail,
   UseRequestDetail,
-} from "$types";
+} from "./types.d.ts";
 
 /**
  * A Scoped Handler Registry implements the logic for handling effect requests.
@@ -269,6 +269,4 @@ export class HandlerRegistry extends HTMLElement
   }
 }
 
-if (window && !customElements.get("handler-registry")) {
-  customElements.define("handler-registry", HandlerRegistry);
-}
+customElements?.define("handler-registry", HandlerRegistry);

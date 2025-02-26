@@ -1,0 +1,33 @@
+{
+	"compilerOptions": {
+		/* Modules */
+		"module": "NodeNext",
+		"target": "ESNext",
+
+		/* Emit */
+		"outDir": "./client",
+		"declaration": true,
+		"allowImportingTsExtensions": true,
+		"rewriteRelativeImportExtensions": true,
+		"noEmitOnError": false,
+		"sourceMap": false,
+
+		/* Interop Constraints */
+		"verbatimModuleSyntax": true,
+		"allowSyntheticDefaultImports": true,
+		"forceConsistentCasingInFileNames": true,
+
+		/* Type Checking */
+		"strict": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"exactOptionalPropertyTypes": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitOverride": true,
+		"lib": ["ESNext", "DOM", "DOM.Iterable", "DOM.AsyncIterable"],
+
+		/* Completeness */
+		"skipLibCheck": true
+	},
+	"include": ["./src"]
+}

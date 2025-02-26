@@ -1,5 +1,5 @@
 {
-  "workspace": ["./init", "./app", "./htmlcrunch"],
+  "workspace": ["./init", "./runtime", "./app", "./htmlcrunch"],
   "name": "@radish/core",
   "version": "1.0.0-alpha.31",
   "license": "MIT",
@@ -7,7 +7,6 @@
     "check": "deno fmt --check && deno lint && deno check **/*.ts",
     "load-env": "deno run -A scripts/load-env.ts",
     "css": "deno run -A scripts/css.ts",
-    "build-runtime": "deno run -A scripts/build-runtime.ts",
     "make-init-tar": "deno fmt init/template/ && tar -C init/template -czf init/template/vscode.tar.gz .vscode && tar -C init/template/base -czf init/template/base.tar.gz .",
     "create": "deno run -A scripts/create.ts",
     "dev": {
@@ -38,7 +37,7 @@
   "imports": {
     "$env": "./src/env.ts",
     "$types": "./src/types.d.ts",
-    "radish/runtime": "./src/client/index.js",
+    "radish/runtime": "./runtime/src/index.ts",
 
     "@std/assert": "jsr:@std/assert@^1.0.11",
     "@std/cli": "jsr:@std/cli@^1.0.13",
@@ -53,7 +52,6 @@
     "@fcrozatier/monarch": "jsr:@fcrozatier/monarch@^2.5.4",
     "@fcrozatier/type-strip": "jsr:@fcrozatier/type-strip@^1.2.0",
 
-    "signal-polyfill": "npm:signal-polyfill@^0.2.2",
     "@jspm/generator": "npm:@jspm/generator@^2.5.1"
   },
   "publish": {

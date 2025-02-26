@@ -1,0 +1,19 @@
+{
+  "tasks": {
+    "check": "deno fmt --check && deno lint && deno check **/*.ts"
+  },
+  "fmt": {
+    "exclude": ["**/*.md"]
+  },
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"],
+    "checkJs": true,
+    "noImplicitOverride": true
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "imports": {
+    "signal-polyfill": "npm:signal-polyfill@^0.2.2"
+  }
+}

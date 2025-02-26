@@ -1,4 +1,4 @@
-import type { AutonomousCustomElement } from "$types";
+import type { AutonomousCustomElement } from "../runtime/src/types.d.ts";
 import {
   booleanAttributes,
   Kind,
@@ -12,9 +12,9 @@ import {
   manifest,
   type RouteManifest,
 } from "./generate/manifest.ts";
-import { bindingConfig } from "./client/config.ts";
-import { getValue, isState } from "./client/reactivity.ts";
-import { spaces_sep_by_comma } from "./client/utils.ts";
+import { bindingConfig } from "../runtime/src/config.ts";
+import { getValue, isState } from "../runtime/src/reactivity.ts";
+import { spaces_sep_by_comma } from "../runtime/src/utils.ts";
 
 let context: { tagName: string; instance: AutonomousCustomElement }[] = [];
 

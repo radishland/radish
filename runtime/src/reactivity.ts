@@ -4,7 +4,7 @@ import type {
   EffectCallback,
   EffectOptions,
   ReactivityOptions,
-} from "$types";
+} from "./types.d.ts";
 
 // @ts-ignore we're hiding get and set
 export class ReactiveValue<T> extends Signal.State<T> {
