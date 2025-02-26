@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "build": "tsup",
-    "prepublishOnly": "pnpm build && deno run -A dts-path-rewriting.ts && cp src/types.d.ts client/"
+    "prepublishOnly": "pnpm build"
   },
   "main": "./client/index.js",
   "exports": {
