@@ -1,6 +1,6 @@
 {
   "name": "@radishland/runtime",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "type": "module",
   "description": "The Radish runtime",
   "author": "Frédéric Crozatier",

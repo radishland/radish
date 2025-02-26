@@ -269,6 +269,6 @@ export class HandlerRegistry extends HTMLElement
   }
 }
 
-if (window && !customElements.get("handler-registry")) {
+if (window && !customElements?.get("handler-registry")) {
   customElements.define("handler-registry", HandlerRegistry);
 }
