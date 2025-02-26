@@ -7,7 +7,6 @@
     "check": "deno fmt --check && deno lint && deno check **/*.ts",
     "load-env": "deno run -A scripts/load-env.ts",
     "css": "deno run -A scripts/css.ts",
-    "build-runtime": "deno run -A scripts/build-runtime.ts",
     "make-init-tar": "deno fmt init/template/ && tar -C init/template -czf init/template/vscode.tar.gz .vscode && tar -C init/template/base -czf init/template/base.tar.gz .",
     "create": "deno run -A scripts/create.ts",
     "dev": {
