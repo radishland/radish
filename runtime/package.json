@@ -1,6 +1,6 @@
 {
   "name": "@radishland/runtime",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "type": "module",
   "description": "The Radish runtime",
   "author": "Frédéric Crozatier",
@@ -9,14 +9,17 @@
     "build": "tsup",
     "prepublishOnly": "pnpm build"
   },
-  "main": "./client/index.js",
   "exports": {
-    ".": "./client/index.js"
+    ".": {
+      "import": "./client/index.js",
+      "types": "./client/index.d.ts"
+    }
   },
   "files": [
     "./client",
     "README.md",
-    "LICENCE"
+    "LICENCE",
+    "package.json"
   ],
   "dependencies": {
     "signal-polyfill": "^0.2.2"
