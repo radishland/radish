@@ -6,20 +6,12 @@ import type {
   ReactivityOptions,
 } from "./types.d.ts";
 import {
+  computed as _computed,
   effect as _effect,
+  type ReadonlySignal,
   Signal as _Signal,
   signal as _signal,
 } from "@preact/signals-core";
-
-// @ts-ignore we're hiding get and set
-export class ReactiveComputation<T> extends Signal.Computed<T> {
-  // @ts-ignore see above
-  private override get;
-
-  get value(): T {
-    return super.get();
-  }
-}
 
 const maybeReactiveObjectType = <T>(thing: T, options: ReactivityOptions) => {
   if (typeof thing === "object") {
@@ -93,22 +85,12 @@ export const isState = (
   return value instanceof _Signal;
 };
 
-export const getValue = (signal: unknown): unknown => {
-  if (isState(signal)) {
-    return signal.value;
-  }
-  return signal;
-};
-
 export const signal = <T>(value: T) => {
   return _signal(value);
 };
 
-export const $computed = <T>(
-  computation: () => T,
-  options?: Signal.Options<T>,
-): ReactiveComputation<T> => {
-  return new ReactiveComputation(computation, options);
+export const computed = <T>(computation: () => T): ReadonlySignal<T> => {
+  return _computed(computation);
 };
 
 /**
