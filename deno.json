@@ -25,7 +25,7 @@
   },
   "lint": {
     "rules": {
-      "exclude": ["no-explicit-any", "no-inner-declarations", "no-var"]
+      "exclude": []
     }
   },
   "compilerOptions": {
