@@ -1,65 +1,55 @@
 import { assertEquals } from "@std/assert/equals";
-import {
-  $array,
-  $object,
-  computed,
-  type ReactiveValue,
-  signal,
-} from "radish/runtime";
+import { array, computed, object, signal } from "../src/reactivity.ts";
 
-// const inc = (signal: ReactiveValue<number>) => {
-//   signal.value++;
-// };
+Deno.test("reactive object", () => {
+  const obj = object({ a: "a" });
 
-// Deno.test("reactive value", () => {
-//   const num = $state(2);
-//   const double = $computed(() => num.value * 2);
-//   assertEquals(num.value, 2);
-//   assertEquals(double.value, 4);
+  let calls = 0;
+  const a = computed(() => {
+    calls++;
+    return obj.a;
+  });
 
-//   inc(num);
-//   assertEquals(num.value, 3);
-//   assertEquals(double.value, 6);
+  assertEquals(calls, 0);
+  assertEquals(a.value, "a");
+  assertEquals(calls, 1);
 
-//   num.value++;
-//   assertEquals(num.value, 4);
-//   assertEquals(double.value, 8);
+  obj.a = "b";
 
-//   num.value *= 2;
-//   assertEquals(num.value, 8);
-//   assertEquals(double.value, 16);
+  assertEquals(calls, 1);
+  assertEquals(a.value, "b");
+  assertEquals(calls, 2);
+});
 
-//   num.value += 1;
-//   assertEquals(num.value, 9);
-//   assertEquals(double.value, 18);
-// });
+Deno.test("deep reactive objects", () => {
+  const obj = object({ deeply: { nested: { value: 1 } } });
 
-// Deno.test("reactive object", () => {
-//   const obj = $object({ a: "a" });
-//   const a = $computed(() => obj.a);
-//   assertEquals(a.value, "a");
+  let calls = 0;
+  const val = computed(() => {
+    calls++;
+    return obj.deeply.nested.value * 2;
+  });
 
-//   obj.a = "b";
-//   assertEquals(a.value, "b");
-// });
+  assertEquals(calls, 0);
+  assertEquals(val.value, 2);
+  assertEquals(calls, 1);
 
-// Deno.test("deep reactive objects", () => {
-//   const obj = $object({ deeply: { nested: { value: 1 } } }, { deep: true });
-//   const count = $computed(() => obj.deeply.nested.value * 2);
-//   assertEquals(count.value, 2);
+  obj.deeply.nested.value = 2;
 
-//   obj.deeply.nested.value = 2;
-//   assertEquals(count.value, 4);
-// });
+  assertEquals(calls, 1);
+  assertEquals(val.value, 4);
+  assertEquals(calls, 2);
+});
 
-// Deno.test("reactive array", () => {
-//   const arr = $array(["a"]);
-//   const first = $computed(() => arr[0]);
-//   assertEquals(first.value, "a");
+Deno.test("reactive array", () => {
+  const arr = array(["a"]);
+  const first = computed(() => arr[0]);
 
-//   arr[0] = "b";
-//   assertEquals(first.value, "b");
-// });
+  assertEquals(first.value, "a");
+
+  arr[0] = "b";
+  assertEquals(first.value, "b");
+});
 
 // Deno.test("deep reactive arrays", () => {
 //   // array of 2x2 matrices

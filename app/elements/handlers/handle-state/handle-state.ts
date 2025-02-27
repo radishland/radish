@@ -1,4 +1,4 @@
-import { $object, computed, signal } from "radish/runtime";
+import { computed, object, signal } from "radish/runtime";
 import { HandlerRegistry } from "radish/runtime";
 
 export class HandleState extends HandlerRegistry {
@@ -6,7 +6,7 @@ export class HandleState extends HandlerRegistry {
   checked = computed(() => this.count.value % 2 === 0);
   name = signal("");
   interval = signal(0);
-  state = $object({
+  state = object({
     name: "fred",
   });
   input_value = computed(() => this.state.name);
