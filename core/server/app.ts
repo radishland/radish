@@ -1,5 +1,5 @@
 import { getCookies } from "@std/http/cookie";
-import type { MaybePromise } from "$types";
+import type { MaybePromise } from "../types.d.ts";
 import type { Router } from "./router.ts";
 
 export type Context = {

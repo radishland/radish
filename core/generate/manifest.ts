@@ -127,8 +127,9 @@ const crawlComponentsFolder = () => {
           if (hasShadowRootTemplate) {
             const content = Deno.readTextFileSync(file.path);
 
+            let fragment;
             try {
-              var fragment = shadowRoot.parseOrThrow(content);
+              fragment = shadowRoot.parseOrThrow(content);
             } catch (error) {
               console.error(
                 `Something went wrong while parsing ${file.path}`,
@@ -207,8 +208,9 @@ const crawlRoutesFolder = (path = routesFolder) => {
   if (layout) {
     const content = Deno.readTextFileSync(layout.path);
 
+    let fragment;
     try {
-      var fragment = fragments.parseOrThrow(content);
+      fragment = fragments.parseOrThrow(content);
     } catch (error) {
       console.error(`Something went wrong while parsing ${layout.path}`);
       throw error;
@@ -244,8 +246,9 @@ const crawlRoutesFolder = (path = routesFolder) => {
         if (file.name === "index.html") {
           const content = Deno.readTextFileSync(file.path);
 
+          let fragment;
           try {
-            var fragment = fragments.parseOrThrow(content);
+            fragment = fragments.parseOrThrow(content);
           } catch (error) {
             console.error(`Something went wrong while parsing ${file.path}`);
             throw error;

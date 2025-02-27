@@ -6,7 +6,7 @@ import {
   serializeFragments,
   textNode,
 } from "@fcrozatier/monarch/html";
-import type { HandlerRegistry } from "radish/runtime";
+import type { HandlerRegistry } from "@radish/runtime";
 import { bindingConfig } from "../runtime/src/config.ts";
 import { spaces_sep_by_comma } from "../runtime/src/utils.ts";
 import {

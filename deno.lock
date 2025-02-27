@@ -1406,6 +1406,13 @@
       "npm:@jspm/generator@^2.5.1"
     ],
     "members": {
+      "core": {
+        "dependencies": [
+          "jsr:@fcrozatier/monarch@^2.5.4",
+          "jsr:@fcrozatier/type-strip@^1.2.0",
+          "npm:@jspm/generator@^2.5.1"
+        ]
+      },
       "runtime": {
         "packageJson": {
           "dependencies": [
