@@ -25,6 +25,7 @@
     "jsr:@std/streams@^1.0.9": "1.0.9",
     "jsr:@std/tar@~0.1.5": "0.1.5",
     "npm:@jspm/generator@^2.5.1": "2.5.1_@babel+core@7.26.9",
+    "npm:@preact/signals-core@^1.8.0": "1.8.0",
     "npm:@types/node@*": "22.12.0",
     "npm:signal-polyfill@~0.2.2": "0.2.2",
     "npm:tsup@^8.4.0": "8.4.0_typescript@5.7.3_esbuild@0.25.0",
@@ -491,6 +492,9 @@
     },
     "@pkgjs/parseargs@0.11.0": {
       "integrity": "sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg=="
+    },
+    "@preact/signals-core@1.8.0": {
+      "integrity": "sha512-OBvUsRZqNmjzCZXWLxkZfhcgT+Fk8DDcT/8vD6a1xhDemodyy87UJRJfASMuSD8FaAIeGgGm85ydXhm7lr4fyA=="
     },
     "@rollup/rollup-android-arm-eabi@4.34.8": {
       "integrity": "sha512-q217OSE8DTp8AFHuNHXo0Y86e1wtlfVrXiAlwkIvGRQv9zbc6mE3sjIVfwI8sYUyNxwOg0j/Vm1RKM04JcWLJw=="
@@ -1412,6 +1416,7 @@
         ],
         "packageJson": {
           "dependencies": [
+            "npm:@preact/signals-core@^1.8.0",
             "npm:signal-polyfill@~0.2.2",
             "npm:tsup@^8.4.0",
             "npm:typescript@^5.7.3"

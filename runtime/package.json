@@ -22,6 +22,7 @@
     "package.json"
   ],
   "dependencies": {
+    "@preact/signals-core": "^1.8.0",
     "signal-polyfill": "^0.2.2"
   },
   "devDependencies": {
