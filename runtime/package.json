@@ -1,9 +1,16 @@
 {
   "name": "@radishland/runtime",
-  "version": "0.0.8",
+  "version": "0.1.0",
   "type": "module",
   "description": "The Radish runtime",
   "author": "Frédéric Crozatier",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/radishland/radish.git"
+  },
+  "bugs": {
+    "url": "https://github.com/radishland/radish/issues"
+  },
   "license": "MIT",
   "scripts": {
     "build": "tsup",
@@ -20,6 +27,10 @@
     "README.md",
     "LICENCE",
     "package.json"
+  ],
+  "keywords": [
+    "radish",
+    "runtime"
   ],
   "dependencies": {
     "@preact/signals-core": "^1.8.0"
