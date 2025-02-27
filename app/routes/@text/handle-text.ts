@@ -1,8 +1,8 @@
 import { HandlerRegistry } from "radish/runtime";
-import { $computed, $state } from "radish/runtime";
+import { $computed, signal } from "radish/runtime";
 
 export class HandleText extends HandlerRegistry {
-  on = $state(false);
+  on = signal(false);
   text = $computed(() => this.on.value ? "with" : "without");
 
   toggle() {

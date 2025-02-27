@@ -3,8 +3,8 @@ import {
   $array,
   $computed,
   $object,
-  $state,
   type ReactiveValue,
+  signal,
 } from "radish/runtime";
 
 // const inc = (signal: ReactiveValue<number>) => {

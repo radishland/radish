@@ -1,8 +1,8 @@
 import { HandlerRegistry } from "radish/runtime";
-import { $computed, $state } from "radish/runtime";
+import { $computed, signal } from "radish/runtime";
 
 export class HandleProp extends HandlerRegistry {
-  pressed = $state(false);
+  pressed = signal(false);
   color = $computed(() => this.pressed.value ? "green" : "red");
 
   toggleColor() {
@@ -10,7 +10,7 @@ export class HandleProp extends HandlerRegistry {
   }
 
   manageColor(node: HTMLElement) {
-    this.$effect(() => {
+    this.effect(() => {
       node.style.color = this.color.value;
     });
   }

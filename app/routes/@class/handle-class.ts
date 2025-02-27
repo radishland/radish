@@ -1,10 +1,10 @@
 import { HandlerRegistry } from "radish/runtime";
-import { $object, $state } from "radish/runtime";
+import { $object, signal } from "radish/runtime";
 
 export class HandleClass extends HandlerRegistry {
-  outline = $state(false);
+  outline = signal(false);
 
-  state = $state({
+  state = signal({
     "red": true,
     "outline": this.outline,
   });

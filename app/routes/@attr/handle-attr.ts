@@ -1,8 +1,8 @@
 import { HandlerRegistry } from "radish/runtime";
-import { $state } from "radish/runtime";
+import { signal } from "radish/runtime";
 
 export class HandleAttr extends HandlerRegistry {
-  state = $state("red");
+  state = signal("red");
 
   toggle() {
     this.state.value = this.state.value === "red" ? "green" : "red";
