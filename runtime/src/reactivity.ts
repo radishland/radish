@@ -5,22 +5,11 @@ import type {
   EffectOptions,
   ReactivityOptions,
 } from "./types.d.ts";
-
-// @ts-ignore we're hiding get and set
-export class ReactiveValue<T> extends Signal.State<T> {
-  // @ts-ignore see above
-  private override get;
-  // @ts-ignore see above
-  private override set;
-
-  get value(): T {
-    return super.get();
-  }
-
-  set value(newValue: T) {
-    super.set(newValue);
-  }
-}
+import {
+  effect as _effect,
+  Signal as _Signal,
+  signal as _signal,
+} from "@preact/signals-core";
 
 // @ts-ignore we're hiding get and set
 export class ReactiveComputation<T> extends Signal.Computed<T> {
@@ -99,29 +88,20 @@ export const $array = <T extends ArrayLike<any>>(
 };
 
 export const isState = (
-  s: unknown,
-): s is InstanceType<typeof ReactiveValue> => {
-  return Signal.isState(s);
-};
-
-export const isComputed = (
-  s: unknown,
-): s is InstanceType<typeof ReactiveComputation> => {
-  return Signal.isComputed(s);
+  value: unknown,
+): value is InstanceType<typeof _Signal> => {
+  return value instanceof _Signal;
 };
 
 export const getValue = (signal: unknown): unknown => {
-  if (isState(signal) || isComputed(signal)) {
+  if (isState(signal)) {
     return signal.value;
   }
   return signal;
 };
 
-export const $state = <T>(
-  initialValue: T,
-  options?: Signal.Options<T | undefined>,
-): ReactiveValue<T> => {
-  return new ReactiveValue(initialValue, options);
+export const signal = <T>(value: T) => {
+  return _signal(value);
 };
 
 export const $computed = <T>(
@@ -131,49 +111,19 @@ export const $computed = <T>(
   return new ReactiveComputation(computation, options);
 };
 
-let pending = false;
-
-const watcher = new Signal.subtle.Watcher(() => {
-  if (!pending) {
-    pending = true;
-
-    queueMicrotask(() => {
-      pending = false;
-      for (const s of watcher.getPending()) s.get();
-      watcher.watch();
-    });
-  }
-});
-
 /**
  * Create an unowned effect that must be cleanup up manually
  *
  * Accept an AbortSignal to abort the effect
  */
-export const $effect = (
+export const effect = (
   cb: EffectCallback,
   options?: EffectOptions,
 ): Destructor => {
   if (options?.signal?.aborted) return () => {};
 
-  let destroy: Destructor | undefined;
-  const c = new Signal.Computed(() => {
-    destroy?.();
-    destroy = cb() ?? undefined;
-  });
-  watcher.watch(c);
-  c.get();
+  const dispose = _effect(cb);
+  options?.signal.addEventListener("abort", dispose);
 
-  let cleaned = false;
-
-  const cleanup = () => {
-    if (cleaned) return;
-    destroy?.();
-    watcher.unwatch(c);
-    cleaned = true;
-  };
-
-  options?.signal.addEventListener("abort", cleanup);
-
-  return cleanup;
+  return dispose;
 };
