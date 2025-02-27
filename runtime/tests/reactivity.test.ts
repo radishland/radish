@@ -1,8 +1,8 @@
 import { assertEquals } from "@std/assert/equals";
 import {
   $array,
-  $computed,
   $object,
+  computed,
   type ReactiveValue,
   signal,
 } from "radish/runtime";
