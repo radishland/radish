@@ -2,7 +2,7 @@ import {
   computed as _computed,
   effect as _effect,
   type ReadonlySignal,
-  Signal as _Signal,
+  Signal,
   signal as _signal,
 } from "@preact/signals-core";
 import type { Destructor, EffectCallback, EffectOptions } from "./types.d.ts";
@@ -10,11 +10,11 @@ import { type } from "./utils.ts";
 
 export const isState = (
   value: unknown,
-): value is InstanceType<typeof _Signal> => {
-  return value instanceof _Signal;
+): value is InstanceType<typeof Signal> => {
+  return value instanceof Signal;
 };
 
-export const signal = <T>(value: T) => {
+export const signal = <T>(value: T): Signal<T> => {
   return _signal(value);
 };
 
@@ -50,7 +50,7 @@ export const effect = (
   obj.a.b.c = 2;
   assertEquals(computation.value, 4);
  */
-export const reactive = <T>(thing: T) => {
+export const reactive = <T>(thing: T): T => {
   if (type(thing) === "object" || type(thing) === "array") {
     // @ts-ignore we've already enforced the type
     return object(thing);
