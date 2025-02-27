@@ -48,7 +48,10 @@ export class HandlerRegistry extends HTMLElement
     effect(callback, { signal: this.abortController.signal });
   }
 
-  lookup(identifier: string) {
+  /**
+   * Looks up an identifier on the instance
+   */
+  lookup(identifier: string): any {
     return this[identifier];
   }
 
