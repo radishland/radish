@@ -19,8 +19,5 @@ jobs:
         with:
           deno-version: v2.x
 
-      - name: Build runtime
-        run: deno task build-runtime
-
-      - name: Publish
-        run: npx jsr publish
+      # - name: Publish
+      #   run: npx jsr publish
