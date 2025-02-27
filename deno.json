@@ -36,8 +36,6 @@
     "@std/tar": "jsr:@std/tar@^0.1.5",
 
     "@fcrozatier/monarch": "jsr:@fcrozatier/monarch@^2.5.4",
-    "@fcrozatier/type-strip": "jsr:@fcrozatier/type-strip@^1.2.0",
-
-    "@jspm/generator": "npm:@jspm/generator@^2.5.1"
+    "@fcrozatier/type-strip": "jsr:@fcrozatier/type-strip@^1.2.0"
   }
 }

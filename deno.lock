@@ -1402,8 +1402,7 @@
       "jsr:@std/http@^1.0.13",
       "jsr:@std/jsonc@^1.0.1",
       "jsr:@std/path@^1.0.8",
-      "jsr:@std/tar@~0.1.5",
-      "npm:@jspm/generator@^2.5.1"
+      "jsr:@std/tar@~0.1.5"
     ],
     "members": {
       "core": {
