@@ -1,4 +1,5 @@
 {
+  "name": "@radish/runtime",
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts"
   },
