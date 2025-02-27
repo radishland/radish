@@ -1,4 +1,3 @@
-import type { AutonomousCustomElement } from "../runtime/src/types.d.ts";
 import {
   booleanAttributes,
   Kind,
@@ -7,23 +6,23 @@ import {
   serializeFragments,
   textNode,
 } from "@fcrozatier/monarch/html";
+import type { HandlerRegistry } from "radish/runtime";
+import { bindingConfig } from "../runtime/src/config.ts";
+import { spaces_sep_by_comma } from "../runtime/src/utils.ts";
 import {
   type ElementManifest,
   manifest,
   type RouteManifest,
 } from "./generate/manifest.ts";
-import { bindingConfig } from "../runtime/src/config.ts";
-import { getValue, isState } from "../runtime/src/reactivity.ts";
-import { spaces_sep_by_comma } from "../runtime/src/utils.ts";
 
-let context: { tagName: string; instance: AutonomousCustomElement }[] = [];
+let context: { tagName: string; instance: HandlerRegistry }[] = [];
 
 const contextLookup = (identifier: string) => {
   for (let i = context.length - 1; i >= 0; i--) {
     const { instance } = context[i];
     if (identifier in instance) {
       // @ts-ignore identifier is in registry
-      return instance[identifier]; // runs the getter and returns the property or method value
+      return instance.lookup(identifier)?.valueOf(); // runs the getter and returns the property or method value
     }
   }
 };
@@ -102,7 +101,7 @@ export function applyServerEffects(
         const [attribute, maybeIdentifier] = assignment.split(":");
         const identifier = maybeIdentifier || attribute;
 
-        const value = getValue(contextLookup(identifier));
+        const value = contextLookup(identifier);
         if (value !== null && value !== undefined) {
           setAttribute(attributes, attribute, value);
         }
@@ -110,17 +109,17 @@ export function applyServerEffects(
     } else if (attribute[0] === "@class") {
       // @class attribute
       const identifier = attribute[1] || "class";
-      const value = getValue(contextLookup(identifier));
+      const value = contextLookup(identifier);
 
       if (!value || typeof value !== "object") {
-        throw new Error("@class should reference a (reactive) object");
+        throw new Error("@class should reference an object");
       }
 
       const classAttr = attributes.find(([k, _]) => k === "class");
       let classes = classAttr?.[1] ?? "";
 
       for (const [k, v] of Object.entries(value)) {
-        if (getValue(v)) {
+        if (v?.valueOf()) {
           classes += ` ${k} `;
         } else {
           for (const className of k.split(" ")) {
@@ -138,7 +137,7 @@ export function applyServerEffects(
     } else if (attribute[0] === "@text") {
       // @text attribute
       const identifier = attribute[1] || "text";
-      const value = getValue(contextLookup(identifier));
+      const value = contextLookup(identifier);
 
       if (kind === Kind.VOID) {
         throw new Error(
@@ -152,7 +151,7 @@ export function applyServerEffects(
     } else if (attribute[0] === "@html") {
       // @html attribute
       const identifier = attribute[1] || "html";
-      const value = getValue(contextLookup(identifier));
+      const value = contextLookup(identifier);
 
       if (kind === Kind.VOID) {
         throw new Error(
@@ -180,17 +179,10 @@ export function applyServerEffects(
       }
 
       const identifier = attribute[1] || property;
-      const state = contextLookup(identifier);
-
-      if (!isState(state)) {
-        throw new Error(`@bind:${property} should reference a ReactiveValue`);
-      }
+      const value = contextLookup(identifier);
 
       if (
-        !bindingConfig[property].type.includes(
-          // @ts-ignore we're actually checking the type
-          typeof state.value,
-        )
+        !bindingConfig[property].type.includes(typeof value)
       ) {
         throw new Error(
           `@bind:${property} should reference a value of type ${
@@ -199,7 +191,7 @@ export function applyServerEffects(
         );
       }
 
-      setAttribute(attributes, property, state.value);
+      setAttribute(attributes, property, value);
     }
   }
 

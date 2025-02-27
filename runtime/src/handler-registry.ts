@@ -1,7 +1,7 @@
 import { booleanAttributes } from "./utils.ts";
 import { bindingConfig } from "./config.ts";
 
-import { $effect, getValue, isComputed, isState } from "./reactivity.ts";
+import { effect, isState } from "./reactivity.ts";
 import type {
   AttrRequestDetail,
   AutonomousCustomElement,
@@ -9,7 +9,6 @@ import type {
   ClassRequestDetail,
   Destructor,
   EffectCallback,
-  EffectOptions,
   HTMLRequestDetail,
   OnRequestDetail,
   PropRequestDetail,
@@ -45,14 +44,11 @@ export class HandlerRegistry extends HTMLElement
    *
    * An optional AbortSignal can be provided to abort the effect prematurely
    */
-  $effect(callback: EffectCallback, options?: EffectOptions) {
-    const signals = [this.abortController.signal];
-    if (options?.signal) signals.push(options.signal);
-
-    $effect(callback, { ...options, signal: AbortSignal.any(signals) });
+  effect(callback: EffectCallback) {
+    effect(callback, { signal: this.abortController.signal });
   }
 
-  #get(identifier: string) {
+  lookup(identifier: string) {
     return this[identifier];
   }
 
@@ -60,8 +56,8 @@ export class HandlerRegistry extends HTMLElement
     if (e instanceof CustomEvent) {
       const { handler, type }: OnRequestDetail = e.detail;
 
-      if (handler in this && typeof this.#get(handler) === "function") {
-        e.target?.addEventListener(type, this.#get(handler).bind(this));
+      if (handler in this && typeof this.lookup(handler) === "function") {
+        e.target?.addEventListener(type, this.lookup(handler).bind(this));
         e.stopPropagation();
       }
     }
@@ -73,11 +69,11 @@ export class HandlerRegistry extends HTMLElement
       const { identifier }: ClassRequestDetail = e.detail;
 
       if (identifier in this) {
-        this.$effect(() => {
-          const classList = getValue(this.#get(identifier));
+        this.effect(() => {
+          const classList = this.lookup(identifier)?.valueOf();
           if (classList && typeof classList === "object") {
             for (const [k, v] of Object.entries(classList)) {
-              const force = !!getValue(v);
+              const force = !!(v?.valueOf());
               for (const className of k.split(" ")) {
                 // @ts-ignore target is an HTMLElement
                 target.classList.toggle(
@@ -98,8 +94,8 @@ export class HandlerRegistry extends HTMLElement
     if (e instanceof CustomEvent) {
       const { hook }: UseRequestDetail = e.detail;
 
-      if (hook in this && typeof this.#get(hook) === "function") {
-        const cleanup = this.#get(hook).bind(this)(e.target);
+      if (hook in this && typeof this.lookup(hook) === "function") {
+        const cleanup = this.lookup(hook).bind(this)(e.target);
         if (typeof cleanup === "function") {
           this.#cleanup.push(cleanup);
         }
@@ -117,24 +113,17 @@ export class HandlerRegistry extends HTMLElement
         identifier in this && target instanceof HTMLElement &&
         attribute in target
       ) {
-        const ref = this.#get(identifier);
+        const ref = this.lookup(identifier);
 
-        const setAttr = () => {
-          const value = getValue(ref);
+        this.effect(() => {
           if (booleanAttributes.includes(attribute)) {
-            value
+            ref.valueOf()
               ? target.setAttribute(attribute, "")
               : target.removeAttribute(attribute);
           } else {
-            target.setAttribute(attribute, `${value}`);
+            target.setAttribute(attribute, `${ref}`);
           }
-        };
-
-        if (isState(ref) || isComputed(ref)) {
-          this.$effect(() => setAttr());
-        } else {
-          setAttr();
-        }
+        });
 
         e.stopPropagation();
       }
@@ -147,19 +136,12 @@ export class HandlerRegistry extends HTMLElement
       const target = e.target;
 
       if (identifier in this && target && property in target) {
-        const ref = this.#get(identifier);
+        const ref = this.lookup(identifier);
 
-        const setProp = () => {
-          const value = getValue(ref);
+        this.effect(() => {
           // @ts-ignore property is in target
-          target[property] = value;
-        };
-
-        if (isState(ref) || isComputed(ref)) {
-          this.$effect(() => setProp());
-        } else {
-          setProp();
-        }
+          target[property] = ref.valueOf();
+        });
 
         e.stopPropagation();
       }
@@ -173,18 +155,11 @@ export class HandlerRegistry extends HTMLElement
       const { identifier }: TextRequestDetail = e.detail;
 
       if (identifier in this && target instanceof HTMLElement) {
-        const ref = this.#get(identifier);
+        const ref = this.lookup(identifier);
 
-        const setTextContent = () => {
-          const value = getValue(ref);
-          target.textContent = `${value}`;
-        };
-
-        if (isState(ref) || isComputed(ref)) {
-          this.$effect(() => setTextContent());
-        } else {
-          setTextContent();
-        }
+        this.effect(() => {
+          target.textContent = `${ref}`;
+        });
 
         e.stopPropagation();
       }
@@ -197,18 +172,11 @@ export class HandlerRegistry extends HTMLElement
       const target = e.target;
 
       if (identifier in this && target instanceof HTMLElement) {
-        const ref = this.#get(identifier);
+        const ref = this.lookup(identifier);
 
-        const setInnerHTML = () => {
-          const value = getValue(ref);
-          target.innerHTML = `${value}`;
-        };
-
-        if (isState(ref) || isComputed(ref)) {
-          this.$effect(() => setInnerHTML());
-        } else {
-          setInnerHTML();
-        }
+        this.effect(() => {
+          target.innerHTML = `${ref}`;
+        });
 
         e.stopPropagation();
       }
@@ -224,7 +192,7 @@ export class HandlerRegistry extends HTMLElement
         identifier in this && target instanceof HTMLElement &&
         property in target
       ) {
-        const state = this.#get(identifier);
+        const state = this.lookup(identifier);
         if (isState(state)) {
           // @ts-ignore property is in target
           state.value = target[property];
@@ -236,7 +204,7 @@ export class HandlerRegistry extends HTMLElement
           });
 
           // Sync
-          this.$effect(() => {
+          this.effect(() => {
             // @ts-ignore property is in target
             target[property] = state.value;
           });
