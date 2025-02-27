@@ -1,8 +1,8 @@
 import { assertEquals } from "@std/assert/equals";
-import { array, computed, object, signal } from "../src/reactivity.ts";
+import { computed, reactive } from "../src/reactivity.ts";
 
 Deno.test("reactive object", () => {
-  const obj = object({ a: "a" });
+  const obj = reactive({ a: "a" });
 
   let calls = 0;
   const a = computed(() => {
@@ -22,7 +22,7 @@ Deno.test("reactive object", () => {
 });
 
 Deno.test("deep reactive objects", () => {
-  const obj = object({ deeply: { nested: { value: 1 } } });
+  const obj = reactive({ deeply: { nested: { value: 1 } } });
 
   let calls = 0;
   const val = computed(() => {
@@ -42,27 +42,55 @@ Deno.test("deep reactive objects", () => {
 });
 
 Deno.test("reactive array", () => {
-  const arr = array(["a"]);
-  const first = computed(() => arr[0]);
+  const arr = reactive(["a"]);
 
+  let calls = 0;
+  const first = computed(() => {
+    calls++;
+    return arr[0];
+  });
+
+  assertEquals(calls, 0);
+  assertEquals(arr[0], "a");
   assertEquals(first.value, "a");
+  assertEquals(calls, 1);
 
   arr[0] = "b";
+
+  assertEquals(calls, 1);
+  assertEquals(arr[0], "b");
   assertEquals(first.value, "b");
+  assertEquals(calls, 2);
 });
 
-// Deno.test("deep reactive arrays", () => {
-//   // array of 2x2 matrices
-//   const matrices = $array([[[0, 1], [2, 3]]], { deep: true });
-//   const first = $computed(() => matrices[0][0][0]);
-//   assertEquals(first.value, 0);
+Deno.test("deep reactive arrays", () => {
+  const matrices = reactive([[[0, 1], [2, 3]]]);
 
-//   matrices[0][0][0] = 1;
-//   assertEquals(first.value, 1);
+  let calls = 0;
+  const first = computed(() => {
+    calls++;
+    return matrices[0][0][0];
+  });
 
-//   matrices[0][0] = [2, 4];
-//   assertEquals(first.value, 2);
+  assertEquals(calls, 0);
+  assertEquals(first.value, 0);
+  assertEquals(calls, 1);
 
-//   matrices[0] = [[3, 4], [5, 6]];
-//   assertEquals(first.value, 3);
-// });
+  matrices[0][0][0] = 1;
+
+  assertEquals(calls, 1);
+  assertEquals(first.value, 1);
+  assertEquals(calls, 2);
+
+  matrices[0][0] = [2, 4];
+
+  assertEquals(calls, 2);
+  assertEquals(first.value, 2);
+  assertEquals(calls, 3);
+
+  matrices[0] = [[3, 4], [5, 6]];
+
+  assertEquals(calls, 3);
+  assertEquals(first.value, 3);
+  assertEquals(calls, 4);
+});

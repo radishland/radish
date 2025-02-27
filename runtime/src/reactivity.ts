@@ -5,8 +5,8 @@ import {
   Signal as _Signal,
   signal as _signal,
 } from "@preact/signals-core";
-import { Signal } from "signal-polyfill";
 import type { Destructor, EffectCallback, EffectOptions } from "./types.d.ts";
+import { type } from "./utils.ts";
 
 export const isState = (
   value: unknown,
@@ -39,22 +39,30 @@ export const effect = (
   return dispose;
 };
 
-const deep = <T>(thing: T) => {
-  if (typeof thing === "object") {
-    if (Array.isArray(thing)) {
-      return array(thing);
-    } else if (thing) {
-      return object(thing);
-    }
+/**
+ * Creates a deeply reactive proxied object or array
+ *
+ * @example  const obj = reactive({ a: { b: { c: 1 } } });
+
+  const computation = computed(() => obj.a.b.c * 2});
+  assertEquals(computation.value, 2);
+
+  obj.a.b.c = 2;
+  assertEquals(computation.value, 4);
+ */
+export const reactive = <T>(thing: T) => {
+  if (type(thing) === "object" || type(thing) === "array") {
+    // @ts-ignore we've already enforced the type
+    return object(thing);
   }
   return thing;
 };
 
-export const object = <T extends Record<PropertyKey, any>>(
+const object = <T extends Record<PropertyKey, any>>(
   init: T,
 ): T => {
   for (const [key, value] of Object.entries(init) as [keyof T, any][]) {
-    init[key] = deep(value);
+    init[key] = reactive(value);
   }
   const state = signal(init);
 
@@ -65,34 +73,8 @@ export const object = <T extends Record<PropertyKey, any>>(
     set(_target, p: keyof T, newValue, _receiver) {
       state.value = {
         ...state.value,
-        [p]: deep(newValue),
+        [p]: reactive(newValue),
       };
-      return true;
-    },
-  });
-
-  return proxy;
-};
-
-export const array = <T extends ArrayLike<any>>(
-  init: T,
-): T => {
-  for (const [key, value] of Object.entries(init)) {
-    init[key as keyof T] = deep(value);
-  }
-
-  const state = new Signal.State(init);
-
-  const proxy = new Proxy(init, {
-    get(_target, p, _receiver) {
-      // @ts-ignore state has p
-      return state.get()[p];
-    },
-    set(_target, p, newValue, _receiver) {
-      state.set({
-        ...state.get(),
-        [p]: deep(newValue),
-      });
       return true;
     },
   });

@@ -1,5 +1,5 @@
-import { HandlerRegistry } from "radish/runtime";
-import { object, signal } from "radish/runtime";
+import { HandlerRegistry, reactive } from "radish/runtime";
+import { signal } from "radish/runtime";
 
 export class HandleClass extends HandlerRegistry {
   outline = signal(false);
@@ -9,7 +9,7 @@ export class HandleClass extends HandlerRegistry {
     "outline": this.outline,
   });
 
-  object = object({
+  object = reactive({
     "red": false,
     "outline": this.outline,
   });
