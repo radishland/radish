@@ -1393,7 +1393,6 @@
   "workspace": {
     "dependencies": [
       "jsr:@fcrozatier/monarch@^2.5.4",
-      "jsr:@fcrozatier/type-strip@^1.2.0",
       "jsr:@std/assert@^1.0.11",
       "jsr:@std/cli@^1.0.13",
       "jsr:@std/dotenv@~0.225.3",

@@ -35,7 +35,6 @@
     "@std/path": "jsr:@std/path@^1.0.8",
     "@std/tar": "jsr:@std/tar@^0.1.5",
 
-    "@fcrozatier/monarch": "jsr:@fcrozatier/monarch@^2.5.4",
-    "@fcrozatier/type-strip": "jsr:@fcrozatier/type-strip@^1.2.0"
+    "@fcrozatier/monarch": "jsr:@fcrozatier/monarch@^2.5.4"
   }
 }
