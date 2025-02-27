@@ -11,9 +11,7 @@
     "noImplicitOverride": true
   },
   "exports": {
-    ".": "./src/index.ts"
-  },
-  "imports": {
-    "signal-polyfill": "npm:signal-polyfill@^0.2.2"
+    ".": "./src/handler-registry.ts",
+    "./reactivity": "./src/reactivity.ts"
   }
 }
