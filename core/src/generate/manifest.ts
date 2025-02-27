@@ -14,7 +14,7 @@ import {
 import { kebabToPascal } from "../utils.ts";
 import { walkTree } from "../walk.ts";
 
-export type Constructor<T = any> = new (...args: any[]) => T;
+type Constructor<T = any> = new (...args: any[]) => T;
 
 export type ElementManifest =
   | {
