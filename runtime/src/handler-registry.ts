@@ -1,5 +1,4 @@
-import { booleanAttributes } from "./utils.ts";
-import { bindingConfig } from "./config.ts";
+import { bindingConfig, booleanAttributes } from "./utils.ts";
 
 import { effect, isState } from "./reactivity.ts";
 import type {

@@ -1,6 +1,6 @@
 {
   "name": "@radishland/runtime",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "The Radish runtime",
   "author": "Frédéric Crozatier",
@@ -24,6 +24,10 @@
     "./boot": {
       "import": "./client/boot.js",
       "types": "./client/boot.d.ts"
+    },
+    "./utils": {
+      "import": "./client/utils.js",
+      "types": "./client/utils.d.ts"
     }
   },
   "files": [
