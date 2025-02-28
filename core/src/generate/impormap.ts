@@ -10,11 +10,17 @@ import { generatedFolder } from "../conventions.ts";
 import type { Manifest } from "./manifest.ts";
 
 interface ImportMapOptions {
+  /**
+   * Whether to generate the dev importmap
+   */
   dev?: boolean;
   /**
    * Manually add a package target into the import map, including all its dependency resolutions via tracing
    */
   install?: string | Install | (string | Install)[];
+  /**
+   * Options passed to the jspm generator
+   */
   generatorOptions?: GeneratorOptions;
 }
 
@@ -34,7 +40,7 @@ const findLongestPrefix = (str: string, list: string[]) => {
   return bestMatch;
 };
 
-export const generateImportMap = async (
+export const pureImportMap = async (
   manifest: Manifest,
   denoImports: Record<string, string>,
   options?: ImportMapOptions,
@@ -126,7 +132,13 @@ export const generateImportMap = async (
   };
 };
 
-export const importMap = async (
+/**
+ * Generates the importmap of your project based on the current manifest. The file is saved inside `_generated/importmap.json`
+ *
+ * @param manifest The project manifest file
+ * @param options
+ */
+export const generateImportMap = async (
   manifest: Manifest,
   options?: ImportMapOptions & {
     /**
@@ -142,7 +154,7 @@ export const importMap = async (
 
   const denoConfig = readDenoConfig();
 
-  const importmap = await generateImportMap(
+  const importmap = await pureImportMap(
     manifest,
     denoConfig.imports ?? {},
     options,
