@@ -23,7 +23,7 @@ A full-stack framework built around Web Components and Web Standards:
   - [Elements](#elements)
   - [Type-safety](#type-safety)
   - [Scoped Handler Registry](#scoped-handler-registry)
-  - [Signals](#signals)
+  - [Reactivity](#reactivity)
   - [Directives](#directives)
     - [@attr directive](#attr-directive)
     - [@bind directive: declarative two-way bindings](#bind-directive-declarative-two-way-bindings)
@@ -147,7 +147,7 @@ The convention is that an element's folder and files are named after the element
 - `app/elements/my-element/my-element.html` contains the declarative shadow root template for the `<my-element>` element.
 - `app/elements/my-element/my-element.ts` contains the `MyElement` class defining the `<my-element>` custom element.
 
-Declarative shadowroot templates will be inlined at build time
+Declarative shadowroot templates are inlined at build time
 
 1. Custom element templates inside `app/elements/` must have the `shadowrootmode="open"` attribute to allow SSR.
 
@@ -184,13 +184,32 @@ In this example, the `handle-hover` custom element implements the `showTooltip` 
 
 This allows you to have a top-level registry implementing common handlers or hooks and removes the need for props drilling
 
-## Signals
+## Reactivity
 
-Reactive values can be created with the `$state<T>(value: T)` helper function, and reactive computations with the `$computed(() => void)` helper.
+The reactivity module is built around `@preact/signals-core` and provides the following helpers:
 
-The reactivity helpers are built on top of the [signals polyfill](https://github.com/proposal-signals/signal-polyfill)
+- the `signal<T>(value: T)` helper function creates a signal whose value can be accessed and modified in the code with the `.value` property. Inside templates signals are coerced to their value and can be referenced directly without `.value`
 
-Handler Registries have a `this.$effect(() => void)` method helper to create a effect which is automatically cleaned up when the element is disconnected.
+Example: given the field `name = signal("Radish")` in a parent handler, we can reference it directly:
+```html
+<parent-handler>
+  <span @text="name"></span>
+</parent-handler>
+```
+
+- the `computed(computation: () => void)` helper creates a read-only computed signal based on the values of other signals and is used similarly to a `signal`
+
+- the `reactive<T>(value: T)` helper creates a deeply reactive object or array. A reactive object or array is proxied and its properties can be accessed directly without `.value`
+
+```ts
+const obj = reactive({a: {b: 1}}) // A reactive object
+const a = computed(() => obj.a.b) // A reactive object is proxied and its properties can be accessed directly without `.value`
+
+obj.a.b = 2 // Deep reactivity
+console.log(a) // 2
+```
+
+- Handler Registries have a `this.effect(() => void)` method to create an effect which is automatically cleaned up when the element is disconnected. For advanced use cases an unowned effect can be created directly with the `effect` helper an accepts an abortion signal
 
 ## Directives
 
@@ -259,9 +278,8 @@ Example:
 
 ```ts
 export class HandleClass extends HandlerRegistry {
-  outline = $state(false);
-
-  classes = $object({
+  outline = signal(false);
+  classes = reactive({
     "red": false,
     "outline": this.outline,
   });
