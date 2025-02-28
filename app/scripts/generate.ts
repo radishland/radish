@@ -1,7 +1,7 @@
 import {
   build,
+  generateImportMap,
   generateManifest,
-  importMap,
   Manifest,
   mockGlobals,
 } from "@radish/core";
@@ -24,8 +24,18 @@ if (args.includes("--manifest")) {
   };
 
   if (args.includes("--importmap")) {
-    await importMap(manifest, {
-      install: ["@preact/signals-core"],
+    await generateImportMap(manifest, {
+      install: "@radishland/runtime@^0.1.0/boot",
+      transform: (importmap) => {
+        return JSON.stringify({
+          imports: {
+            ...importmap.imports,
+            // When using the development runtime version
+            // "radish": "/_radish/runtime/index.js",
+          },
+          scopes: importmap.scopes,
+        });
+      },
     });
   } else if (args.includes("--build")) {
     await build(manifest, { dev: false });

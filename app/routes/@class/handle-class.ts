@@ -1,5 +1,5 @@
-import { HandlerRegistry, reactive } from "radish/runtime";
-import { signal } from "radish/runtime";
+import { HandlerRegistry, reactive } from "radish";
+import { signal } from "radish";
 
 export class HandleClass extends HandlerRegistry {
   outline = signal(false);

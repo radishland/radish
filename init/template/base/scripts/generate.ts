@@ -1,10 +1,10 @@
 import {
   build,
+  generateImportMap,
   generateManifest,
-  importMap,
   type Manifest,
   mockGlobals,
-} from "radish";
+} from "radish/core";
 
 const args = Deno.args;
 
@@ -17,8 +17,8 @@ if (args.includes("--manifest")) {
   };
 
   if (args.includes("--importmap")) {
-    await importMap(manifest, {
-      install: ["signal-polyfill@^0.2.2"],
+    await generateImportMap(manifest, {
+      install: "@radishland/runtime@^0.1.0/boot",
     });
   } else if (args.includes("--build")) {
     await build(manifest, { dev: false });

@@ -1,4 +1,4 @@
-import { start } from "radish";
+import { start } from "radish/core";
 
 const dev = Deno.args.includes("--dev");
 

@@ -2,7 +2,10 @@ import { defineConfig } from "tsup";
 
 export default defineConfig({
   entry: ["src/index.ts", "src/boot.ts"],
+  outDir: "client",
+  clean: true,
   format: "esm",
+  target: "esnext",
   platform: "node",
   bundle: true,
   dts: true,
@@ -10,9 +13,6 @@ export default defineConfig({
   splitting: false,
   sourcemap: false,
   minify: false,
-  target: "esnext",
-  outDir: "client",
-  clean: true,
   tsconfig: "tsconfig.json",
   env: {
     NODE_ENV: "production",
