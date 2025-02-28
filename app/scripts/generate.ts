@@ -1,7 +1,7 @@
 import {
   build,
+  generateImportMap,
   generateManifest,
-  importMap,
   Manifest,
   mockGlobals,
 } from "@radish/core";
@@ -24,7 +24,7 @@ if (args.includes("--manifest")) {
   };
 
   if (args.includes("--importmap")) {
-    await importMap(manifest, {
+    await generateImportMap(manifest, {
       transform: (importmap) => {
         return JSON.stringify({
           imports: {

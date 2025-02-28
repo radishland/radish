@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert/equals";
-import { generateImportMap } from "../src/generate/impormap.ts";
+import { pureImportMap } from "../src/generate/impormap.ts";
 import type { ElementManifest } from "../src/generate/manifest.ts";
 
 const zeroElement = {
@@ -12,7 +12,7 @@ const zeroElement = {
 } satisfies ElementManifest;
 
 Deno.test("main import", async () => {
-  const importmap = await generateImportMap({
+  const importmap = await pureImportMap({
     elements: {
       a: {
         ...zeroElement,
@@ -32,7 +32,7 @@ Deno.test("main import", async () => {
 });
 
 Deno.test("subpath import", async () => {
-  const importmap = await generateImportMap({
+  const importmap = await pureImportMap({
     elements: {
       a: {
         ...zeroElement,
@@ -52,7 +52,7 @@ Deno.test("subpath import", async () => {
 });
 
 Deno.test("main & subpath imports", async () => {
-  const importmap = await generateImportMap({
+  const importmap = await pureImportMap({
     elements: {
       a: {
         ...zeroElement,
@@ -77,7 +77,7 @@ Deno.test("main & subpath imports", async () => {
 });
 
 Deno.test("filters unused packages", async () => {
-  const importmap = await generateImportMap({
+  const importmap = await pureImportMap({
     elements: {
       a: {
         ...zeroElement,
@@ -98,7 +98,7 @@ Deno.test("filters unused packages", async () => {
 });
 
 Deno.test("aliased relative import", async () => {
-  const importmap = await generateImportMap({
+  const importmap = await pureImportMap({
     elements: {
       a: {
         ...zeroElement,
@@ -118,7 +118,7 @@ Deno.test("aliased relative import", async () => {
 });
 
 Deno.test("rewrite aliased relative ts import", async () => {
-  const importmap = await generateImportMap({
+  const importmap = await pureImportMap({
     elements: {
       a: {
         ...zeroElement,
@@ -138,7 +138,7 @@ Deno.test("rewrite aliased relative ts import", async () => {
 });
 
 Deno.test("https target", async () => {
-  const importmap = await generateImportMap({
+  const importmap = await pureImportMap({
     elements: {
       a: {
         ...zeroElement,
