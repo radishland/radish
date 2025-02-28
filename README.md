@@ -5,7 +5,7 @@ A full-stack framework built around Web Components and Web Standards:
 - Simple, type-safe authoring
 - Server-Side rendered templates with declarative shadow root
 - Minimal, declarative API with signals and reactive directives
-- Ship readable, debuggable code with a near-no-build step
+- Ship readable, debuggable code with a near-zero build step and no bundle
 - Escape the js toolchain entropy
 - Less migration hell: platform API change slowly
 - Powered by Deno, secure by default
@@ -42,7 +42,7 @@ A full-stack framework built around Web Components and Web Standards:
 - Create a new project:
 
 ```sh
-deno run -A jsr:@radish/init@1.0.0-alpha-13 my-rad-project
+deno run -A jsr:@radish/init@1.0.0-alpha-16 my-rad-project
 ```
 
 or have a look at the /app folder of the repo for syntax examples
@@ -85,7 +85,7 @@ Where:
 
 ### Importmap
 
-When building your project, an importmap of the dependencies is generated and inlined in the  `head` of the html. This relies on the [importmap](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) Web Standard.
+When building your project, an importmap of the runtime dependencies is generated and inlined in the  `head` of the html. This relies on the [importmap](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) Web Standard.
 
 You have full control over the importmap generation, which is configurable in the `scripts/generate.ts` file:
 - a `transform(importmap: ImportMap): string` hook allows you to modify the generated importmap before the file is saved on disk.
