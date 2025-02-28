@@ -1,5 +1,6 @@
 {
   "name": "@radish/runtime",
+  "version": "0.1.1",
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts"
   },
@@ -13,6 +14,7 @@
   },
   "exports": {
     ".": "./src/handler-registry.ts",
-    "./reactivity": "./src/reactivity.ts"
+    "./reactivity": "./src/reactivity.ts",
+    "./utils": "./src/utils.ts"
   }
 }
