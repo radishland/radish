@@ -1,5 +1,5 @@
-import { HandlerRegistry } from "radish/runtime";
-import { computed, signal } from "radish/runtime";
+import { HandlerRegistry } from "radish";
+import { computed, signal } from "radish";
 
 export class HandleProp extends HandlerRegistry {
   pressed = signal(false);

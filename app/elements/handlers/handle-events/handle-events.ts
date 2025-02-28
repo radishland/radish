@@ -1,5 +1,5 @@
-import { HandlerRegistry } from "radish/runtime";
-import { signal } from "radish/runtime";
+import { HandlerRegistry } from "radish";
+import { signal } from "radish";
 
 export class HandleEvents extends HandlerRegistry {
   state = signal(1);

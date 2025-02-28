@@ -1,4 +1,4 @@
-import { HandlerRegistry } from "radish/runtime";
+import { HandlerRegistry } from "radish";
 
 export class MyComponent extends HandlerRegistry {
 }

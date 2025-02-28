@@ -1,4 +1,4 @@
-import { HandlerRegistry } from "radish/runtime";
+import { HandlerRegistry } from "radish";
 
 export class CustomElement extends HandlerRegistry {
   // Your custom element's logic goes here
