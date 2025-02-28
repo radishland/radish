@@ -4,7 +4,7 @@ import {
   generateManifest,
   type Manifest,
   mockGlobals,
-} from "radish/core";
+} from "$core";
 
 const args = Deno.args;
 

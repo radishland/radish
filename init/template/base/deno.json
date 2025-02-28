@@ -12,7 +12,7 @@
   },
   "nodeModulesDir": "auto",
   "imports": {
-    "radish/core": "jsr:@radish/core@^1.0.0-alpha.29",
-    "radish": "npm:@radishland/runtime@^0.1.0"
+    "$core": "jsr:@radish/core@^1.0.0-alpha.32",
+    "$runtime": "npm:@radishland/runtime@^0.1.0"
   }
 }

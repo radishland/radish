@@ -12,9 +12,9 @@ if (args.includes("--manifest")) {
   generateManifest({
     transform: (content) => {
       return content
-        .replace("radish/parser", "@radish/htmlcrunch")
-        .replace("radish/utils", "@radish/core/utils")
-        .replace(/[^@]radish[^/]/, '"@radish/core"');
+        .replace("$core/parser", "@radish/htmlcrunch")
+        .replace("$core/utils", "@radish/core/utils")
+        .replace("$core", "@radish/core");
     },
   });
 } else {

@@ -311,9 +311,9 @@ export const generateManifest = (
 ): void => {
   console.log("Generating manifest...");
 
-  let manifest = `import { fragments, shadowRoot } from "radish/parser";
-import { memoize } from 'radish/utils';
-import type { Manifest } from "radish";\n\n`;
+  let manifest = `import { fragments, shadowRoot } from "$core/parser";
+import { memoize } from '$core/utils';
+import type { Manifest } from "$core";\n\n`;
 
   crawlComponentsFolder();
   crawlRoutesFolder();
