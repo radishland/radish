@@ -25,8 +25,8 @@
     "jsr:@std/streams@^1.0.9": "1.0.9",
     "jsr:@std/tar@~0.1.5": "0.1.5",
     "npm:@jspm/generator@^2.5.1": "2.5.1_@babel+core@7.26.9",
+    "npm:@preact/signals-core@^1.8.0": "1.8.0",
     "npm:@types/node@*": "22.12.0",
-    "npm:signal-polyfill@~0.2.2": "0.2.2",
     "npm:tsup@^8.4.0": "8.4.0_typescript@5.7.3_esbuild@0.25.0",
     "npm:typescript@^5.7.2": "5.7.3",
     "npm:typescript@^5.7.3": "5.7.3"
@@ -491,6 +491,9 @@
     },
     "@pkgjs/parseargs@0.11.0": {
       "integrity": "sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg=="
+    },
+    "@preact/signals-core@1.8.0": {
+      "integrity": "sha512-OBvUsRZqNmjzCZXWLxkZfhcgT+Fk8DDcT/8vD6a1xhDemodyy87UJRJfASMuSD8FaAIeGgGm85ydXhm7lr4fyA=="
     },
     "@rollup/rollup-android-arm-eabi@4.34.8": {
       "integrity": "sha512-q217OSE8DTp8AFHuNHXo0Y86e1wtlfVrXiAlwkIvGRQv9zbc6mE3sjIVfwI8sYUyNxwOg0j/Vm1RKM04JcWLJw=="
@@ -1152,9 +1155,6 @@
     "signal-exit@4.1.0": {
       "integrity": "sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw=="
     },
-    "signal-polyfill@0.2.2": {
-      "integrity": "sha512-p63Y4Er5/eMQ9RHg0M0Y64NlsQKpiu6MDdhBXpyywRuWiPywhJTpKJ1iB5K2hJEbFZ0BnDS7ZkJ+0AfTuL37Rg=="
-    },
     "smart-buffer@4.2.0": {
       "integrity": "sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg=="
     },
@@ -1393,7 +1393,6 @@
   "workspace": {
     "dependencies": [
       "jsr:@fcrozatier/monarch@^2.5.4",
-      "jsr:@fcrozatier/type-strip@^1.2.0",
       "jsr:@std/assert@^1.0.11",
       "jsr:@std/cli@^1.0.13",
       "jsr:@std/dotenv@~0.225.3",
@@ -1402,17 +1401,20 @@
       "jsr:@std/http@^1.0.13",
       "jsr:@std/jsonc@^1.0.1",
       "jsr:@std/path@^1.0.8",
-      "jsr:@std/tar@~0.1.5",
-      "npm:@jspm/generator@^2.5.1"
+      "jsr:@std/tar@~0.1.5"
     ],
     "members": {
-      "runtime": {
+      "core": {
         "dependencies": [
-          "npm:signal-polyfill@~0.2.2"
-        ],
+          "jsr:@fcrozatier/monarch@^2.5.4",
+          "jsr:@fcrozatier/type-strip@^1.2.0",
+          "npm:@jspm/generator@^2.5.1"
+        ]
+      },
+      "runtime": {
         "packageJson": {
           "dependencies": [
-            "npm:signal-polyfill@~0.2.2",
+            "npm:@preact/signals-core@^1.8.0",
             "npm:tsup@^8.4.0",
             "npm:typescript@^5.7.3"
           ]

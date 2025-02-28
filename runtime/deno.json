@@ -1,4 +1,5 @@
 {
+  "name": "@radish/runtime",
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts"
   },
@@ -11,9 +12,7 @@
     "noImplicitOverride": true
   },
   "exports": {
-    ".": "./src/index.ts"
-  },
-  "imports": {
-    "signal-polyfill": "npm:signal-polyfill@^0.2.2"
+    ".": "./src/handler-registry.ts",
+    "./reactivity": "./src/reactivity.ts"
   }
 }

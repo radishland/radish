@@ -1,15 +1,15 @@
-import { $computed, $object, $state } from "radish/runtime";
+import { computed, reactive, signal } from "radish/runtime";
 import { HandlerRegistry } from "radish/runtime";
 
 export class HandleState extends HandlerRegistry {
-  count = $state(0);
-  checked = $computed(() => this.count.value % 2 === 0);
-  name = $state("");
-  interval = $state(0);
-  state = $object({
+  count = signal(0);
+  checked = computed(() => this.count.value % 2 === 0);
+  name = signal("");
+  interval = signal(0);
+  state = reactive({
     name: "fred",
   });
-  input_value = $computed(() => this.state.name);
+  input_value = computed(() => this.state.name);
 
   increment() {
     this.count.value++;

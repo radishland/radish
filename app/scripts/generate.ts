@@ -25,7 +25,7 @@ if (args.includes("--manifest")) {
 
   if (args.includes("--importmap")) {
     await importMap(manifest, {
-      install: ["signal-polyfill@^0.2.2"],
+      install: ["@preact/signals-core"],
     });
   } else if (args.includes("--build")) {
     await build(manifest, { dev: false });

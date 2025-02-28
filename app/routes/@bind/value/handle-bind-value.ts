@@ -1,9 +1,9 @@
 import { HandlerRegistry } from "radish/runtime";
-import { $state } from "radish/runtime";
+import { signal } from "radish/runtime";
 
 export class HandleBindValue extends HandlerRegistry {
   // Value: text
-  text = $state("hi");
+  text = signal("hi");
   inspectText() {
     console.log("text", this.text.value);
   }
@@ -15,7 +15,7 @@ export class HandleBindValue extends HandlerRegistry {
   }
 
   // Value: number
-  number = $state(0);
+  number = signal(0);
   inspectNumber() {
     console.log("number", this.number.value);
   }
@@ -27,7 +27,7 @@ export class HandleBindValue extends HandlerRegistry {
   }
 
   // Value: range
-  range = $state(3);
+  range = signal(3);
   inspectRange() {
     console.log("range", this.range.value);
   }
@@ -39,19 +39,19 @@ export class HandleBindValue extends HandlerRegistry {
   }
 
   // Value: date
-  date = $state("2025-02-28");
+  date = signal("2025-02-28");
   inspectDate() {
     console.log("date", this.date.value);
   }
 
   // Value: color
-  color = $state("#aaee00");
+  color = signal("#aaee00");
   inspectColor() {
     console.log("color", this.color.value);
   }
 
   // Textarea
-  textarea = $state("");
+  textarea = signal("");
   inspectTextarea() {
     console.log("color", this.textarea.value);
   }

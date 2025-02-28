@@ -1,8 +1,8 @@
 import { HandlerRegistry } from "radish/runtime";
-import { $effect, $state } from "radish/runtime";
+import { effect, signal } from "radish/runtime";
 
 export class MyInvoke extends HandlerRegistry {
-  state = $state(0);
+  state = signal(0);
 
   constructor() {
     super();
@@ -29,7 +29,7 @@ export class MyInvoke extends HandlerRegistry {
   }
 
   updateText(node: HTMLElement) {
-    return $effect(() => {
+    return effect(() => {
       node.textContent = `${this.state.value}`;
     });
   }

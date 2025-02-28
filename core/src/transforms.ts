@@ -1,4 +1,4 @@
-import type { Transform } from "$types";
+import type { Transform } from "./types.d.ts";
 
 import strip from "@fcrozatier/type-strip";
 

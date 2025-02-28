@@ -1,4 +1,4 @@
-import type { Transform } from "$types";
+import type { Transform } from "./types.d.ts";
 import { serializeFragments } from "@fcrozatier/monarch/html";
 import { emptyDirSync, ensureDirSync, existsSync, walkSync } from "@std/fs";
 import { dirname, extname, join } from "@std/path";

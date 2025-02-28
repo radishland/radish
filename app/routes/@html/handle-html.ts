@@ -1,10 +1,10 @@
 import { HandlerRegistry } from "radish/runtime";
-import { $state } from "radish/runtime";
+import { signal } from "radish/runtime";
 
 export class HandleHtml extends HandlerRegistry {
   html = "<input type=checkbox>";
-  htmlString = $state("");
-  on = $state(false);
+  htmlString = signal("");
+  on = signal(false);
 
   toggle() {
     this.on.value = !this.on.value;

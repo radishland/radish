@@ -10,17 +10,23 @@
     <button @on="click:increment">increment</button>
   </p>
   <p>
-    <input type="text" @on="input" @set="value:input_value" />
+    <input
+      type="text"
+      @on="input"
+      @attr="value:input_value"
+      @prop="value:input_value"
+    />
     <span @text="input_value"></span>
   </p>
   <p>
     <span @text="interval" @use="hookInterval"></span>
   </p>
+
+  <button id="rm">remove component</button>
 </handle-state>
 
 <p>TODO: path binding for accessing state</p>
 
-<button id="rm">remove component</button>
 <script>
   rm.addEventListener("click", () => {
     component.remove();

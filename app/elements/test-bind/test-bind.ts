@@ -1,19 +1,19 @@
 import { HandlerRegistry } from "radish/runtime";
-import { $state } from "radish/runtime";
+import { signal } from "radish/runtime";
 
 export class TestBind extends HandlerRegistry {
   type = "text";
-  value = $state("b");
+  value = signal("b");
 
   undefined_value = undefined;
-  undefined_signal = $state(undefined);
+  undefined_signal = signal(undefined);
 
   true = true;
   false = false;
-  signal_true = $state(true);
-  signal_false = $state(false);
+  signal_true = signal(true);
+  signal_false = signal(false);
 
-  content_signal = $state(0);
+  content_signal = signal(0);
 }
 
 if (window && !customElements.get("test-bind")) {

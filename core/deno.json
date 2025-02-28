@@ -1,5 +1,6 @@
 {
-  "workspace": ["./core", "./init", "./runtime", "./app", "./htmlcrunch"],
+  "name": "@radish/core",
+  "version": "1.0.0-alpha.31",
   "license": "MIT",
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts",
@@ -12,6 +13,11 @@
       "dependencies": ["load-env", "build"]
     }
   },
+  "exports": {
+    ".": "./exports/mod.ts",
+    "./parser": "./exports/parser.ts",
+    "./utils": "./src/utils.ts"
+  },
   "fmt": {
     "exclude": ["**/*.md"]
   },
@@ -20,21 +26,13 @@
     "checkJs": true,
     "noImplicitOverride": true
   },
-  "nodeModulesDir": "auto",
   "imports": {
     "$env": "./src/env.ts",
     "radish/runtime": "./runtime/src/index.ts",
 
-    "@std/assert": "jsr:@std/assert@^1.0.11",
-    "@std/cli": "jsr:@std/cli@^1.0.13",
-    "@std/dotenv": "jsr:@std/dotenv@^0.225.3",
-    "@std/fmt": "jsr:@std/fmt@^1.0.5",
-    "@std/fs": "jsr:@std/fs@^1.0.13",
-    "@std/http": "jsr:@std/http@^1.0.13",
-    "@std/jsonc": "jsr:@std/jsonc@^1.0.1",
-    "@std/path": "jsr:@std/path@^1.0.8",
-    "@std/tar": "jsr:@std/tar@^0.1.5",
+    "@fcrozatier/monarch": "jsr:@fcrozatier/monarch@^2.5.4",
+    "@fcrozatier/type-strip": "jsr:@fcrozatier/type-strip@^1.2.0",
 
-    "@fcrozatier/monarch": "jsr:@fcrozatier/monarch@^2.5.4"
+    "@jspm/generator": "npm:@jspm/generator@^2.5.1"
   }
 }

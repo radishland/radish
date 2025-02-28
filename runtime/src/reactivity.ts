@@ -1,179 +1,98 @@
-import { Signal } from "signal-polyfill";
-import type {
-  Destructor,
-  EffectCallback,
-  EffectOptions,
-  ReactivityOptions,
-} from "./types.d.ts";
+import {
+  computed as _computed,
+  effect as _effect,
+  type ReadonlySignal,
+  Signal,
+  signal as _signal,
+} from "@preact/signals-core";
+import type { Destructor, EffectCallback, EffectOptions } from "./types.d.ts";
+import { type } from "./utils.ts";
 
-// @ts-ignore we're hiding get and set
-export class ReactiveValue<T> extends Signal.State<T> {
-  // @ts-ignore see above
-  private override get;
-  // @ts-ignore see above
-  private override set;
+export const isState = (
+  value: unknown,
+): value is InstanceType<typeof Signal> => {
+  return value instanceof Signal;
+};
 
-  get value(): T {
-    return super.get();
-  }
+/**
+ * Creates a new signal
+ *
+ * @param value The initial value
+ */
+export const signal = <T>(value: T): Signal<T> => {
+  return _signal(value);
+};
 
-  set value(newValue: T) {
-    super.set(newValue);
-  }
-}
+/**
+ * Creates a read-only computed signal based on the values of other signals
+ *
+ * The computed value is updated when a tracked dependency changes
+ *
+ * @param computation The callback function doing the computation
+ */
+export const computed = <T>(computation: () => T): ReadonlySignal<T> => {
+  return _computed(computation);
+};
 
-// @ts-ignore we're hiding get and set
-export class ReactiveComputation<T> extends Signal.Computed<T> {
-  // @ts-ignore see above
-  private override get;
+/**
+ * Creates an unowned effect that must be cleaned up manually and runs arbitrary code in response to signals change.
+ *
+ * @param cb The effect callback to run when a tracked dependency changes. Can return a cleanup function, executed when the effect is re-run or is disposed of.
+ *
+ * @param options An AbortSignal can be passed to abort the effect
+ *
+ * @return a function to unsubscribe and cleanup the effect
+ */
+export const effect = (
+  cb: EffectCallback,
+  options?: EffectOptions,
+): Destructor => {
+  if (options?.signal.aborted) return () => {};
 
-  get value(): T {
-    return super.get();
-  }
-}
+  const dispose = _effect(cb);
+  options?.signal.addEventListener("abort", dispose);
 
-const maybeReactiveObjectType = <T>(thing: T, options: ReactivityOptions) => {
-  if (typeof thing === "object") {
-    if (Array.isArray(thing)) {
-      return $array(thing, options);
-    } else if (thing) {
-      return $object(thing, options);
-    }
+  return dispose;
+};
+
+/**
+ * Creates a deeply reactive proxied object or array
+ *
+ * @example  const obj = reactive({ a: { b: { c: 1 } } });
+  const computation = computed(() => obj.a.b.c * 2});
+
+  assertEquals(computation.value, 2);
+  obj.a.b.c = 2;
+  assertEquals(computation.value, 4);
+ */
+export const reactive = <T>(thing: T): T => {
+  if (type(thing) === "object" || type(thing) === "array") {
+    // @ts-ignore we've already enforced the type
+    return object(thing);
   }
   return thing;
 };
 
-export const $object = <T extends Record<PropertyKey, any>>(
+const object = <T extends Record<PropertyKey, any>>(
   init: T,
-  options: ReactivityOptions = { deep: false },
 ): T => {
-  if (options.deep === true) {
-    for (const [key, value] of Object.entries(init)) {
-      init[key as keyof T] = maybeReactiveObjectType(value, options);
-    }
+  for (const [key, value] of Object.entries(init) as [keyof T, any][]) {
+    init[key] = reactive(value);
   }
-  const state = new Signal.State(init);
+  const state = signal(init);
 
   const proxy = new Proxy(init, {
     get(_target, p, _receiver) {
-      return state.get()[p];
+      return state.value[p];
     },
-    set(_target, p, newValue, _receiver) {
-      state.set({
-        ...state.get(),
-        [p]: maybeReactiveObjectType(newValue, options),
-      });
+    set(_target, p: keyof T, newValue, _receiver) {
+      state.value = {
+        ...state.value,
+        [p]: reactive(newValue),
+      };
       return true;
     },
   });
 
   return proxy;
-};
-
-export const $array = <T extends ArrayLike<any>>(
-  init: T,
-  options: ReactivityOptions = { deep: false },
-): T => {
-  if (options.deep) {
-    for (const [key, value] of Object.entries(init)) {
-      init[key as keyof T] = maybeReactiveObjectType(value, options);
-    }
-  }
-  const state = new Signal.State(init);
-
-  const proxy = new Proxy(init, {
-    get(_target, p, _receiver) {
-      // @ts-ignore state has p
-      return state.get()[p];
-    },
-    set(_target, p, newValue, _receiver) {
-      state.set({
-        ...state.get(),
-        [p]: maybeReactiveObjectType(newValue, options),
-      });
-      return true;
-    },
-  });
-
-  return proxy;
-};
-
-export const isState = (
-  s: unknown,
-): s is InstanceType<typeof ReactiveValue> => {
-  return Signal.isState(s);
-};
-
-export const isComputed = (
-  s: unknown,
-): s is InstanceType<typeof ReactiveComputation> => {
-  return Signal.isComputed(s);
-};
-
-export const getValue = (signal: unknown): unknown => {
-  if (isState(signal) || isComputed(signal)) {
-    return signal.value;
-  }
-  return signal;
-};
-
-export const $state = <T>(
-  initialValue: T,
-  options?: Signal.Options<T | undefined>,
-): ReactiveValue<T> => {
-  return new ReactiveValue(initialValue, options);
-};
-
-export const $computed = <T>(
-  computation: () => T,
-  options?: Signal.Options<T>,
-): ReactiveComputation<T> => {
-  return new ReactiveComputation(computation, options);
-};
-
-let pending = false;
-
-const watcher = new Signal.subtle.Watcher(() => {
-  if (!pending) {
-    pending = true;
-
-    queueMicrotask(() => {
-      pending = false;
-      for (const s of watcher.getPending()) s.get();
-      watcher.watch();
-    });
-  }
-});
-
-/**
- * Create an unowned effect that must be cleanup up manually
- *
- * Accept an AbortSignal to abort the effect
- */
-export const $effect = (
-  cb: EffectCallback,
-  options?: EffectOptions,
-): Destructor => {
-  if (options?.signal?.aborted) return () => {};
-
-  let destroy: Destructor | undefined;
-  const c = new Signal.Computed(() => {
-    destroy?.();
-    destroy = cb() ?? undefined;
-  });
-  watcher.watch(c);
-  c.get();
-
-  let cleaned = false;
-
-  const cleanup = () => {
-    if (cleaned) return;
-    destroy?.();
-    watcher.unwatch(c);
-    cleaned = true;
-  };
-
-  options?.signal.addEventListener("abort", cleanup);
-
-  return cleanup;
 };

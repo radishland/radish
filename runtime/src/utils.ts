@@ -43,6 +43,72 @@ export const toPascalCase = (str: string) => {
   return pascal;
 };
 
+type LooseAutocomplete<T extends string> = T | Omit<string, T>;
+
+type Types = LooseAutocomplete<
+  | "null"
+  | "undefined"
+  | "boolean"
+  | "number"
+  | "bigint"
+  | "string"
+  | "symbol"
+  | "function"
+  | "class"
+  | "array"
+  | "date"
+  | "error"
+  | "regexp"
+  | "object"
+>;
+
+/**
+ * A more reliable `typeof` function
+ */
+export function type(value: unknown): Types {
+  if (value === null) {
+    return "null";
+  }
+
+  if (value === undefined) {
+    return "undefined";
+  }
+
+  const baseType = typeof value;
+  // Primitive types
+  if (!["object", "function"].includes(baseType)) {
+    return baseType;
+  }
+
+  // Symbol.toStringTag often specifies the "display name" of the
+  // object's class. It's used in Object.prototype.toString().
+  if (typeof value === "object" && Symbol.toStringTag in value) {
+    const tag = value[Symbol.toStringTag];
+    if (typeof tag === "string") {
+      return tag;
+    }
+  }
+
+  // If it's a function whose source code starts with the "class" keyword
+  if (
+    baseType === "function" &&
+    Function.prototype.toString.call(value).startsWith("class")
+  ) {
+    return "class";
+  }
+
+  // The name of the constructor; for example `Array`, `GeneratorFunction`,
+  // `Number`, `String`, `Boolean` or `MyCustomClass`
+  const className = value.constructor.name;
+  if (typeof className === "string" && className !== "") {
+    return className.toLowerCase();
+  }
+
+  // At this point there's no robust way to get the type of value,
+  // so we use the base implementation.
+  return baseType;
+}
+
 export const booleanAttributes = [
   "allowfullscreen", // on <iframe>
   "async", // on <script>

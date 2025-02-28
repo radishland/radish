@@ -1,8 +1,8 @@
 import { HandlerRegistry } from "radish/runtime";
-import { $state } from "radish/runtime";
+import { signal } from "radish/runtime";
 
 export class HandleEvents extends HandlerRegistry {
-  state = $state(1);
+  state = signal(1);
 
   clickHandler() {
     console.log("you clicked");

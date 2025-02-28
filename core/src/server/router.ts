@@ -56,7 +56,7 @@ export class Router {
     const dirname = import.meta.dirname;
 
     if (dirname) {
-      const client = join(dirname, "..", "..", "runtime", "client");
+      const client = join(dirname, "..", "..", "..", "runtime", "client");
       this.serveStatic({ pathname: "/_radish/runtime/*" }, {
         fsRoot: client,
         urlRoot: "_radish/runtime",

@@ -1,9 +1,9 @@
 import { HandlerRegistry } from "radish/runtime";
-import { $state } from "radish/runtime";
+import { signal } from "radish/runtime";
 
 export class HandleBindChecked extends HandlerRegistry {
   // Checked
-  checked = $state(true);
+  checked = signal(true);
   inspectChecked() {
     console.log("checked", this.checked.value);
   }

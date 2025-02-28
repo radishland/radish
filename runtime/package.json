@@ -1,9 +1,16 @@
 {
   "name": "@radishland/runtime",
-  "version": "0.0.8",
+  "version": "0.1.0",
   "type": "module",
   "description": "The Radish runtime",
   "author": "Frédéric Crozatier",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/radishland/radish.git"
+  },
+  "bugs": {
+    "url": "https://github.com/radishland/radish/issues"
+  },
   "license": "MIT",
   "scripts": {
     "build": "tsup",
@@ -13,6 +20,10 @@
     ".": {
       "import": "./client/index.js",
       "types": "./client/index.d.ts"
+    },
+    "./boot": {
+      "import": "./client/boot.js",
+      "types": "./client/boot.d.ts"
     }
   },
   "files": [
@@ -21,8 +32,12 @@
     "LICENCE",
     "package.json"
   ],
+  "keywords": [
+    "radish",
+    "runtime"
+  ],
   "dependencies": {
-    "signal-polyfill": "^0.2.2"
+    "@preact/signals-core": "^1.8.0"
   },
   "devDependencies": {
     "tsup": "^8.4.0",
