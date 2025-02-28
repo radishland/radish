@@ -20,6 +20,10 @@
     ".": {
       "import": "./client/index.js",
       "types": "./client/index.d.ts"
+    },
+    "./boot": {
+      "import": "./client/boot.js",
+      "types": "./client/boot.d.ts"
     }
   },
   "files": [
