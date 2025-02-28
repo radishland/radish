@@ -12,7 +12,7 @@
   },
   "nodeModulesDir": "auto",
   "imports": {
-    "radish": "jsr:@radish/core@^1.0.0-alpha.29",
-    "signal-polyfill": "npm:signal-polyfill@^0.2.2"
+    "radish/core": "jsr:@radish/core@^1.0.0-alpha.29",
+    "radish": "npm:@radishland/runtime@^0.1.0"
   }
 }
