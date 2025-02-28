@@ -28,11 +28,11 @@
   },
   "imports": {
     "$env": "./src/env.ts",
-    "radish/runtime": "./runtime/src/index.ts",
 
     "@fcrozatier/monarch": "jsr:@fcrozatier/monarch@^2.5.4",
     "@fcrozatier/type-strip": "jsr:@fcrozatier/type-strip@^1.2.0",
 
-    "@jspm/generator": "npm:@jspm/generator@^2.5.1"
+    "@jspm/generator": "npm:@jspm/generator@^2.5.1",
+    "@jspm/import-map": "npm:@jspm/import-map@^1.1.0"
   }
 }

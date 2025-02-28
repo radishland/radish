@@ -3,14 +3,11 @@ import {
   type GeneratorOptions,
   type Install,
 } from "@jspm/generator";
-import type { Manifest } from "./manifest.ts";
+import type { IImportMap } from "@jspm/import-map";
 import { join } from "@std/path";
-import { generatedFolder } from "../conventions.ts";
 import { readDenoConfig } from "../config.ts";
-
-type ImportmapObject = {
-  imports: Record<string, string>;
-};
+import { generatedFolder } from "../conventions.ts";
+import type { Manifest } from "./manifest.ts";
 
 interface ImportMapOptions {
   dev?: boolean;
@@ -41,7 +38,7 @@ export const generateImportMap = async (
   manifest: Manifest,
   denoImports: Record<string, string>,
   options?: ImportMapOptions,
-): Promise<ImportmapObject> => {
+): Promise<IImportMap> => {
   const { dev, generatorOptions } = { ...options, dev: false };
   const projectImports = new Set<string>();
 
@@ -57,7 +54,7 @@ export const generateImportMap = async (
   const aliases = Object.keys(denoImports);
   const symbol = Symbol("remaining");
 
-  // Focus on aliased imports as relative imports are fine
+  // Split the deno importmap in groups of used aliases with their target subpaths, leaving non-used aliases and relative imports
   const projectAliasTargetMap = Object.groupBy(projectImports, (item) => {
     return findLongestPrefix(item, aliases) ?? symbol;
   });
@@ -85,10 +82,7 @@ export const generateImportMap = async (
   });
 
   // For relative imports and https: targets
-  const manualImportMap = new Map<string, string>([[
-    "radish/runtime",
-    "/_radish/runtime/index.js",
-  ]]);
+  const manualImportMap = new Map<string, string>();
 
   for (const [alias, specifiers] of Object.entries(projectAliasTargetMap)) {
     const target = denoImports[alias];
@@ -123,17 +117,26 @@ export const generateImportMap = async (
     await generator.install(options.install);
   }
 
+  const { imports, scopes, integrity } = generator.getMap();
+
   return {
-    imports: {
-      ...generator.getMap().imports,
-      ...Object.fromEntries(manualImportMap.entries()),
-    },
+    imports: { ...imports, ...Object.fromEntries(manualImportMap.entries()) },
+    scopes,
+    integrity,
   };
 };
 
 export const importMap = async (
   manifest: Manifest,
-  options?: ImportMapOptions,
+  options?: ImportMapOptions & {
+    /**
+     * Provides a transform hook giving you full control over the generated importmap
+     *
+     * @param importmap The generated importmap
+     * @return The JSON stringified importmap
+     */
+    transform?: (importmap: IImportMap) => string;
+  },
 ): Promise<void> => {
   console.log("Generating importmap...");
 
@@ -147,6 +150,8 @@ export const importMap = async (
 
   Deno.writeTextFileSync(
     join(generatedFolder, "importmap.json"),
-    JSON.stringify(importmap),
+    options?.transform
+      ? options.transform(importmap)
+      : JSON.stringify(importmap),
   );
 };

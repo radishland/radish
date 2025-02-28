@@ -25,7 +25,15 @@ if (args.includes("--manifest")) {
 
   if (args.includes("--importmap")) {
     await importMap(manifest, {
-      install: ["@preact/signals-core"],
+      transform: (importmap) => {
+        return JSON.stringify({
+          imports: {
+            ...importmap.imports,
+            // "radish": "/_radish/runtime/index.js",
+          },
+          scopes: importmap.scopes,
+        });
+      },
     });
   } else if (args.includes("--build")) {
     await build(manifest, { dev: false });
