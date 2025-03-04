@@ -11,14 +11,11 @@ A full-stack framework built around Web Components and Web Standards:
 - Powered by Deno, secure by default
 - A disappearing framework that fades away as the platform evolves
 
-> Web Components are here to stay, you should get on board now!
+> Web Components are here to stay, get on board now!
 
 - [Radish!](#radish)
   - [Try out the alpha](#try-out-the-alpha)
   - [Project structure](#project-structure)
-  - [Concepts](#concepts)
-    - [Importmap](#importmap)
-    - [No bundle](#no-bundle)
   - [Routing](#routing)
     - [Dynamic routes](#dynamic-routes)
     - [Non-capturing groups](#non-capturing-groups)
@@ -36,6 +33,9 @@ A full-stack framework built around Web Components and Web Standards:
     - [@on directive: declarative event handlers](#on-directive-declarative-event-handlers)
     - [@prop directive](#prop-directive)
     - [@use directive: declarative hooks](#use-directive-declarative-hooks)
+  - [Build](#build)
+    - [Importmap](#importmap)
+    - [No bundle](#no-bundle)
 
 ## Try out the alpha
 
@@ -81,44 +81,7 @@ Where:
 - `static` contains the static assets that should be served as-is
 - the `start.ts` script calls the `start` function and passes it your config.
 
-## Concepts
 
-### Importmap
-
-When building your project, an importmap of the runtime dependencies is generated and inlined in the  `head` of the html. This relies on the [importmap](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) Web Standard.
-
-You have full control over the importmap generation, which is configurable in the `scripts/generate.ts` file:
-- a `transform(importmap: ImportMap): string` hook allows you to modify the generated importmap before the file is saved on disk.
-- an `install` option lets you force install any package that can't be statically detected.
-- further options (default registry, custom providers etc) can be passed to the generator
-
-Example. We dynamically import `my-package` and want to override a module with a local one:
-
-```ts
-await generateImportMap(manifest, {
-  install: { target: "my-package@^1.2.3", alias: "$my-lib" }, // Force a package in the importmap
-  transform: (importmap) => {
-    return JSON.stringify({
-      imports: {
-        ...importmap.imports,
-        "mod": "/mod.js", // Override `mod` resolution
-      },
-      scopes: importmap.scopes,
-    });
-  },
-});
-```
-
-> [!NOTE]
-> Most of the time the automatic generation should be enough and you won't have to edit this file too often.
-
-### No bundle
-
-The production importmap lets the browser resolve dependencies (and their dependencies) from standard CDNs. This means that your code and dependencies are not bundled together, and instead there is a clean separation between the code that you author and everything else. This has several benefits:
-
-- Better caching. Dependencies can be cached by the browser separately from your modules, so that updating a typo in your code only invalidates that file.
-- Smaller downloads. Since dependencies are not inlined with your code, they're only downloaded on first load or whenever you update their version; not with every bundle.
-- Less bandwidth usage. Resolving dependencies client-side and downloading them from CDNs means that much less traffic on your infrastructure. This can make a difference in terms of cost and usage
 
 ## Routing
 
@@ -394,3 +357,42 @@ hook(element: Element){
 ```
 
 You can use a hook defined in a parent handler registry, similar to if it were automatically passed via a context API
+
+## Build
+
+### Importmap
+
+When building your project, an importmap of the runtime dependencies is generated and inlined in the  `head` of the html. This relies on the [importmap](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) Web Standard.
+
+You have full control over the importmap generation, which is configurable in the `scripts/generate.ts` file:
+- a `transform(importmap: ImportMap): string` hook allows you to modify the generated importmap before the file is saved on disk.
+- an `install` option lets you force install any package that can't be statically detected.
+- further options (default registry, custom providers etc) can be passed to the jspm generator
+
+Example. We dynamically import `my-package` and want to override a module with a local one:
+
+```ts
+await generateImportMap(manifest, {
+  install: { target: "my-package@^1.2.3", alias: "$my-lib" }, // Force a package in the importmap
+  transform: (importmap) => {
+    return JSON.stringify({
+      imports: {
+        ...importmap.imports,
+        "mod": "/mod.js", // Override `mod` resolution
+      },
+      scopes: importmap.scopes,
+    });
+  },
+});
+```
+
+> [!NOTE]
+> Most of the time the automatic generation should be enough and you won't have to edit this file too often.
+
+### No bundle
+
+The production importmap lets the browser resolve dependencies (and their dependencies) from standard CDNs. This means that your code and dependencies are not bundled together, and instead there is a clean separation between the code that you author and everything else. This has several benefits:
+
+- Better caching. Dependencies can be cached by the browser separately from your modules, so that updating a typo in your code only invalidates that file.
+- Smaller downloads. Since dependencies are not inlined with your code, they're only downloaded on first load or whenever you update their version; not with every bundle.
+- Less bandwidth usage. Resolving dependencies client-side and downloading them from CDNs means that much less traffic on your infrastructure. This can make a difference in terms of cost and usage
