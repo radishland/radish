@@ -33,6 +33,8 @@ A full-stack framework built around Web Components and Web Standards:
     - [@on directive: declarative event handlers](#on-directive-declarative-event-handlers)
     - [@prop directive](#prop-directive)
     - [@use directive: declarative hooks](#use-directive-declarative-hooks)
+  - [Special elements](#special-elements)
+    - [radish:head](#radishhead)
   - [Build](#build)
     - [Importmap](#importmap)
     - [No bundle](#no-bundle)
@@ -357,6 +359,20 @@ hook(element: Element){
 ```
 
 You can use a hook defined in a parent handler registry, similar to if it were automatically passed via a context API
+
+## Special elements
+
+### <radish:head>
+
+This component lets you declaratively add content to the document's head, and provide it with a title, description etc.
+
+It must appear at the top-level of your component
+
+```html
+<radish:head>
+  <title></title>
+</radish:head>
+```
 
 ## Build
 
