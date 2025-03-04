@@ -82,7 +82,7 @@ export const comment: Parser<MCommentNode> = bracket(
   literal("<!--"),
   regex(/^(?!>|->)(?:.|\n)*?(?=(?:<\!--|-->|--!>|<!-)|$)/),
   literal("-->"),
-).map((text) => commentNode(text));
+).map(commentNode);
 
 /**
  * Parses a sequence of comments maybe surrounded by whitespace
@@ -93,7 +93,7 @@ export const spacesAndComments: Parser<MSpacesAndComments> = sequence(
     sepBy(comment, whitespaces),
     whitespaceOnlyText,
   ],
-).map(([space1, comments, space2]) => [space1, ...comments, space2]);
+).map((res) => res.flat());
 
 /**
  * Parses a modern HTML doctype
@@ -252,10 +252,7 @@ export const shadowRoot: Parser<MFragment> = createParser(
     const result = sequence([
       spacesAndComments,
       element,
-    ]).map(([comments, element]) => [...comments, element]).parse(
-      input,
-      position,
-    );
+    ]).map((res) => res.flat()).parse(input, position);
 
     if (!result.success) return result;
 

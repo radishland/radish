@@ -1,1 +1,1 @@
-export { fragments, html, shadowRoot } from "@fcrozatier/monarch/html";
+export { fragments, html, shadowRoot } from "@radish/htmlcrunch";

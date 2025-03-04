@@ -28,7 +28,7 @@ export class HandlerRegistry extends HTMLElement
    *
    * The `abort` method of the controller is called in the `disconnectedCallback` method. It allows to cleanup event handlers and other abortable operations
    */
-  abortController = new AbortController();
+  abortController: AbortController = new AbortController();
 
   constructor() {
     super();

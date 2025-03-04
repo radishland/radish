@@ -5,7 +5,7 @@ import {
   type MNode,
   serializeFragments,
   textNode,
-} from "@fcrozatier/monarch/html";
+} from "@radish/htmlcrunch";
 import type { HandlerRegistry } from "@radish/runtime";
 import { bindingConfig, spaces_sep_by_comma } from "@radish/runtime/utils";
 import {
