@@ -215,6 +215,15 @@ Deno.test("void_element", () => {
     kind: Kind.VOID,
     attributes: [["type", "text"]],
   });
+
+  // The closing slash becomes part of the unquoted attribute value
+  // https://html.spec.whatwg.org/#start-tags
+  const unquoted_attr_then_slash = element.parseOrThrow("<input type=text/>");
+  assertEquals(unquoted_attr_then_slash, {
+    tagName: "input",
+    kind: Kind.VOID,
+    attributes: [["type", "text/"]],
+  });
 });
 
 Deno.test("void_elements", () => {
