@@ -6,7 +6,7 @@
     "check": "deno fmt --check && deno lint && deno check **/*.ts"
   },
   "exports": {
-    ".": "./mod.ts"
+    ".": "./index.ts"
   },
   "fmt": {
     "exclude": ["**/*.md"]
