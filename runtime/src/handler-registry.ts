@@ -1,4 +1,8 @@
-import { bindingConfig, booleanAttributes } from "./utils.ts";
+import {
+  bindingConfig,
+  booleanAttributes,
+  spaces_sep_by_comma,
+} from "./utils.ts";
 
 import { effect, isState } from "./reactivity.ts";
 import type {
@@ -31,11 +35,11 @@ export class HandlerRegistry extends HTMLElement
    *
    * The `abort` method of the controller is called in the `disconnectedCallback` method. It allows to cleanup event handlers and other abortable operations
    */
-  abortController: AbortController;
+  abortController = new AbortController();
 
   constructor() {
     super();
-    this.abortController = new AbortController();
+    console.log(`${this.tagName} init`);
   }
 
   /**
@@ -44,7 +48,7 @@ export class HandlerRegistry extends HTMLElement
    * An optional AbortSignal can be provided to abort the effect prematurely
    */
   effect(callback: EffectCallback) {
-    effect(callback, { signal: this.abortController.signal });
+    effect(callback, this.abortController);
   }
 
   /**
@@ -52,6 +56,185 @@ export class HandlerRegistry extends HTMLElement
    */
   lookup(identifier: string): any {
     return this[identifier];
+  }
+
+  #hydrateElement(element: Element) {
+    const attributes = ["@attr", "@attr|client"]
+      .map((item) => element?.getAttribute(item))
+      .filter((attr) => attr !== null && attr !== undefined)
+      .flatMap((attr) => attr.trim().split(spaces_sep_by_comma));
+
+    for (const attribute of attributes) {
+      const [key, value] = attribute.split(":");
+
+      const attrRequest = new CustomEvent("@attr-request", {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        detail: {
+          attribute: key,
+          identifier: value || key,
+        },
+      });
+
+      element.dispatchEvent(attrRequest);
+    }
+
+    for (const property of Object.keys(bindingConfig)) {
+      if (element.hasAttribute(`@bind:${property}`)) {
+        const identifier = element.getAttribute(`@bind:${property}`)?.trim() ||
+          property;
+
+        const bindRequest = new CustomEvent("@bind-request", {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+          detail: {
+            property,
+            identifier,
+          },
+        });
+
+        element.dispatchEvent(bindRequest);
+      }
+    }
+
+    const classList = element.getAttribute("@class");
+
+    if (classList) {
+      const classRequest = new CustomEvent("@class-request", {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        detail: {
+          identifier: classList,
+        },
+      });
+
+      element.dispatchEvent(classRequest);
+    }
+
+    const html = element.getAttribute("@html");
+
+    if (html) {
+      const htmlRequest = new CustomEvent("@html-request", {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        detail: {
+          identifier: html,
+        },
+      });
+
+      element.dispatchEvent(htmlRequest);
+    }
+
+    const events = element.getAttribute("@on")
+      ?.trim().split(spaces_sep_by_comma);
+
+    if (events) {
+      for (const event of events) {
+        const [type, handler] = event.split(":");
+
+        const onRequest = new CustomEvent("@on-request", {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+          detail: {
+            type,
+            handler: handler || type,
+          },
+        });
+
+        element.dispatchEvent(onRequest);
+      }
+    }
+
+    const props = element.getAttribute("@prop")
+      ?.trim().split(spaces_sep_by_comma);
+
+    if (props) {
+      for (const prop of props) {
+        const [key, value] = prop.split(":");
+
+        const propRequest = new CustomEvent("@prop-request", {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+          detail: {
+            property: key,
+            identifier: value || key,
+          },
+        });
+
+        element.dispatchEvent(propRequest);
+      }
+    }
+
+    const text = element.getAttribute("@text");
+
+    if (text) {
+      const textRequest = new CustomEvent("@text-request", {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        detail: {
+          identifier: text,
+        },
+      });
+
+      element.dispatchEvent(textRequest);
+    }
+
+    const hooks = element.getAttribute("@use")
+      ?.trim().split(spaces_sep_by_comma);
+
+    if (hooks) {
+      for (const hook of hooks) {
+        const useRequest = new CustomEvent("@use-request", {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+          detail: {
+            hook,
+          },
+        });
+
+        element.dispatchEvent(useRequest);
+      }
+    }
+  }
+
+  hydrate(root: Node = this) {
+    console.log(`${this.tagName} hydrating`);
+
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+
+    let node: Node | null = walker.currentNode;
+    // console.log(" element:", node);
+    do {
+      if ((node instanceof HandlerRegistry) && node !== this) {
+        node.hydrate();
+        node = walker.nextSibling() || walker.parentNode();
+        // console.log(" skip to next element :", node);
+        if (node !== this) continue;
+        break;
+      }
+
+      if (node instanceof Element) {
+        // console.log(node.tagName);
+        this.#hydrateElement(node);
+
+        if (node.shadowRoot) {
+          // console.log("entering shadow root");
+          this.hydrate(node.shadowRoot);
+          // console.log("exiting shadow root");
+        }
+      }
+
+      node = walker.nextNode();
+      // console.log("next element:", node);
+    } while (node);
   }
 
   #handleOn(e: Event) {
@@ -218,6 +401,7 @@ export class HandlerRegistry extends HTMLElement
   }
 
   connectedCallback() {
+    console.log(`${this.tagName} connected`);
     const { signal } = this.abortController;
 
     this.addEventListener("@attr-request", this.#handleAttr, { signal });
