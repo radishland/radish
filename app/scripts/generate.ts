@@ -25,13 +25,15 @@ if (args.includes("--manifest")) {
 
   if (args.includes("--importmap")) {
     await generateImportMap(manifest, {
-      install: "@radishland/runtime@^0.1.0/boot",
+      // When using the development runtime version
+      install: "@preact/signals-core",
       transform: (importmap) => {
         return JSON.stringify({
           imports: {
             ...importmap.imports,
             // When using the development runtime version
-            // "radish": "/_radish/runtime/index.js",
+            "radish": "/_radish/runtime/index.js",
+            "radish/boot": "/_radish/runtime/boot.js",
           },
           scopes: importmap.scopes,
         });
