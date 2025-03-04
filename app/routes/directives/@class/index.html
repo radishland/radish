@@ -1,3 +1,11 @@
+<radish:head>
+  <title>The @class directive</title>
+  <script
+    type="module"
+    src="/routes/directives/@class/handle-class.js"
+  ></script>
+</radish:head>
+
 <style>
   .btn {
     padding: 10px 20px;
@@ -41,8 +49,3 @@
     <button class="btn" @on="click:toggleOutline">toggle outline</button>
   </p>
 </handle-class>
-
-<script
-  type="module"
-  src="/routes/@class/handle-class.js"
-></script>

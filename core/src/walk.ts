@@ -63,7 +63,7 @@ const setAttribute = (
 const server_attr_directive = /@attr(\|server)?/;
 
 /**
- * Transforms a component tree by applying server-side effects: [[set]], [[bind]], [[template inclusion]]
+ * Transforms a component tree by applying server-side effects: [[bind]], [[template inclusion]] etc
  */
 export function applyServerEffects(
   element: MNode,

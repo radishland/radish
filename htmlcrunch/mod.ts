@@ -136,12 +136,21 @@ export const attribute: Parser<[string, string]> = first<[string, string]>(
   attributeName.map((name) => [name, ""]),
 ).skip(whitespaces);
 
-// Tags
-const tagName = regex(/^[a-zA-Z][a-zA-Z0-9-]*/)
+/**
+ * Parses a tag name as extended ASCII alphanumeric
+ *
+ * HTML tag names are ASCII alphanumeric only
+ * https://html.spec.whatwg.org/#syntax-tag-name
+ *
+ * More generally XML names can have colon, dashes etc.
+ * https://www.w3.org/TR/REC-xml/#NT-NameStartChar
+ */
+const tagName = regex(/^[a-zA-Z:_][a-zA-Z0-9-:_.]*/)
   .skip(whitespaces)
   .map((name) => name.toLowerCase())
-  .error("Expected an ASCII alphanumeric tag name");
+  .error("Invalid tag name");
 
+// https://html.spec.whatwg.org/#start-tags
 const startTag: Parser<
   { tagName: string; attributes: [string, string][] }
 > = sequence([

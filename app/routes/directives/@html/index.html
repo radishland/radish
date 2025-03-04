@@ -1,3 +1,11 @@
+<radish:head>
+  <title>The @html directive</title>
+  <script
+    type="module"
+    src="/routes/directives/@html/handle-html.js"
+  ></script>
+</radish:head>
+
 <handle-html>
   <div @html="html"></div>
   <!-- <button @on="click:toggle">toggle checkbox</button> -->
@@ -12,8 +20,3 @@
     The checkbox is an @html string
   </p>
 </handle-html>
-
-<script
-  type="module"
-  src="/routes/@html/handle-html.js"
-></script>
