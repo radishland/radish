@@ -1,40 +1,25 @@
-export type OnRequestDetail = {
+export interface HandleRequestDetail {
+  target: EventTarget;
+  identifier: string;
+}
+
+export interface OnRequestDetail extends HandleRequestDetail {
   type: string;
-  handler: string;
-};
+}
 
-export type UseRequestDetail = {
-  hook: string;
-};
-
-export type AttrRequestDetail = {
+export interface AttrRequestDetail extends HandleRequestDetail {
   attribute: string;
-  identifier: string;
-};
+}
 
-export type PropRequestDetail = {
+export interface PropRequestDetail extends HandleRequestDetail {
   property: string;
-  identifier: string;
-};
+}
 
-export type TextRequestDetail = {
-  identifier: string;
-};
+export type BindableProperty = "checked" | "value";
 
-export type HTMLRequestDetail = {
-  identifier: string;
-};
-
-export type ClassRequestDetail = {
-  identifier: string;
-};
-
-type BindableProperty = "checked" | "value";
-
-export type BindRequestDetail = {
+export interface BindRequestDetail extends HandleRequestDetail {
   property: BindableProperty;
-  identifier: string;
-};
+}
 
 export interface AutonomousCustomElement {
   /**

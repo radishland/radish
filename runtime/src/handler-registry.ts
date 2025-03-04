@@ -1,22 +1,15 @@
-import {
-  bindingConfig,
-  booleanAttributes,
-  spaces_sep_by_comma,
-} from "./utils.ts";
+import { bindingConfig, booleanAttributes } from "./utils.ts";
 
 import { effect, isState } from "./reactivity.ts";
 import type {
   AttrRequestDetail,
   AutonomousCustomElement,
   BindRequestDetail,
-  ClassRequestDetail,
   Destructor,
   EffectCallback,
-  HTMLRequestDetail,
+  HandleRequestDetail,
   OnRequestDetail,
   PropRequestDetail,
-  TextRequestDetail,
-  UseRequestDetail,
 } from "./types.d.ts";
 
 /**
@@ -39,7 +32,6 @@ export class HandlerRegistry extends HTMLElement
 
   constructor() {
     super();
-    console.log(`${this.tagName} init`);
   }
 
   /**
@@ -58,200 +50,20 @@ export class HandlerRegistry extends HTMLElement
     return this[identifier];
   }
 
-  #hydrateElement(element: Element) {
-    const attributes = ["@attr", "@attr|client"]
-      .map((item) => element?.getAttribute(item))
-      .filter((attr) => attr !== null && attr !== undefined)
-      .flatMap((attr) => attr.trim().split(spaces_sep_by_comma));
-
-    for (const attribute of attributes) {
-      const [key, value] = attribute.split(":");
-
-      const attrRequest = new CustomEvent("@attr-request", {
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-        detail: {
-          attribute: key,
-          identifier: value || key,
-        },
-      });
-
-      element.dispatchEvent(attrRequest);
-    }
-
-    for (const property of Object.keys(bindingConfig)) {
-      if (element.hasAttribute(`@bind:${property}`)) {
-        const identifier = element.getAttribute(`@bind:${property}`)?.trim() ||
-          property;
-
-        const bindRequest = new CustomEvent("@bind-request", {
-          bubbles: true,
-          cancelable: true,
-          composed: true,
-          detail: {
-            property,
-            identifier,
-          },
-        });
-
-        element.dispatchEvent(bindRequest);
-      }
-    }
-
-    const classList = element.getAttribute("@class");
-
-    if (classList) {
-      const classRequest = new CustomEvent("@class-request", {
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-        detail: {
-          identifier: classList,
-        },
-      });
-
-      element.dispatchEvent(classRequest);
-    }
-
-    const html = element.getAttribute("@html");
-
-    if (html) {
-      const htmlRequest = new CustomEvent("@html-request", {
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-        detail: {
-          identifier: html,
-        },
-      });
-
-      element.dispatchEvent(htmlRequest);
-    }
-
-    const events = element.getAttribute("@on")
-      ?.trim().split(spaces_sep_by_comma);
-
-    if (events) {
-      for (const event of events) {
-        const [type, handler] = event.split(":");
-
-        const onRequest = new CustomEvent("@on-request", {
-          bubbles: true,
-          cancelable: true,
-          composed: true,
-          detail: {
-            type,
-            handler: handler || type,
-          },
-        });
-
-        element.dispatchEvent(onRequest);
-      }
-    }
-
-    const props = element.getAttribute("@prop")
-      ?.trim().split(spaces_sep_by_comma);
-
-    if (props) {
-      for (const prop of props) {
-        const [key, value] = prop.split(":");
-
-        const propRequest = new CustomEvent("@prop-request", {
-          bubbles: true,
-          cancelable: true,
-          composed: true,
-          detail: {
-            property: key,
-            identifier: value || key,
-          },
-        });
-
-        element.dispatchEvent(propRequest);
-      }
-    }
-
-    const text = element.getAttribute("@text");
-
-    if (text) {
-      const textRequest = new CustomEvent("@text-request", {
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-        detail: {
-          identifier: text,
-        },
-      });
-
-      element.dispatchEvent(textRequest);
-    }
-
-    const hooks = element.getAttribute("@use")
-      ?.trim().split(spaces_sep_by_comma);
-
-    if (hooks) {
-      for (const hook of hooks) {
-        const useRequest = new CustomEvent("@use-request", {
-          bubbles: true,
-          cancelable: true,
-          composed: true,
-          detail: {
-            hook,
-          },
-        });
-
-        element.dispatchEvent(useRequest);
-      }
-    }
-  }
-
-  hydrate(root: Node = this) {
-    console.log(`${this.tagName} hydrating`);
-
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
-
-    let node: Node | null = walker.currentNode;
-    // console.log(" element:", node);
-    do {
-      if ((node instanceof HandlerRegistry) && node !== this) {
-        node.hydrate();
-        node = walker.nextSibling() || walker.parentNode();
-        // console.log(" skip to next element :", node);
-        if (node !== this) continue;
-        break;
-      }
-
-      if (node instanceof Element) {
-        // console.log(node.tagName);
-        this.#hydrateElement(node);
-
-        if (node.shadowRoot) {
-          // console.log("entering shadow root");
-          this.hydrate(node.shadowRoot);
-          // console.log("exiting shadow root");
-        }
-      }
-
-      node = walker.nextNode();
-      // console.log("next element:", node);
-    } while (node);
-  }
-
   #handleOn(e: Event) {
     if (e instanceof CustomEvent) {
-      const { handler, type }: OnRequestDetail = e.detail;
+      const { identifier, type, target }: OnRequestDetail = e.detail;
 
-      if (handler in this && typeof this.lookup(handler) === "function") {
-        e.target?.addEventListener(type, this.lookup(handler).bind(this));
+      if (identifier in this && typeof this.lookup(identifier) === "function") {
+        target.addEventListener(type, this.lookup(identifier).bind(this));
         e.stopPropagation();
       }
     }
   }
 
   #handleClass(e: Event) {
-    const target = e.target;
-    if (e instanceof CustomEvent && target) {
-      const { identifier }: ClassRequestDetail = e.detail;
+    if (e instanceof CustomEvent) {
+      const { identifier, target }: HandleRequestDetail = e.detail;
 
       if (identifier in this) {
         this.effect(() => {
@@ -277,10 +89,10 @@ export class HandlerRegistry extends HTMLElement
 
   #handleUse(e: Event) {
     if (e instanceof CustomEvent) {
-      const { hook }: UseRequestDetail = e.detail;
+      const { identifier, target }: HandleRequestDetail = e.detail;
 
-      if (hook in this && typeof this.lookup(hook) === "function") {
-        const cleanup = this.lookup(hook).bind(this)(e.target);
+      if (identifier in this && typeof this.lookup(identifier) === "function") {
+        const cleanup = this.lookup(identifier).bind(this)(target);
         if (typeof cleanup === "function") {
           this.#cleanup.push(cleanup);
         }
@@ -291,8 +103,7 @@ export class HandlerRegistry extends HTMLElement
 
   #handleAttr(e: Event) {
     if (e instanceof CustomEvent) {
-      const { identifier, attribute }: AttrRequestDetail = e.detail;
-      const target = e.target;
+      const { identifier, attribute, target }: AttrRequestDetail = e.detail;
 
       if (
         identifier in this && target instanceof HTMLElement &&
@@ -317,10 +128,9 @@ export class HandlerRegistry extends HTMLElement
 
   #handleProp(e: Event) {
     if (e instanceof CustomEvent) {
-      const { identifier, property }: PropRequestDetail = e.detail;
-      const target = e.target;
+      const { identifier, property, target }: PropRequestDetail = e.detail;
 
-      if (identifier in this && target && property in target) {
+      if (identifier in this && property in target) {
         const ref = this.lookup(identifier);
 
         this.effect(() => {
@@ -335,9 +145,7 @@ export class HandlerRegistry extends HTMLElement
 
   #handleText(e: Event) {
     if (e instanceof CustomEvent) {
-      const target = e.target;
-
-      const { identifier }: TextRequestDetail = e.detail;
+      const { identifier, target }: HandleRequestDetail = e.detail;
 
       if (identifier in this && target instanceof HTMLElement) {
         const ref = this.lookup(identifier);
@@ -353,8 +161,7 @@ export class HandlerRegistry extends HTMLElement
 
   #handleHTML(e: Event) {
     if (e instanceof CustomEvent) {
-      const { identifier }: HTMLRequestDetail = e.detail;
-      const target = e.target;
+      const { identifier, target }: HandleRequestDetail = e.detail;
 
       if (identifier in this && target instanceof HTMLElement) {
         const ref = this.lookup(identifier);
@@ -370,8 +177,7 @@ export class HandlerRegistry extends HTMLElement
 
   #handleBind(e: Event) {
     if (e instanceof CustomEvent) {
-      const { identifier, property }: BindRequestDetail = e.detail;
-      const target = e.target;
+      const { identifier, property, target }: BindRequestDetail = e.detail;
 
       if (
         identifier in this && target instanceof HTMLElement &&
