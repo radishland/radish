@@ -1,4 +1,3 @@
-import type { Transform } from "./types.d.ts";
 import { serializeFragments } from "@radish/htmlcrunch";
 import { emptyDirSync, ensureDirSync, existsSync, walkSync } from "@std/fs";
 import { dirname, extname, join } from "@std/path";
@@ -16,6 +15,7 @@ import type {
 import { manifest, sortComponents } from "./generate/manifest.ts";
 import { dev } from "./start.ts";
 import { stripTypes } from "./transforms.ts";
+import type { Transform } from "./types.d.ts";
 import { applyServerEffects, serializeWebComponent } from "./walk.ts";
 
 const cssTransforms: Transform[] = [];
@@ -149,9 +149,32 @@ const buildRoute = (
   const pageFragments = route.layouts.map((layout) => layout.templateLoader());
   pageFragments.push(route.templateLoader().map(applyServerEffects));
 
-  const pageBodyContent = serializeFragments(pageFragments.flat(), {
-    removeComments: !dev,
-  });
+  const pageGroups = Object.groupBy(
+    pageFragments.flat(),
+    (node) => {
+      if (node.kind === "NORMAL" && node.tagName === "radish:head") {
+        return "head";
+      }
+      return "body";
+    },
+  );
+
+  if (pageGroups.head) {
+    const head = pageGroups.head
+      .map((node) => node.kind === "NORMAL" && node.children)
+      .filter((node) => !!node).flat();
+
+    pageHeadContent += serializeFragments(head, {
+      removeComments: !dev,
+    });
+  }
+
+  let pageBodyContent = "";
+  if (pageGroups.body) {
+    pageBodyContent = serializeFragments(pageGroups.body, {
+      removeComments: !dev,
+    });
+  }
 
   const pageContent = options.appContent
     .replace("%radish.head%", pageHeadContent)

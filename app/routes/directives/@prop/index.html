@@ -1,3 +1,12 @@
+<radish:head>
+  <title>The @prop directive</title>
+
+  <script
+    type="module"
+    src="/routes/directives/@prop/handle-prop.js"
+  ></script>
+</radish:head>
+
 <handle-prop>
   <div>
     <button @on="click:toggleColor" @prop="ariaPressed:pressed">
@@ -10,8 +19,3 @@
     hello span uses an effect inside a hook to react to the press state change
   </p>
 </handle-prop>
-
-<script
-  type="module"
-  src="/routes/@prop/handle-prop.js"
-></script>
