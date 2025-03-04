@@ -27,7 +27,6 @@
     "npm:@jspm/generator@^2.5.1": "2.5.1_@babel+core@7.26.9",
     "npm:@jspm/import-map@^1.1.0": "1.1.0",
     "npm:@preact/signals-core@^1.8.0": "1.8.0",
-    "npm:@radishland/runtime@0.1": "0.1.0",
     "npm:@types/node@*": "22.12.0",
     "npm:tsup@^8.4.0": "8.4.0_typescript@5.7.3_esbuild@0.25.0",
     "npm:typescript@^5.7.2": "5.7.3",
@@ -496,12 +495,6 @@
     },
     "@preact/signals-core@1.8.0": {
       "integrity": "sha512-OBvUsRZqNmjzCZXWLxkZfhcgT+Fk8DDcT/8vD6a1xhDemodyy87UJRJfASMuSD8FaAIeGgGm85ydXhm7lr4fyA=="
-    },
-    "@radishland/runtime@0.1.0": {
-      "integrity": "sha512-PUyFJV3jrT2DK/I5BEBK98mzf8U8o6CuBYOemC8DSmGhCwAoCl3WsDbaxTD6fp9SDtU0Zwqo91AC9uxz7fL7Zg==",
-      "dependencies": [
-        "@preact/signals-core"
-      ]
     },
     "@rollup/rollup-android-arm-eabi@4.34.8": {
       "integrity": "sha512-q217OSE8DTp8AFHuNHXo0Y86e1wtlfVrXiAlwkIvGRQv9zbc6mE3sjIVfwI8sYUyNxwOg0j/Vm1RKM04JcWLJw=="
@@ -1412,11 +1405,6 @@
       "jsr:@std/tar@~0.1.5"
     ],
     "members": {
-      "app": {
-        "dependencies": [
-          "npm:@radishland/runtime@0.1"
-        ]
-      },
       "core": {
         "dependencies": [
           "jsr:@fcrozatier/monarch@^2.5.4",

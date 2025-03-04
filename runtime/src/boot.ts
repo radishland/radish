@@ -1,172 +1,189 @@
+import type {
+  AttrRequestDetail,
+  BindableProperty,
+  BindRequestDetail,
+  HandleRequestDetail,
+  OnRequestDetail,
+  PropRequestDetail,
+} from "./types.d.ts";
 import { bindingConfig, spaces_sep_by_comma } from "./utils.ts";
 
-const bindingsQueryString = Object.keys(bindingConfig).map((property) =>
-  `[\\@bind\\:${property}]`
-).join(",");
+const hydrateElement = (element: Element) => {
+  const attributes = ["@attr", "@attr|client"]
+    .map((item) => element?.getAttribute(item))
+    .filter((attr) => attr !== null && attr !== undefined)
+    .flatMap((attr) => attr.trim().split(spaces_sep_by_comma));
 
-setTimeout(() => {
-  customElements?.whenDefined("handler-registry").then(() => {
-    document.querySelectorAll(
-      `[\\@on],[\\@use],[\\@attr],[\\@attr\\|client],[\\@prop],${bindingsQueryString},[\\@text],[\\@html]`,
-    )
-      .forEach(
-        (entry) => {
-          const events = entry.getAttribute("@on")?.trim()
-            ?.split(spaces_sep_by_comma);
+  for (const attribute of attributes) {
+    const [key, value] = attribute.split(":");
 
-          if (events) {
-            for (const event of events) {
-              const [type, handler] = event.split(":");
+    const attrRequest = new CustomEvent("@attr-request", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      detail: {
+        attribute: key,
+        identifier: value || key,
+        target: element,
+      } satisfies AttrRequestDetail,
+    });
 
-              const onRequest = new CustomEvent("@on-request", {
-                bubbles: true,
-                cancelable: true,
-                composed: true,
-                detail: {
-                  type,
-                  handler: handler || type,
-                },
-              });
+    element.dispatchEvent(attrRequest);
+  }
 
-              entry.dispatchEvent(onRequest);
-            }
-          }
+  for (const property of Object.keys(bindingConfig)) {
+    if (element.hasAttribute(`@bind:${property}`)) {
+      const identifier = element.getAttribute(`@bind:${property}`)?.trim() ||
+        property;
 
-          const hooks = entry.getAttribute("@use")?.trim()
-            ?.split(spaces_sep_by_comma);
+      const bindRequest = new CustomEvent("@bind-request", {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        detail: {
+          property: property as BindableProperty,
+          identifier,
+          target: element,
+        } satisfies BindRequestDetail,
+      });
 
-          if (hooks) {
-            for (const hook of hooks) {
-              const useRequest = new CustomEvent("@use-request", {
-                bubbles: true,
-                cancelable: true,
-                composed: true,
-                detail: {
-                  hook,
-                },
-              });
+      element.dispatchEvent(bindRequest);
+    }
+  }
 
-              entry.dispatchEvent(useRequest);
-            }
-          }
+  const classList = element.getAttribute("@class");
 
-          const props = (entry.getAttribute("@prop"))?.trim()
-            .split(spaces_sep_by_comma);
+  if (classList) {
+    const classRequest = new CustomEvent("@class-request", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      detail: {
+        identifier: classList,
+        target: element,
+      } satisfies HandleRequestDetail,
+    });
 
-          if (props) {
-            for (const prop of props) {
-              const [key, value] = prop.split(":");
+    element.dispatchEvent(classRequest);
+  }
 
-              const propRequest = new CustomEvent("@prop-request", {
-                bubbles: true,
-                cancelable: true,
-                composed: true,
-                detail: {
-                  property: key,
-                  identifier: value || key,
-                },
-              });
+  const html = element.getAttribute("@html");
 
-              entry.dispatchEvent(propRequest);
-            }
-          }
+  if (html) {
+    const htmlRequest = new CustomEvent("@html-request", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      detail: {
+        identifier: html,
+        target: element,
+      } satisfies HandleRequestDetail,
+    });
 
-          const text = entry.hasAttribute("@text");
+    element.dispatchEvent(htmlRequest);
+  }
 
-          if (text) {
-            const identifier = entry.getAttribute("@text") || "text";
+  const events = element.getAttribute("@on")
+    ?.trim().split(spaces_sep_by_comma);
 
-            const textRequest = new CustomEvent("@text-request", {
-              bubbles: true,
-              cancelable: true,
-              composed: true,
-              detail: {
-                identifier,
-              },
-            });
+  if (events) {
+    for (const event of events) {
+      const [type, handler] = event.split(":");
 
-            entry.dispatchEvent(textRequest);
-          }
+      const onRequest = new CustomEvent("@on-request", {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        detail: {
+          type,
+          identifier: handler || type,
+          target: element,
+        } satisfies OnRequestDetail,
+      });
 
-          const html = entry.hasAttribute("@html");
+      element.dispatchEvent(onRequest);
+    }
+  }
 
-          if (html) {
-            const identifier = entry.getAttribute("@html") || "html";
+  const props = element.getAttribute("@prop")
+    ?.trim().split(spaces_sep_by_comma);
 
-            const htmlRequest = new CustomEvent("@html-request", {
-              bubbles: true,
-              cancelable: true,
-              composed: true,
-              detail: {
-                identifier,
-              },
-            });
+  if (props) {
+    for (const prop of props) {
+      const [key, value] = prop.split(":");
 
-            entry.dispatchEvent(htmlRequest);
-          }
+      const propRequest = new CustomEvent("@prop-request", {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        detail: {
+          property: key,
+          identifier: value || key,
+          target: element,
+        } satisfies PropRequestDetail,
+      });
 
-          const classList = entry.hasAttribute("@class");
+      element.dispatchEvent(propRequest);
+    }
+  }
 
-          if (classList) {
-            const identifier = entry.getAttribute("@class") || "class";
+  const text = element.getAttribute("@text");
 
-            const classRequest = new CustomEvent("@class-request", {
-              bubbles: true,
-              cancelable: true,
-              composed: true,
-              detail: {
-                identifier,
-              },
-            });
+  if (text) {
+    const textRequest = new CustomEvent("@text-request", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      detail: {
+        identifier: text,
+        target: element,
+      } satisfies HandleRequestDetail,
+    });
 
-            entry.dispatchEvent(classRequest);
-          }
+    element.dispatchEvent(textRequest);
+  }
 
-          const attributes = [
-            ...(entry.getAttribute("@attr"))?.trim()
-              .split(spaces_sep_by_comma) ?? [],
-            ...(entry.getAttribute("@attr|client"))?.trim()
-              .split(spaces_sep_by_comma) ?? [],
-          ];
+  const hooks = element.getAttribute("@use")
+    ?.trim().split(spaces_sep_by_comma);
 
-          if (attributes.length > 0) {
-            for (const attribute of attributes) {
-              const [key, value] = attribute.split(":");
+  if (hooks) {
+    for (const hook of hooks) {
+      const useRequest = new CustomEvent("@use-request", {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        detail: {
+          identifier: hook,
+          target: element,
+        } satisfies HandleRequestDetail,
+      });
 
-              const attrRequest = new CustomEvent("@attr-request", {
-                bubbles: true,
-                cancelable: true,
-                composed: true,
-                detail: {
-                  attribute: key,
-                  identifier: value || key,
-                },
-              });
+      element.dispatchEvent(useRequest);
+    }
+  }
+};
 
-              entry.dispatchEvent(attrRequest);
-            }
-          }
+const hydrate = (root: Node) => {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
 
-          for (const property of Object.keys(bindingConfig)) {
-            if (entry.hasAttribute(`@bind:${property}`)) {
-              const identifier =
-                entry.getAttribute(`@bind:${property}`)?.trim() ||
-                property;
+  let node: Node | null = walker.currentNode;
 
-              const bindRequest = new CustomEvent("@bind-request", {
-                bubbles: true,
-                cancelable: true,
-                composed: true,
-                detail: {
-                  property,
-                  identifier,
-                },
-              });
+  do {
+    if (node instanceof Element) {
+      console.log(node.tagName);
+      hydrateElement(node);
 
-              entry.dispatchEvent(bindRequest);
-            }
-          }
-        },
-      );
-  });
-}, 100);
+      if (node.shadowRoot) {
+        console.log("entering shadow root");
+        hydrate(node.shadowRoot);
+        console.log("exiting shadow root");
+      }
+    }
+
+    // console.log("next element:", node);
+  } while ((node = walker.nextNode()));
+};
+
+customElements?.whenDefined("handler-registry").then(() => {
+  hydrate(document.body);
+});
