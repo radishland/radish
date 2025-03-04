@@ -2,7 +2,8 @@
   "name": "@radish/runtime",
   "version": "0.1.2",
   "tasks": {
-    "check": "deno fmt --check && deno lint && deno check **/*.ts"
+    "check": "deno fmt --check && deno lint && deno check **/*.ts",
+    "build": "pnpm build"
   },
   "fmt": {
     "exclude": ["**/*.md"]
