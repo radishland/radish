@@ -1,4 +1,4 @@
-import { fragments, serializeFragments } from "@fcrozatier/monarch/html";
+import { fragments, serializeFragments } from "@radish/htmlcrunch";
 import { applyServerEffects } from "../src/walk.ts";
 import { assertEquals } from "@std/assert/equals";
 import { generateManifest } from "../src/generate/manifest.ts";

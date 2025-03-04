@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert/equals";
 import { generateManifest } from "../src/generate/manifest.ts";
 import { applyServerEffects } from "../src/walk.ts";
-import { fragments, serializeFragments } from "@fcrozatier/monarch/html";
+import { fragments, serializeFragments } from "@radish/htmlcrunch";
 
 generateManifest();
 

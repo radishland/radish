@@ -3,7 +3,7 @@ import {
   Kind,
   type MFragment,
   shadowRoot,
-} from "@fcrozatier/monarch/html";
+} from "@radish/htmlcrunch";
 import { ensureDirSync, walkSync } from "@std/fs";
 import { extname, join } from "@std/path";
 import {

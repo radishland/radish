@@ -13,5 +13,8 @@
   },
   "publish": {
     "exclude": ["./tests/**/*"]
+  },
+  "imports": {
+    "@fcrozatier/monarch": "jsr:@fcrozatier/monarch@^2.5.4"
   }
 }
