@@ -1,10 +1,24 @@
-<main>
-  <my-article>
-    <span slot="title">the title</span>
-    <p>the article</p>
-  </my-article>
+<script type="module">
+  import "/elements/my-article/my-article.js";
+  import "/routes/projection/rad-projection.js";
+  import "/routes/projection/rad-page.js";
+</script>
 
-  <p>
-    Testing declarative shadow root slot projection in template elements
-  </p>
-</main>
+<rad-page>
+  <main>
+    <rad-projection>
+      <my-article>
+        <span slot="title">the title</span>
+        <span slot="subtitle">the <span @text="h2"></span></span>
+        <section>
+          <p>the article</p>
+          <rad-unknown></rad-unknown>
+        </section>
+        <p>
+          Testing declarative shadow root slot projection in template elements
+        </p>
+        <button @on="click:toggle">toggle <span @text="h2"></span></button>
+      </my-article>
+    </rad-projection>
+  </main>
+</rad-page>
