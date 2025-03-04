@@ -13,12 +13,11 @@ export class HandleEvents extends HandlerRegistry {
   }
 
   hook1(element: HTMLElement) {
-    const { signal } = this.abortController;
     console.log("adding hook1 on element", element);
 
     element.addEventListener("mouseover", () => {
       console.log("hovering");
-    }, { signal });
+    }, this.abortController);
 
     element.style.color = "red";
   }
