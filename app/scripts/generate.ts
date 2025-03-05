@@ -42,23 +42,23 @@ if (args.includes("--manifest")) {
   } else if (args.includes("--build")) {
     await build(manifest, {
       dev: false,
-      speculationRules: {
-        prerender: [{
-          where: {
-            and: [
-              { href_matches: "/*" },
-              { not: { selector_matches: ".do-not-prerender" } },
-            ],
-          },
-          eagerness: "moderate",
-        }],
-        prefetch: [
-          {
-            where: { not: { href_matches: "/*" } },
-            eagerness: "moderate",
-          },
-        ],
-      },
+      // speculationRules: {
+      //   prerender: [{
+      //     where: {
+      //       and: [
+      //         { href_matches: "/*" },
+      //         { not: { selector_matches: ".do-not-prerender" } },
+      //       ],
+      //     },
+      //     eagerness: "moderate",
+      //   }],
+      //   prefetch: [
+      //     {
+      //       where: { not: { href_matches: "/*" } },
+      //       eagerness: "moderate",
+      //     },
+      //   ],
+      // },
     });
   }
 }

@@ -1,5 +1,10 @@
 <radish:head>
   <title>Invoker API</title>
+  <script
+    type="module"
+    async
+    src="https://unpkg.com/invokers-polyfill@latest/invoker.min.js"
+  ></script>
 </radish:head>
 
 <button commandfor="dialog" command="show-modal">Open dialog</button>
@@ -12,10 +17,3 @@
 
 <button commandfor="state" command="--increment">increment</button>
 <button commandfor="state" command="--decrement">decrement</button>
-
-<script
-  type="module"
-  async
-  src="https://unpkg.com/invokers-polyfill@latest/invoker.min.js"
-></script>
-<script type="module" src="/routes/invokers/my-invoke.js"></script>
