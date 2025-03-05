@@ -1,0 +1,33 @@
+<radish:head>
+  <title>The importmap</title>
+</radish:head>
+
+<handle-input>
+  <label>
+    number
+    <input type="number" step="0.01" @bind:value="number">
+  </label>
+
+  <p>rounded value: <output @text="rounded"></output></p>
+
+  <p>
+    For the sake of the example, here we use a helper library to round a number
+    to 1 decimal place
+  </p>
+
+  <p>
+    In dev mode the importmap resolves modules from the node_modules folder, in
+    production, it resolves modules from CDNs
+  </p>
+
+  <p>
+    To generate the importmap in dev mode run:
+    <code>deno task generate --importmap --dev</code>
+  </p>
+  <p>
+    To generate the importmap in prod mode run:
+    <code>deno task generate --importmap --prod</code>
+  </p>
+
+  <pre @text="importmap"></pre>
+</handle-input>
