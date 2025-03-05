@@ -4,16 +4,13 @@ import {
   type Install,
 } from "@jspm/generator";
 import type { IImportMap } from "@jspm/import-map";
+import { dev } from "$env";
 import { join } from "@std/path";
 import { readDenoConfig } from "../config.ts";
 import { generatedFolder } from "../conventions.ts";
 import type { Manifest } from "./manifest.ts";
 
 interface ImportMapOptions {
-  /**
-   * Whether to generate the dev importmap
-   */
-  dev?: boolean;
   /**
    * Manually add a package target into the import map, including all its dependency resolutions via tracing
    */
@@ -45,7 +42,6 @@ export const pureImportMap = async (
   denoImports: Record<string, string>,
   options?: ImportMapOptions,
 ): Promise<IImportMap> => {
-  const { dev, generatorOptions } = { ...options, dev: false };
   const projectImports = new Set<string>();
 
   // Collect deduped import specifiers
@@ -76,15 +72,15 @@ export const pureImportMap = async (
   }
 
   const generator = new Generator({
-    defaultProvider: "jspm.io",
+    defaultProvider: dev() ? "nodemodules" : "jspm.io",
     env: [
-      dev ? "development" : "production",
+      dev() ? "development" : "production",
       "browser",
       "module",
       "import",
       "default",
     ],
-    ...generatorOptions,
+    ...options?.generatorOptions,
   });
 
   // For relative imports and https: targets

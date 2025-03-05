@@ -11,14 +11,13 @@ import {
 import { generateCSS } from "./css.ts";
 import { App, type Handle } from "./server/app.ts";
 import { Router } from "./server/router.ts";
-
-export let dev = false;
+import { dev } from "$env";
 
 const handle: Handle = async ({ context, resolve }) => {
   // Avoid mime type sniffing
   context.headers.set("X-Content-Type-Options", "nosniff");
 
-  if (!dev) {
+  if (!dev()) {
     const ua = new UserAgent(context.request.headers.get("user-agent") ?? "");
     console.log("ua:", ua);
   }
@@ -27,15 +26,12 @@ const handle: Handle = async ({ context, resolve }) => {
 };
 
 type StartOptions = {
-  dev?: boolean;
   router?: {
     matchers: Record<string, RegExp>;
   };
 };
 
 export const start = async (options?: StartOptions): Promise<void> => {
-  dev = options?.dev ?? false;
-
   const hostname = "127.0.0.1";
   const port = 1235;
 
@@ -60,6 +56,7 @@ export const start = async (options?: StartOptions): Promise<void> => {
     fsRoot: buildFolder,
   });
   router.serveStatic({ pathname: `/${staticFolder}/*` });
+  router.serveStatic({ pathname: `/node_modules/*` }, { fsRoot: ".." });
 
   await router.generateFileBasedRoutes();
 
@@ -93,7 +90,7 @@ export const start = async (options?: StartOptions): Promise<void> => {
     },
   }, (request, info) => {
     console.log("Request", request.method, request.url);
-    if (dev && request.headers.get("upgrade") === "websocket") {
+    if (dev() && request.headers.get("upgrade") === "websocket") {
       return wsHandler(request);
     }
     return app.handleRequest(request, info);
@@ -123,7 +120,7 @@ export const start = async (options?: StartOptions): Promise<void> => {
   /**
    * Watcher
    */
-  if (dev) {
+  if (dev()) {
     const routesPath = resolve(routesFolder);
 
     appWatcher = Deno.watchFs(Deno.cwd(), { recursive: true });
