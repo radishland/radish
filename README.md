@@ -20,8 +20,11 @@ A full-stack framework built around Web Components and Web Standards:
     - [Dynamic routes](#dynamic-routes)
     - [Non-capturing groups](#non-capturing-groups)
     - [Regex matchers](#regex-matchers)
+  - [Navigation](#navigation)
+    - [Speculation Rules](#speculation-rules)
   - [Elements](#elements)
-  - [Type-safety](#type-safety)
+  - [Authoring](#authoring)
+    - [Type-safety](#type-safety)
   - [Scoped Handler Registry](#scoped-handler-registry)
   - [Reactivity](#reactivity)
   - [Directives](#directives)
@@ -142,6 +145,12 @@ routes/
 
 Only non-empty numeric ids will match against this route, like `/user/123` but not `/user/abc`.
 
+## Navigation
+
+### Speculation Rules
+
+The [Speculation Rules API](https://developer.chrome.com/docs/web-platform/prerender-pages) is supported with the generation of a `speculationrules` script at build time for instant page navigation. You can configure the ruleset in the `generate.ts` script build options.
+
 ## Elements
 
 The `elements` folder contains all three sorts of elements:
@@ -163,7 +172,9 @@ Declarative shadowroot templates are inlined at build time
 - the provided `reset.css`
 - the `generated_variables.css` for just-in-time CSS variable definitions, fluid sizes and typography, and a flexible, customizable and intuitive scale -->
 
-## Type-safety
+## Authoring
+
+### Type-safety
 
 You can write your modules in Typescript and type annotations will be removed with [type-strip](https://github.com/fcrozatier/type-strip).
 
