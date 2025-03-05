@@ -405,7 +405,7 @@ It must appear at the top-level of your component
 
 When building your project, an importmap of the runtime dependencies is generated and inlined in the  `head` of the html. This relies on the [importmap](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) Web Standard.
 
-In dev mode the importmap resolves modules from the node_modules folder, and in production, it resolves modules from the jspm.io CDN by default but is entirely configurable.
+In dev mode the importmap resolves modules from the node_modules folder by default and allows off-line development, and in production it resolves modules from the jspm.io CDN by default. This is entirely configurable.
 
 The importmap is generated in the `_generated` folder, and you can inspect it with the following commands:
 
