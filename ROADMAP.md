@@ -2,23 +2,22 @@
 
 [x] Inline declarative shadow root templates on the server
 [x] JIT CSS variables: fluid scale and typography
-[x] Hot-reloading dev server
 [x] Scoped Handler Registries
-[x] @on directive (declarative event-handlers)
-[x] @use directive (declarative lifecycle hooks)
+[x] @on directive
+[x] @use directive
 [x] @attr directive
 [x] @class directive
 [x] @prop directive
 [x] @text directive
 [x] @html directive
-[x] @set directive (declarative assignments)
-[x] @bind directive (with resumable state & focus)
-[x] scaffolding scripts for project & components
-[x] auto-generate client importmap
-[x] Auto-load library itself
+[x] @bind directive
+[x] Generate client importmap
+[x] Hydration script
+[x] auto-import custom elements
 
+[ ] Hot-reloading dev server
+[ ] Scaffolding scripts for project & components
 [ ] Lazy load islands
-[ ] auto-import modules of needed custom elements
 [ ] Handle client errors and try-catch components
 [ ] Load effect
 [ ] Option to prerender a component
@@ -26,6 +25,7 @@
 [ ] local first compatible data loading model with storage providers, diffing & merging and smart updates on navigation request
 [?] Convenience: use proxy for state?
 [ ] Distinguish between route level handler registries and others: a global handler throws if it sees an unhandled interaction request
+[ ] Stateful navigation
 
 [ ] Templating: loops
 

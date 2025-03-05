@@ -405,30 +405,18 @@ It must appear at the top-level of your component
 
 When building your project, an importmap of the runtime dependencies is generated and inlined in the  `head` of the html. This relies on the [importmap](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) Web Standard.
 
-You have full control over the importmap generation, which is configurable in the `scripts/generate.ts` file:
+In dev mode the importmap resolves modules from the node_modules folder, and in production, it resolves modules from the jspm.io CDN by default but is entirely configurable.
+
+The importmap is generated in the `_generated` folder, and you can inspect it with the following commands:
+
+- `deno task generate --importmap --dev` generated the dev importmap
+- `deno task generate --importmap` generated the production importmap
+
+You have full control over the importmap generation in the `scripts/generate.ts` file:
+
 - a `transform(importmap: ImportMap): string` hook allows you to modify the generated importmap before the file is saved on disk.
 - an `install` option lets you force install any package that can't be statically detected.
 - further options (default registry, custom providers etc) can be passed to the jspm generator
-
-Example. We dynamically import `my-package` and want to override a module with a local one:
-
-```ts
-await generateImportMap(manifest, {
-  install: { target: "my-package@^1.2.3", alias: "$my-lib" }, // Force a package in the importmap
-  transform: (importmap) => {
-    return JSON.stringify({
-      imports: {
-        ...importmap.imports,
-        "mod": "/mod.js", // Override `mod` resolution
-      },
-      scopes: importmap.scopes,
-    });
-  },
-});
-```
-
-> [!NOTE]
-> Most of the time the automatic generation should be enough and you won't have to edit this file too often.
 
 ### No bundle
 
