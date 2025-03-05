@@ -140,6 +140,21 @@ const buildRoute = (
     </script>`;
   }
 
+  // Auto-import custom element modules
+  const imports = route.dependencies.toReversed().map((dependency) => {
+    const element = manifest.elements[dependency];
+    return element.kind === "unknown-element" ? undefined : element.path
+      .find((p) => p.endsWith(".ts") || p.endsWith(".js"))
+      ?.replace(/\.ts$/, ".js");
+  }).filter((i) => i !== undefined);
+
+  if (imports.length > 0) {
+    pageHeadContent += `
+    <script type="module">
+      ${imports.map((i) => `import "/${i}";`).join("\n\t")}
+    </script>
+    `;
+  }
   // Insert WebSocket script
   if (options.dev) {
     pageHeadContent += `
