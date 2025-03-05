@@ -299,7 +299,9 @@ type BuildOptions = {
   /**
    * The speculation rules of the whole site
    *
-   * https://wicg.github.io/nav-speculation/speculation-rules.html
+   * https://github.com/WICG/nav-speculation/blob/main/triggers.md
+   *
+   * Spec: https://wicg.github.io/nav-speculation/speculation-rules.html
    */
   speculationRules?: SpeculationRules;
 };
