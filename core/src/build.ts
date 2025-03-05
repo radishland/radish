@@ -13,11 +13,11 @@ import type {
   RouteManifest,
 } from "./generate/manifest.ts";
 import { manifest, sortComponents } from "./generate/manifest.ts";
-import { dev } from "./start.ts";
 import { stripTypes } from "./transforms.ts";
 import type { Transform } from "./types.d.ts";
 import { applyServerEffects, serializeWebComponent } from "./walk.ts";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
+import { dev } from "$env";
 
 const cssTransforms: Transform[] = [];
 const htmlTransforms: Transform[] = [];
@@ -120,7 +120,6 @@ const buildRoute = (
   options: {
     appContent: string;
     importmapContent: string;
-    dev: boolean;
     speculationRules?: SpeculationRules;
   },
 ) => {
@@ -156,7 +155,7 @@ const buildRoute = (
     `;
   }
   // Insert WebSocket script
-  if (options.dev) {
+  if (dev()) {
     pageHeadContent += `
         <script>
           const ws = new WebSocket("ws://localhost:1235/ws");
@@ -194,14 +193,14 @@ const buildRoute = (
       .filter((node) => !!node).flat();
 
     pageHeadContent += serializeFragments(head, {
-      removeComments: !dev,
+      removeComments: !dev(),
     });
   }
 
   let pageBodyContent = "";
   if (pageGroups.body) {
     pageBodyContent = serializeFragments(pageGroups.body, {
-      removeComments: !dev,
+      removeComments: !dev(),
     });
   }
 
@@ -308,10 +307,6 @@ export const mockGlobals = (): void => {
 
 type BuildOptions = {
   /**
-   * Whether to build in dev mode
-   */
-  dev?: boolean;
-  /**
    * The speculation rules of the whole site
    *
    * https://github.com/WICG/nav-speculation/blob/main/triggers.md
@@ -354,7 +349,6 @@ export const build = async (
       buildRoute(component, {
         appContent,
         importmapContent,
-        dev: options?.dev ?? false,
         speculationRules: options?.speculationRules,
       });
     }

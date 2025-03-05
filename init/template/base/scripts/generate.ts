@@ -8,6 +8,11 @@ import {
 
 const args = Deno.args;
 
+if (args.includes("--dev")) {
+  Deno.env.set("dev", "");
+  console.log(`Running in dev mode`);
+}
+
 if (args.includes("--manifest")) {
   generateManifest();
 } else {
@@ -22,7 +27,6 @@ if (args.includes("--manifest")) {
     });
   } else if (args.includes("--build")) {
     await build(manifest, {
-      dev: false,
       speculationRules: {
         prerender: [{
           where: {

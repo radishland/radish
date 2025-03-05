@@ -16,5 +16,6 @@
   },
   "imports": {
     // "radish": "npm:@radishland/runtime@^0.1.0"
+    "ts-helpers": "npm:@fcrozatier/ts-helpers@^2.8.0"
   }
 }
