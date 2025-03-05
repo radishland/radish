@@ -17,6 +17,7 @@ import { dev } from "./start.ts";
 import { stripTypes } from "./transforms.ts";
 import type { Transform } from "./types.d.ts";
 import { applyServerEffects, serializeWebComponent } from "./walk.ts";
+import type { SpeculationRules } from "./generate/speculationrules.ts";
 
 const cssTransforms: Transform[] = [];
 const htmlTransforms: Transform[] = [];
@@ -116,15 +117,28 @@ const buildElement = async (
 
 const buildRoute = (
   route: RouteManifest,
-  options: { appContent: string; importmapContent: string; dev: boolean },
+  options: {
+    appContent: string;
+    importmapContent: string;
+    dev: boolean;
+    speculationRules?: SpeculationRules;
+  },
 ) => {
   const srcFile = join(route.path, "index.html");
   const destFile = join(buildFolder, srcFile);
   ensureDirSync(dirname(destFile));
 
-  let pageHeadContent = `<script type="importmap">
+  let pageHeadContent = `
+    <script type="importmap">
       ${options.importmapContent}
     </script>`;
+
+  if (options?.speculationRules) {
+    pageHeadContent += `
+    <script type="speculationrules">
+      ${JSON.stringify(options.speculationRules)}
+    </script>`;
+  }
 
   // Insert WebSocket script
   if (options.dev) {
@@ -277,12 +291,25 @@ export const mockGlobals = (): void => {
   globalThis.customElements = undefined;
 };
 
+type BuildOptions = {
+  /**
+   * Whether to build in dev mode
+   */
+  dev?: boolean;
+  /**
+   * The speculation rules of the whole site
+   *
+   * https://wicg.github.io/nav-speculation/speculation-rules.html
+   */
+  speculationRules?: SpeculationRules;
+};
+
 /**
  * Runs the build process
  */
 export const build = async (
   manifestObject: Manifest,
-  options: { dev: boolean },
+  options?: BuildOptions,
 ): Promise<void> => {
   console.log("Building...");
 
@@ -307,7 +334,12 @@ export const build = async (
     if (component.kind !== "route") {
       await buildElement(component);
     } else {
-      buildRoute(component, { appContent, importmapContent, dev: options.dev });
+      buildRoute(component, {
+        appContent,
+        importmapContent,
+        dev: options?.dev ?? false,
+        speculationRules: options?.speculationRules,
+      });
     }
   }
 
