@@ -25,6 +25,7 @@ A full-stack framework built around Web Components and Web Standards:
   - [Elements](#elements)
   - [Authoring](#authoring)
     - [Type-safety](#type-safety)
+    - [Auto-imports](#auto-imports)
   - [Scoped Handler Registry](#scoped-handler-registry)
   - [Reactivity](#reactivity)
   - [Directives](#directives)
@@ -181,6 +182,19 @@ You can write your modules in Typescript and type annotations will be removed wi
 Only *modern TypeScript* is supported, equivalent to setting [`--erasableSyntaxOnly`](https://devblogs.microsoft.com/typescript/announcing-typescript-5-8-beta/#the---erasablesyntaxonly-option). See the `type-strip` [unsupported features](https://github.com/fcrozatier/type-strip?tab=readme-ov-file#unsupported-features) for more.
 
 This limitation is on purpose so that your code is not [incompatible](https://github.com/tc39/proposal-type-annotations) with the TC39 type annotations proposal.
+
+### Auto-imports
+
+Your custom elements are automatically imported by Radish where you use them.
+
+For example if you have defined a `my-button` web-component, then you can use it directly in any page, and Radish will add the required import in the head of the page:
+
+```html
+<!-- This is automatically inserted in the head -->
+<script type="module">
+  import "/elements/my-button/my-button.js";
+</script>
+```
 
 ## Scoped Handler Registry
 
