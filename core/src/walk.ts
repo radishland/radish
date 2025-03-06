@@ -199,9 +199,9 @@ export function applyServerEffects(
         !bindingConfig[property].type.includes(typeof value)
       ) {
         throw new Error(
-          `@bind:${property} should reference a value of type ${
+          `@bind:${property}=${identifier} should reference a value of type ${
             bindingConfig[property].type.join("|")
-          }`,
+          } and "${identifier}" has type ${typeof value}`,
         );
       }
 
