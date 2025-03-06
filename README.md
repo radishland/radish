@@ -26,6 +26,7 @@ A full-stack framework built around Web Components and Web Standards:
   - [Authoring](#authoring)
     - [Type-safety](#type-safety)
     - [Auto-imports](#auto-imports)
+    - [Debugging](#debugging)
   - [Scoped Handler Registry](#scoped-handler-registry)
   - [Reactivity](#reactivity)
   - [Directives](#directives)
@@ -195,6 +196,14 @@ For example if you have defined a `my-button` web-component, then you can use it
   import "/elements/my-button/my-button.js";
 </script>
 ```
+
+### Debugging
+
+Debugging your app is quite simple - and it's rather fun! - as Deno runs TypeScript source directly, so you can easily step through Radish very readable ts source code and not be confused by compiled/minified js.
+
+A VS-Code `launch.json` file is provided in the `.vscode` folder of your app to help in the process. Just pass it the args array of the script you want to debug (`"--importmap"`, `"--build"` etc) and launch the debug session!
+
+In the browser debugging also works out of the box, and you can easily step through your code to understand what's going on, since the code running in the browser is just your TypeScript code with the types stripped out, which should be easy to read and a seamless experience.
 
 ## Scoped Handler Registry
 

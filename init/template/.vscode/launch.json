@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "core script",
+      "name": "debug app",
       "request": "launch",
       "type": "node",
       "runtimeExecutable": "deno",
@@ -15,29 +15,13 @@
         "run",
         "--unstable",
         "--inspect-wait",
-        "--allow-all"
-      ],
-      "env": {},
-      "attachSimplePort": 9229
-    },
-    {
-      "name": "app script",
-      "request": "launch",
-      "type": "node",
-      "runtimeExecutable": "deno",
-      "cwd": "${workspaceFolder}/app",
-      "program": "${file}",
-      "runtimeArgs": [
-        "run",
-        "--unstable",
-        "--inspect-wait",
         "--allow-all",
         "--config",
-        "${workspaceFolder}/app/deno.jsonc"
+        "${workspaceFolder}/deno.jsonc"
       ],
-      "env": {},
       // Debug command args: "--build", "--importmap" etc.
       "args": [],
+      "env": {},
       "attachSimplePort": 9229
     }
   ]
