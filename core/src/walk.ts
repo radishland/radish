@@ -75,14 +75,16 @@ export function applyServerEffects(
   let template: MNode[] = [];
 
   if (kind === Kind.CUSTOM) {
-    const element = manifest.elements[tagName];
-    // component is a custom element
-    if (element.kind !== "unknown-element") {
-      context.push({ tagName, instance: new element.class() });
-    }
-    // component has a shadow root
-    if (element.kind !== "custom-element") {
-      template = element.templateLoader().map(applyServerEffects);
+    const element: ElementManifest | undefined = manifest.elements[tagName];
+    if (element) {
+      // component is a custom element
+      if (element.kind !== "unknown-element") {
+        context.push({ tagName, instance: new element.class() });
+      }
+      // component has a shadow root
+      if (element.kind !== "custom-element") {
+        template = element.templateLoader().map(applyServerEffects);
+      }
     }
   }
 

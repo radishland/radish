@@ -141,7 +141,8 @@ const buildRoute = (
 
   // Auto-import custom element modules
   const imports = route.dependencies.toReversed().map((dependency) => {
-    const element = manifest.elements[dependency];
+    const element: ElementManifest | undefined = manifest.elements[dependency];
+    if (!element) return undefined;
     return element.kind === "unknown-element" ? undefined : element.path
       .find((p) => p.endsWith(".ts") || p.endsWith(".js"))
       ?.replace(/\.ts$/, ".js");
