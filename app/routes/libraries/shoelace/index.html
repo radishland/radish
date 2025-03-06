@@ -9,4 +9,47 @@
   ></script>
 </radish:head>
 
-<sl-button>Click me</sl-button>
+<handle-sl>
+  <h2>button</h2>
+  <p>
+    Reactive @text binding between an <code>sl-button</code> component and a
+    text
+    <code>input</code>
+  </p>
+  <label>
+    Button label
+    <input type="text" @bind:value="btn-text">
+  </label>
+  <sl-button @text="btn-text" @on="click:handleClick"></sl-button>
+
+  <h2>rating</h2>
+  <label>
+    Rating maximum value
+    <input type="number" @bind:value="max">
+  </label>
+  <label>
+    Rating precision
+    <input type="number" @bind:value="precision">
+  </label>
+  <label>
+    Readonly
+    <input type="checkbox" @bind:checked="readonly">
+  </label>
+  <label>
+    Disabled
+    <input type="checkbox" @bind:checked="disabled">
+  </label>
+  <label>
+    Value
+    <input type="number" @bind:value>
+  </label>
+  <div class="detect-hover">
+    <sl-rating
+      label="Rating"
+      @attr="max,precision"
+      @prop="value"
+      @on="sl-hover:hover"
+    ></sl-rating>
+    <span @text="value"></span>
+  </div>
+</handle-sl>
