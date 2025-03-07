@@ -51,6 +51,28 @@ const hydrateElement = (element: Element) => {
     }
   }
 
+  const booleanAttributes = element.getAttribute("@bool")
+    ?.trim().split(spaces_sep_by_comma);
+
+  if (booleanAttributes) {
+    for (const bool of booleanAttributes) {
+      const [key, value] = bool.split(":");
+
+      element.dispatchEvent(
+        new CustomEvent("@bool-request", {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+          detail: {
+            attribute: key,
+            identifier: value || key,
+            target: element,
+          } satisfies AttrRequestDetail,
+        }),
+      );
+    }
+  }
+
   const classList = element.getAttribute("@class");
 
   if (classList) {

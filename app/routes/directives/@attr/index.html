@@ -20,11 +20,18 @@
 <handle-attr>
   <div class="box" @attr="id:state"></div>
 
+  <label>
+    is red
+    <input type="checkbox" readonly @attr|server="checked" @prop="checked">
+  </label>
+
   <button @on="click:toggle">
     toggle id
   </button>
 
   <p>
-    The id attribute is toggled by the button between #red and #green
+    The @attr directive toggles the <code>id</code> attribute between #red and
+    #green when the button is clicked. It also sets the non-reflected boolean
+    <code>checked</code> attribute on the checkbox
   </p>
 </handle-attr>

@@ -32,6 +32,7 @@ A full-stack framework built around Web Components and Web Standards:
   - [Directives](#directives)
     - [@attr directive](#attr-directive)
     - [@bind directive: declarative two-way bindings](#bind-directive-declarative-two-way-bindings)
+    - [@bool directive](#bool-directive)
     - [@class directive](#class-directive)
     - [@html directive](#html-directive)
     - [@text directive](#text-directive)
@@ -258,6 +259,7 @@ console.log(a) // 2
 The following directives are available:
 - @attr
 - @bind
+- @bool
 - @class
 - @html
 - @on
@@ -269,7 +271,7 @@ The following directives are available:
 
 ### @attr directive
 
-The @attr directive allow to set attributes on an element to the value of a given identifier. If the identifier is a signal, then the assignment is reactive
+The @attr directive allows to set attributes on an element to the value of a given identifier. If the identifier is a signal, then the assignment is reactive
 
 ```html
 <input type="checkbox" @attr="disabled:isDisabled" />
@@ -279,11 +281,11 @@ If the attribute and the identifier have the same name we can use a shorthand no
 
 ```html
 <!-- these are equivalent -->
-<input type="text" @attr="value" />
-<input type="text" @attr="value:value" />
+<input type="checkbox" @attr="checked" />
+<input type="checkbox" @attr="checked:checked" />
 ```
 
-The `value` attribute of the input is bound to the `value` property of its handling registry
+The `checked` attribute of the input is bound to the `value` property of its handling registry. Global boolean attributes are handled automatically by @attr. If you want to bind a custom boolean attribute on your custom element, you may want to reach for @bool.
 
 ### @bind directive: declarative two-way bindings
 
@@ -311,6 +313,32 @@ The `@bind` directive is a universal directive: it has both server and client se
 The resumability of the state on the client prevents janky hydration and provides instant interactivity in the case of slow networks. And focus is not lost.
 
 The `@bind` directive allow cross-component bindings at any filiation level: parents, grand-parents, grand-grand-parents etc.
+
+### @bool directive
+
+The @bool directive handles custom boolean attribute bindings.
+
+```html
+<demo-bool>
+  <label>
+    loading <input type="checkbox" name="circle" @bind:checked="loading">
+  </label>
+
+  <sl-button size="medium" @bool="loading">
+    <sl-icon name="gear" label="Settings"></sl-icon>
+  </sl-button>
+</demo-bool>
+```
+
+```ts
+class DemoBool extends HandlerRegistry {
+  loading = signal(true);
+}
+```
+
+Toggling the checkbox will add or remove the <code>loading</code> boolean attribute on the <code>sl-button</code> web component.
+
+Global boolean attributes like <code>disabled</code>, <code>checked</code> etc. can also be handled by the @attr directive.
 
 ### @class directive
 

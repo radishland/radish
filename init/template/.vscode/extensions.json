@@ -1,6 +1,8 @@
 {
   "recommendations": [
     "denoland.vscode-deno",
-    "ecmel.vscode-html-css"
+    "ecmel.vscode-html-css",
+    "pranaygp.vscode-css-peek",
+    "deque-systems.vscode-axe-linter"
   ]
 }
