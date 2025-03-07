@@ -13,8 +13,10 @@ import type { Manifest } from "./manifest.ts";
 interface ImportMapOptions {
   /**
    * Manually add a package target into the import map, including all its dependency resolutions via tracing
+   *
+   * Accepts a string or Install object, or an array of this type, and falsy values are skipped
    */
-  install?: string | Install | (string | Install)[];
+  install?: string | boolean | Install | (string | boolean | Install)[];
   /**
    * Options passed to the jspm generator
    */
@@ -116,7 +118,11 @@ export const pureImportMap = async (
   }
 
   if (options?.install) {
-    await generator.install(options.install);
+    const install = Array.isArray(options.install)
+      ? options.install
+      : [options.install];
+
+    await generator.install(install.filter((i) => typeof i !== "boolean"));
   }
 
   const { imports, scopes, integrity } = generator.getMap();
