@@ -3,53 +3,60 @@
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/cdn/themes/light.css"
   />
-  <script
-    type="module"
-    src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/cdn/shoelace-autoloader.js"
-  ></script>
+
+  <script type="module">
+    import "@shoelace-style/shoelace/dist/components/rating/rating.js";
+  </script>
 </radish:head>
 
 <handle-sl>
-  <h2>button</h2>
-  <p>
-    Reactive @text binding between an <code>sl-button</code> component and a
-    text
-    <code>input</code>
-  </p>
-  <label>
-    Button label
-    <input type="text" @bind:value="btn-text">
-  </label>
-  <sl-button @text="btn-text" @on="click:handleClick"></sl-button>
+  <h2>Rating</h2>
 
-  <h2>rating</h2>
-  <label>
-    Rating maximum value
-    <input type="number" @bind:value="max">
-  </label>
-  <label>
-    Rating precision
-    <input type="number" @bind:value="precision">
-  </label>
-  <label>
-    Readonly
-    <input type="checkbox" @bind:checked="readonly">
-  </label>
-  <label>
-    Disabled
-    <input type="checkbox" @bind:checked="disabled">
-  </label>
-  <label>
-    Value
-    <input type="number" @bind:value>
-  </label>
+  <div>
+    <label>
+      Rating maximum value
+      <input type="number" @bind:value="max">
+    </label>
+  </div>
+  <div>
+    <label>
+      Rating precision
+      <input type="number" @bind:value="precision" step="0.1">
+    </label>
+  </div>
+  <div>
+    <label>
+      Readonly
+      <input type="checkbox" @bind:checked="readonly">
+    </label>
+  </div>
+  <div>
+    <label>
+      Disabled
+      <input type="checkbox" @bind:checked="disabled">
+    </label>
+  </div>
+  <div>
+    <label>
+      Value
+      <input type="number" @bind:value>
+    </label>
+  </div>
+
   <div class="detect-hover">
     <sl-rating
       label="Rating"
-      @attr="max,precision"
-      @prop="value"
+      @attr="max, precision"
+      @bool="readonly, disabled"
+      @bind:value
       @on="sl-hover:hover"
     ></sl-rating>
     <span @text="value"></span>
   </div>
 </handle-sl>
+
+<style>
+  div:has(> label) {
+    margin-block-end: 1lh;
+  }
+</style>
