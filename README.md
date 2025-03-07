@@ -51,7 +51,7 @@ A full-stack framework built around Web Components and Web Standards:
 - Create a new project:
 
 ```sh
-deno run -A jsr:@radish/init@1.0.0-alpha-16 my-rad-project
+deno run -A jsr:@radish/init@1.0.0-alpha-17 my-rad-project
 ```
 
 or have a look at the /app folder of the repo for syntax examples
