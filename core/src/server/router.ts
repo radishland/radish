@@ -91,19 +91,21 @@ export class Router {
       if (entry.name !== "index.html") continue;
 
       const regex = new RegExp(`^${routesFolder}/?`);
-      const pathname = dirname(entry.path).replace(regex, "/").replace(
-        square_brackets_around_named_group,
-        (_match, _, namedGroup, matcherName) => {
-          if (matcherName) {
-            const matcher = this.matchers[matcherName];
-            if (!matcher) {
-              throw new Error(`Regex matcher not found: ${matcherName}`);
+      const pathname = dirname(entry.path)
+        .replace(regex, "/")
+        .replace(
+          square_brackets_around_named_group,
+          (_match, _, namedGroup, matcherName) => {
+            if (matcherName) {
+              const matcher = this.matchers[matcherName];
+              if (!matcher) {
+                throw new Error(`Regex matcher not found: ${matcherName}`);
+              }
+              return `:${namedGroup}(${matcher.source})`;
             }
-            return `:${namedGroup}(${matcher.source})`;
-          }
-          return `:${namedGroup}`;
-        },
-      );
+            return `:${namedGroup}`;
+          },
+        );
       const destPath = join(buildFolder, entry.path);
       routes.push(pathname);
 

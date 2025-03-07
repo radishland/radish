@@ -56,7 +56,10 @@ export const start = async (options?: StartOptions): Promise<void> => {
     fsRoot: buildFolder,
   });
   router.serveStatic({ pathname: `/${staticFolder}/*` });
-  router.serveStatic({ pathname: `/node_modules/*` }, { fsRoot: ".." });
+
+  if (dev()) {
+    router.serveStatic({ pathname: `/node_modules/*` }, { fsRoot: ".." });
+  }
 
   await router.generateFileBasedRoutes();
 

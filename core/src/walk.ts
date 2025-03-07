@@ -92,8 +92,9 @@ export function applyServerEffects(
   const textContent = textNode("");
 
   for (const attribute of attributes) {
-    // @attr attribute
     if (server_attr_directive.test(attribute[0])) {
+      // @attr section
+
       const assignments = attribute[1].trim().split(
         spaces_sep_by_comma,
       );
@@ -107,8 +108,32 @@ export function applyServerEffects(
           setAttribute(attributes, attribute, value);
         }
       }
-    } // @bool directive
-    else if (attribute[0] === "@bool") {
+    } else if (attribute[0].startsWith("@bind")) {
+      // @bind section
+
+      const property = attribute[0].split(":")[1] as keyof typeof bindingConfig;
+
+      if (!Object.keys(bindingConfig).includes(property)) {
+        throw new Error(`${property} is not bindable`);
+      }
+
+      const identifier = attribute[1] || property;
+      const value = contextLookup(identifier);
+
+      if (
+        !bindingConfig[property].type.includes(typeof value)
+      ) {
+        throw new Error(
+          `@bind:${property}=${identifier} should reference a value of type ${
+            bindingConfig[property].type.join("|")
+          } and "${identifier}" has type ${typeof value}`,
+        );
+      }
+
+      setAttribute(attributes, property, value);
+    } else if (attribute[0] === "@bool") {
+      // @bool section
+
       const booleanAttributes = attribute[1].trim().split(spaces_sep_by_comma);
 
       for (const booleanAttribute of booleanAttributes) {
@@ -176,36 +201,6 @@ export function applyServerEffects(
       if (value !== null && value !== undefined) {
         innerHTML.push(textNode(`${value}`));
       }
-    } else if (attribute[0].startsWith("@bind")) {
-      // @bind section
-      const property = attribute[0].split(":")[1] as keyof typeof bindingConfig;
-
-      if (!Object.keys(bindingConfig).includes(property)) {
-        throw new Error(`${property} is not bindable`);
-      }
-
-      if (
-        !bindingConfig[property].element.some((el) => tagName === el)
-      ) {
-        throw new Error(
-          `@bind:${property} is not allowed on a ${tagName}`,
-        );
-      }
-
-      const identifier = attribute[1] || property;
-      const value = contextLookup(identifier);
-
-      if (
-        !bindingConfig[property].type.includes(typeof value)
-      ) {
-        throw new Error(
-          `@bind:${property} should reference a value of type ${
-            bindingConfig[property].type.join("|")
-          }`,
-        );
-      }
-
-      setAttribute(attributes, property, value);
     }
   }
 
