@@ -107,6 +107,19 @@ export function applyServerEffects(
           setAttribute(attributes, attribute, value);
         }
       }
+    } // @bool directive
+    else if (attribute[0] === "@bool") {
+      const booleanAttributes = attribute[1].trim().split(spaces_sep_by_comma);
+
+      for (const booleanAttribute of booleanAttributes) {
+        const [attribute, maybeIdentifier] = booleanAttribute.split(":");
+        const identifier = maybeIdentifier || attribute;
+        const value = contextLookup(identifier);
+
+        if (value) {
+          attributes.push([attribute, ""]);
+        }
+      }
     } else if (attribute[0] === "@class") {
       // @class attribute
       const identifier = attribute[1] || "class";

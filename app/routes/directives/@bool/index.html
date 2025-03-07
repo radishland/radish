@@ -1,0 +1,32 @@
+<radish:head>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/cdn/themes/light.css"
+  />
+  <script
+    type="module"
+    src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/cdn/shoelace-autoloader.js"
+  ></script>
+</radish:head>
+
+<handle-bool>
+  <label>
+    loading <input type="checkbox" name="loading" @bind:checked="loading">
+  </label>
+  <label>
+    pill <input type="checkbox" name="pill" @bind:checked="pill">
+  </label>
+  <label>
+    circle <input type="checkbox" name="circle" @bind:checked="circle">
+  </label>
+
+  <sl-button variant="default" size="medium" @bool="loading, pill, circle">
+    <sl-icon name="gear" label="Settings"></sl-icon>
+  </sl-button>
+
+  <style>
+    label {
+      user-select: none;
+    }
+  </style>
+</handle-bool>

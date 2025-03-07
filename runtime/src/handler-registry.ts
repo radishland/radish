@@ -50,6 +50,49 @@ export class HandlerRegistry extends HTMLElement
     return this[identifier];
   }
 
+  #handleAttr(e: Event) {
+    if (e instanceof CustomEvent) {
+      const { identifier, attribute, target }: AttrRequestDetail = e.detail;
+
+      if (
+        identifier in this && target instanceof HTMLElement &&
+        attribute in target
+      ) {
+        const ref = this.lookup(identifier);
+
+        this.effect(() => {
+          if (booleanAttributes.includes(attribute)) {
+            ref.valueOf()
+              ? target.setAttribute(attribute, "")
+              : target.removeAttribute(attribute);
+          } else {
+            target.setAttribute(attribute, `${ref}`);
+          }
+        });
+
+        e.stopPropagation();
+      }
+    }
+  }
+
+  #handleBool(e: Event) {
+    if (e instanceof CustomEvent) {
+      const { identifier, attribute, target }: AttrRequestDetail = e.detail;
+
+      if (identifier in this && target instanceof HTMLElement) {
+        const ref = this.lookup(identifier);
+
+        this.effect(() => {
+          ref.valueOf()
+            ? target.setAttribute(attribute, "")
+            : target.removeAttribute(attribute);
+        });
+
+        e.stopPropagation();
+      }
+    }
+  }
+
   #handleOn(e: Event) {
     if (e instanceof CustomEvent) {
       const { identifier, type, target }: OnRequestDetail = e.detail;
@@ -96,31 +139,6 @@ export class HandlerRegistry extends HTMLElement
         if (typeof cleanup === "function") {
           this.#cleanup.push(cleanup);
         }
-        e.stopPropagation();
-      }
-    }
-  }
-
-  #handleAttr(e: Event) {
-    if (e instanceof CustomEvent) {
-      const { identifier, attribute, target }: AttrRequestDetail = e.detail;
-
-      if (
-        identifier in this && target instanceof HTMLElement &&
-        attribute in target
-      ) {
-        const ref = this.lookup(identifier);
-
-        this.effect(() => {
-          if (booleanAttributes.includes(attribute)) {
-            ref.valueOf()
-              ? target.setAttribute(attribute, "")
-              : target.removeAttribute(attribute);
-          } else {
-            target.setAttribute(attribute, `${ref}`);
-          }
-        });
-
         e.stopPropagation();
       }
     }
@@ -211,6 +229,7 @@ export class HandlerRegistry extends HTMLElement
     const { signal } = this.abortController;
 
     this.addEventListener("@attr-request", this.#handleAttr, { signal });
+    this.addEventListener("@bool-request", this.#handleBool, { signal });
     this.addEventListener("@class-request", this.#handleClass, { signal });
     this.addEventListener("@on-request", this.#handleOn, { signal });
     this.addEventListener("@use-request", this.#handleUse, { signal });
