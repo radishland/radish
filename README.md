@@ -43,6 +43,7 @@ A full-stack framework built around Web Components and Web Standards:
   - [Build](#build)
     - [Importmap](#importmap)
     - [No bundle](#no-bundle)
+  - [Resources](#resources)
 
 ## Try out the alpha
 
@@ -434,3 +435,14 @@ The production importmap lets the browser resolve dependencies (and their depend
 - Better caching. Dependencies can be cached by the browser separately from your modules, so that updating a typo in your code only invalidates that file.
 - Smaller downloads. Since dependencies are not inlined with your code, they're only downloaded on first load or whenever you update their version; not with every bundle.
 - Less bandwidth usage. Resolving dependencies client-side and downloading them from CDNs means that much less traffic on your infrastructure. This can make a difference in terms of cost and usage
+
+## Resources
+
+Here are a few resources to learn more about various aspects of Web Components:
+
+- web.dev article on [Custom Element Best Practices](https://web.dev/articles/custom-elements-best-practices)
+- [Declarative Shadow DOM](https://web.dev/articles/declarative-shadow-dom)
+- MDN 3 parts guide:
+  - [Using custom elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements)
+  - [Using Shadow DOM](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM)
+  - [Using templates and slots](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_templates_and_slots)
