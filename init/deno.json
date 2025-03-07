@@ -1,6 +1,6 @@
 {
   "name": "@radish/init",
-  "version": "1.0.0-alpha.16",
+  "version": "1.0.0-alpha.17",
   "license": "MIT",
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts"
