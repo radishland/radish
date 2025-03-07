@@ -62,9 +62,7 @@ export class HandlerRegistry extends HTMLElement
 
         this.effect(() => {
           if (booleanAttributes.includes(attribute)) {
-            ref.valueOf()
-              ? target.setAttribute(attribute, "")
-              : target.removeAttribute(attribute);
+            target.toggleAttribute(attribute, ref.valueOf());
           } else {
             target.setAttribute(attribute, `${ref}`);
           }
@@ -83,9 +81,7 @@ export class HandlerRegistry extends HTMLElement
         const ref = this.lookup(identifier);
 
         this.effect(() => {
-          ref.valueOf()
-            ? target.setAttribute(attribute, "")
-            : target.removeAttribute(attribute);
+          target.toggleAttribute(attribute, ref.valueOf());
         });
 
         e.stopPropagation();
