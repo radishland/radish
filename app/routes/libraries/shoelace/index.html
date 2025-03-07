@@ -43,16 +43,14 @@
     </label>
   </div>
 
-  <div class="detect-hover">
-    <sl-rating
-      label="Rating"
-      @attr="max, precision"
-      @bool="readonly, disabled"
-      @bind:value
-      @on="sl-hover:hover"
-    ></sl-rating>
-    <span @text="value"></span>
-  </div>
+  <sl-rating
+    label="Rating"
+    @attr="max, precision"
+    @bool="readonly, disabled"
+    @bind:value
+    @on="sl-hover:hover"
+  ></sl-rating>
+  <span @text="value"></span>
 </handle-sl>
 
 <style>

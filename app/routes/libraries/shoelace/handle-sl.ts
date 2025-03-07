@@ -6,7 +6,7 @@ export class HandleSl extends HandlerRegistry {
   precision = signal(1);
   readonly = signal(false);
   disabled = signal(false);
-  value = signal(0);
+  value = signal(3);
 
   hover = (e: CustomEvent<{ value: number }>) => {
     if (!this.disabled.value && !this.readonly.value) {

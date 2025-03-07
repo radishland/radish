@@ -289,15 +289,24 @@ The `checked` attribute of the input is bound to the `value` property of its han
 
 ### @bind directive: declarative two-way bindings
 
-The `@bind` directive allows to declare a two-way binding between a reactive js value and a stateful HTML property.
+The `@bind` directive declares a two-way reactive binding between an element stateful property and a reactive signal.
 
-For example to bind the `checked` property to the `isChecked` signal:
+For example to bind the `checked` property of an `input` to the `isChecked` signal of a surrounding handler:
 
 ```html
-<input type="checkbox" @bind:checked="isChecked" />
+<demo-bind>
+  <input type="checkbox" @bind:checked="isChecked" />
+</demo-bind>
 ```
 
-If the property and the value have the same name you can use the shorthand syntax:
+```ts
+// demo-bind.ts
+class DemoBind extends HandlerRegistry {
+  isChecked = signal(true);
+}
+```
+
+If the property and the value have the same name you can use the following shorthand syntax:
 
 ```html
 <!-- these are equivalent -->
@@ -307,12 +316,27 @@ If the property and the value have the same name you can use the shorthand synta
 
 The `@bind` directive is a universal directive: it has both server and client semantics:
 
-- On the server, it is equivalent to an `@attr|server` effect: it sets the attribute to the given value on the server.
-- On the client, the js state is first resumed to the value of the HTML state, in case the user interacted before js was ready. Then an event listener manages the html -> js state updates and a `@prop` effect handles the remaining js -> html state sync.
+- On the server, it is equivalent to an `@attr|server` effect and sets the attribute to the given value.
+- On the client, `@bind` performs an extended `@prop` effect with a twist: the signal value is first resumed to the value of the HTML state, in case the user interacted before js was ready. Then an event listener manages the html -> js updates and a `@prop` effect handles state synchronization.
 
-The resumability of the state on the client prevents janky hydration and provides instant interactivity in the case of slow networks. And focus is not lost.
+The resumability of the state on the client prevents janky hydration and provides instant interactivity in the case of slow networks. And as a bonus, focus is not lost after the state is resumed.
 
-The `@bind` directive allow cross-component bindings at any filiation level: parents, grand-parents, grand-grand-parents etc.
+Also, the `@bind` directive allows cross-component bindings at any filiation level: parents, grand-parents, grand-grand-parents etc.
+
+You can use this directive on your web components too. For example the following `my-rating` element and the `input` are correlated via the `value` signal of their common handler:
+
+```html
+<bind-custom-element>
+  <input type="number" @bind:value>
+  <my-rating label="Rating" @bind:value></my-rating>
+<bind-custom-element>
+```
+
+```ts
+class BindCustomElement extends HandlerRegistry {
+  value = signal(3)
+}
+```
 
 ### @bool directive
 

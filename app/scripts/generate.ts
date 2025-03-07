@@ -36,42 +36,17 @@ if (args.includes("--manifest")) {
     await generateImportMap(manifest, {
       install: [
         "@preact/signals-core", // When using the development runtime version
+        !dev() && "@shoelace-style/shoelace/dist/components/rating/rating.js",
       ],
-      generatorOptions: {
-        inputMap: {
-          imports: {
-            "@shoelace-style/shoelace/dist/components/rating/rating.js": dev()
-              ? "../node_modules/@shoelace-style/shoelace/dist/components/rating/rating.js"
-              : "@shoelace-style/shoelace/dist/components/rating/rating.js",
-          },
-          scopes: {
-            "https://ga.jspm.io/": {
-              "@lit/reactive-element":
-                "https://ga.jspm.io/npm:@lit/reactive-element@2.0.4/reactive-element.js",
-              "@lit/reactive-element/decorators/":
-                "https://ga.jspm.io/npm:@lit/reactive-element@2.0.4/decorators/",
-              "@shoelace-style/localize":
-                "https://ga.jspm.io/npm:@shoelace-style/localize@3.2.1/dist/index.js",
-              "lit": "https://ga.jspm.io/npm:lit@3.2.1/index.js",
-              "lit-element/lit-element.js":
-                "https://ga.jspm.io/npm:lit-element@4.1.1/lit-element.js",
-              "lit-html": "https://ga.jspm.io/npm:lit-html@3.2.1/lit-html.js",
-              "lit-html/": "https://ga.jspm.io/npm:lit-html@3.2.1/",
-              "lit/": "https://ga.jspm.io/npm:lit@3.2.1/",
-            },
-          },
-        },
-        ignore: ["@shoelace-style/shoelace/dist/components/rating/rating.js"],
-      },
       transform: (importmap) => {
-        const insert = {
+        const imports = {
           // When using the development runtime version
           "radish": "/_radish/runtime/index.js",
           "radish/boot": "/_radish/runtime/boot.js",
         };
         return JSON.stringify({
-          imports: { ...importmap.imports, ...insert },
-          scopes: importmap.scopes,
+          imports: { ...importmap.imports, ...imports },
+          scopes: { ...importmap.scopes },
         });
       },
     });
