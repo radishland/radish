@@ -438,7 +438,7 @@ The production importmap lets the browser resolve dependencies (and their depend
 
 ## Resources
 
-Here are a few resources to learn more:
+Here are a few resources to learn more about various aspects of Web Components:
 
 - web.dev article on [Custom Element Best Practices](https://web.dev/articles/custom-elements-best-practices)
 - [Declarative Shadow DOM](https://web.dev/articles/declarative-shadow-dom)
