@@ -15,6 +15,7 @@
     "noImplicitOverride": true
   },
   "imports": {
+    "@shoelace-style/shoelace": "npm:@shoelace-style/shoelace@^2.20.0",
     // "radish": "npm:@radishland/runtime@^0.1.0"
     "ts-helpers": "npm:@fcrozatier/ts-helpers@^2.8.0"
   }
