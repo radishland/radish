@@ -1,0 +1,45 @@
+@media print {
+  body {
+    print-color-adjust: economy;
+  }
+
+  /* Remove unnecessary elements */
+  aside, footer, .no-print {
+    display: none !important;
+  }
+
+  /* Display abbreviation meaning */
+  abbr[title]::after {
+    content: " (" attr(title) ") ";
+  }
+
+  /* Include citation source */
+  :is(blockquote, q)[cite]::after {
+    content: " (source: " attr(cite) ") ";
+  }
+
+  cite::after {
+    content: "(" attr(href) ")";
+  }
+
+  /* Do not break inside lists, tables, code blocks, images and block quotes if possible */
+  blockquote,
+  figure,
+  img,
+  pre,
+  table,
+  ul,
+  ol {
+    break-inside: avoid;
+  }
+
+  /* Do not break after a title */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    break-after: avoid;
+  }
+}
