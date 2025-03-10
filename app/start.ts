@@ -6,4 +6,6 @@ if (dev) {
   Deno.env.set("dev", "");
 }
 
-await start({ router: { matchers: { number: /\d+/ } } });
+await start({
+  router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
+});

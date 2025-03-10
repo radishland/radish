@@ -27,7 +27,25 @@ const handle: Handle = async ({ context, resolve }) => {
 
 type StartOptions = {
   router?: {
-    matchers: Record<string, RegExp>;
+    /**
+     * An object mapping matcher names to their corresponding regexp definition.
+     *
+     * Matchers allow to filter dynamic routes like `[id=number]` with a "number" matcher.
+     * For example:
+     *
+     * ```ts
+     * matchers: {
+     *  number: /^\d+$/
+     * }
+     * ```
+     */
+    matchers?: Record<string, RegExp>;
+    /**
+     * Specifies the location of the node_modules folder relative to the deno.json file to serve local dependencies from in dev mode, like `.` or `..` etc.
+     *
+     * @default `.`
+     */
+    nodeModulesRoot?: string;
   };
 };
 
@@ -58,7 +76,9 @@ export const start = async (options?: StartOptions): Promise<void> => {
   router.serveStatic({ pathname: `/${staticFolder}/*` });
 
   if (dev()) {
-    router.serveStatic({ pathname: `/node_modules/*` }, { fsRoot: ".." });
+    router.serveStatic({ pathname: `/node_modules/*` }, {
+      fsRoot: join(options?.router?.nodeModulesRoot ?? "."),
+    });
   }
 
   await router.generateFileBasedRoutes();
