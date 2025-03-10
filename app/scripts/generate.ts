@@ -36,6 +36,10 @@ if (args.includes("--manifest")) {
     await generateImportMap(manifest, {
       install: [
         "@preact/signals-core", // When using the development runtime version
+        "@material/web/button/filled-button",
+        "@material/web/button/outlined-button",
+        "@material/web/checkbox/checkbox",
+        "wired-elements",
         !dev() && "@shoelace-style/shoelace/dist/components/rating/rating.js",
       ],
       transform: (importmap) => {
