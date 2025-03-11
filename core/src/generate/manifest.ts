@@ -6,11 +6,7 @@ import {
 } from "@radish/htmlcrunch";
 import { ensureDirSync, walkSync } from "@std/fs";
 import { extname, join } from "@std/path";
-import {
-  elementsFolder,
-  generatedFolder,
-  routesFolder,
-} from "../conventions.ts";
+import { elementsFolder, generatedFolder, routesFolder } from "../constants.ts";
 import { kebabToPascal } from "../utils.ts";
 import { walkTree } from "../walk.ts";
 

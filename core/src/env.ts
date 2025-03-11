@@ -1,5 +1,5 @@
 import { join } from "@std/path";
-import { generatedFolder } from "./conventions.ts";
+import { generatedFolder } from "./constants.ts";
 
 const env_comment = /^\s*#/;
 const env_pair = /(?<key>\w+)=(?<value>\w+)/;

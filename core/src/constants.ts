@@ -4,3 +4,5 @@ export const routesFolder = "routes";
 export const libFolder = "lib";
 export const staticFolder = "static";
 export const generatedFolder = "_generated";
+
+export const ts_extension_regex = /\.ts$/;
