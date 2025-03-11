@@ -1,5 +1,5 @@
 import { UserAgent } from "@std/http/user-agent";
-import { common, dirname, extname, join, resolve } from "@std/path";
+import { common, extname, join, relative, resolve } from "@std/path";
 import { buildFile } from "./build.ts";
 import {
   buildFolder,
@@ -7,11 +7,12 @@ import {
   libFolder,
   routesFolder,
   staticFolder,
-} from "./conventions.ts";
-import { generateCSS } from "./css.ts";
+  ts_extension_regex,
+} from "./constants.ts";
 import { App, type Handle } from "./server/app.ts";
 import { Router } from "./server/router.ts";
 import { dev } from "$env";
+import { setTimeoutWithAbort } from "./utils.ts";
 
 const handle: Handle = async ({ context, resolve }) => {
   // Avoid mime type sniffing
@@ -86,23 +87,21 @@ export const start = async (options?: StartOptions): Promise<void> => {
   const app = new App(router, handle);
   const clients = new Set<WebSocket>();
 
-  const wsHandler = (request: Request) => {
-    const { socket, response } = Deno.upgradeWebSocket(request);
-    socket.onopen = () => {
+  const handleWebSocket = (socket: WebSocket) => {
+    socket.addEventListener("open", () => {
       console.log("WebSocket Client connected");
       clients.add(socket);
-    };
-    socket.onclose = () => {
+    });
+    socket.addEventListener("close", () => {
       console.log("WebSocket Client disconnected");
       clients.delete(socket);
-    };
-    socket.onmessage = (e) => {
+    });
+    socket.addEventListener("message", (e) => {
       console.log("WebSocket message", e);
-    };
-    socket.onerror = (e) => {
+    });
+    socket.addEventListener("error", (e) => {
       console.log("WebSocket error", e);
-    };
-    return response;
+    });
   };
 
   const server = Deno.serve({
@@ -113,8 +112,14 @@ export const start = async (options?: StartOptions): Promise<void> => {
     },
   }, (request, info) => {
     console.log("Request", request.method, request.url);
+    if (!dev() && request.headers.get("upgrade")) {
+      // Not implemented: we don't support upgrades in production
+      return new Response(null, { status: 501 });
+    }
     if (dev() && request.headers.get("upgrade") === "websocket") {
-      return wsHandler(request);
+      const { socket, response } = Deno.upgradeWebSocket(request);
+      handleWebSocket(socket);
+      return response;
     }
     return app.handleRequest(request, info);
   });
@@ -128,9 +133,7 @@ export const start = async (options?: StartOptions): Promise<void> => {
       appWatcher?.close();
       console.log("Server closed");
       for (const client of clients) {
-        if (client.readyState === WebSocket.OPEN) {
-          client.close(1000, "Normal WebSocket closure");
-        }
+        client.close();
       }
       clients.clear();
       Deno.exit();
@@ -144,20 +147,30 @@ export const start = async (options?: StartOptions): Promise<void> => {
    * Watcher
    */
   if (dev()) {
+    console.log("HRM server watching...");
     const routesPath = resolve(routesFolder);
+    const buildPath = resolve(buildFolder);
 
-    appWatcher = Deno.watchFs(Deno.cwd(), { recursive: true });
+    appWatcher = Deno.watchFs([
+      elementsFolder,
+      routesFolder,
+      libFolder,
+      staticFolder,
+    ], { recursive: true });
 
     /**
      * Simple throttling mechanism to prevent duplicated File System events
      */
     class Throttle<T> extends Set<T> {
-      timeout: number;
-      timers = new Set<number>();
+      #timeout: number;
+      #timers = new Set<number>();
 
+      /**
+       * @param {number} timeout Throttle precision timeout in ms
+       */
       constructor(timeout: number) {
         super();
-        this.timeout = timeout;
+        this.#timeout = timeout;
       }
 
       override add(value: T): this {
@@ -165,108 +178,126 @@ export const start = async (options?: StartOptions): Promise<void> => {
 
         const id = setTimeout(() => {
           super.delete(value);
-        }, this.timeout);
+          this.#timers.delete(id);
+        }, this.#timeout);
 
-        this.timers.add(id);
+        this.#timers.add(id);
         return this;
       }
 
       override clear(): void {
         super.clear();
-        for (const id of this.timers) {
+        for (const id of this.#timers) {
           clearTimeout(id);
         }
+        this.#timers.clear();
       }
     }
 
-    /**
-     * Throttle precision in ms
-     */
     const timeout = 200;
     const throttle = new Throttle<string>(timeout);
-    const removeEvents = new Map<string, number>();
+    const controllers = new Map<string, AbortController>();
 
     for await (const event of appWatcher) {
       const time = Math.floor(Date.now() / timeout);
-      console.log(`FS Event`, event.kind, time);
+      console.log(`FS Event`, event, time);
 
       // Update generated CSS variables
-      if (
-        event.kind === "modify" &&
-        event.paths.every((p) => [".html", ".css"].includes(extname(p)))
-      ) {
-        if (!throttle.has(`css`)) {
-          console.log("Generate css variables");
-          await generateCSS();
-          throttle.add(`css`);
-        }
-      }
+      // if (
+      //   event.kind === "modify" &&
+      //   event.paths.every((p) => [".html", ".css"].includes(extname(p)))
+      // ) {
+      //   if (!throttle.has(`css`)) {
+      //     console.log("Generate css variables");
+      //     await generateCSS();
+      //     throttle.add(`css`);
+      //   }
+      // }
 
       for (const path of event.paths) {
-        const dest = join(buildFolder, path);
+        const relativePath = relative(Deno.cwd(), path);
+        const dest = join(buildPath, relativePath);
 
         if (extname(path)) {
           // Build files
-          if (
-            ["create", "modify", "rename"].includes(event.kind) &&
-            !throttle.has(`file:${event.kind}:${path}`)
-          ) {
-            console.log("building file", path);
-            await buildFile(path, dest);
-          } else if (event.kind === "remove") {
-            if (dest.endsWith(".ts")) {
-              Deno.removeSync(dest.replace(/\.ts$/, ".js"));
-            } else {
-              Deno.removeSync(dest);
-            }
-            console.log("removed a file", dest);
-          }
-          throttle.add(`file:${event.kind}:${path}`);
-        } else {
-          // Update folder structure
-          const key = `folder:${event.kind}:${path}`;
+          const key = `file:${event.kind}:${relativePath}`;
           if (!throttle.has(key)) {
-            if (event.kind === "create") {
-              Deno.mkdirSync(dest);
-              console.log("created a folder", path);
-            } else if (event.kind === "rename") {
-              const matchingSourcePath = removeEvents.entries().find(
-                ([removedPath, t]) => {
-                  // Heuristic to find the correlated renamed source
-                  return t === time && dirname(path) === dirname(removedPath);
-                },
-              )?.[0];
-
-              if (matchingSourcePath) {
-                const matchingSourceDest = join(
-                  buildFolder,
-                  matchingSourcePath,
-                );
-                Deno.renameSync(matchingSourceDest, dest);
-                console.log(
-                  `renamed folder: ${matchingSourceDest}\n\tto: ${dest}`,
-                );
-              } else {
-                console.log("renamed detected but source not found", path);
-              }
-            } else if (event.kind === "remove") {
-              removeEvents.set(path, time);
-
-              // Postpone deletion in case it's a rename
-              setTimeout(() => {
-                removeEvents.delete(path);
-                try {
-                  Deno.removeSync(dest, { recursive: true });
-                  console.log("removed a folder", path);
-                } catch (error) {
-                  if (!(error instanceof Deno.errors.NotFound)) {
-                    throw error;
-                  }
-                }
-              }, timeout);
-            }
             throttle.add(key);
 
+            if (["create", "modify", "rename"].includes(event.kind)) {
+              // TODO distinguish, elements, libs etc
+              await buildFile(path, dest);
+              console.log("built", relativePath);
+            } else if (event.kind === "remove") {
+              try {
+                if (dest.endsWith(".ts")) {
+                  Deno.removeSync(dest.replace(ts_extension_regex, ".js"));
+                } else {
+                  Deno.removeSync(dest);
+                }
+              } catch (error) {
+                if (!(error instanceof Deno.errors.NotFound)) {
+                  throw error;
+                }
+              }
+              console.log("removed", relativePath);
+            }
+          }
+        } else {
+          // Update folder structure
+          const key = `folder:${event.kind}:${relativePath}`;
+          if (!throttle.has(key)) {
+            throttle.add(key);
+
+            if (event.kind === "create") {
+              Deno.mkdirSync(dest);
+              console.log("created", relativePath);
+            } else if (event.kind === "rename") {
+              let matchingSourcePath = "";
+
+              console.log([...throttle.values()]);
+              // Heuristic to find the correlated renamed source
+              const found = throttle.values().find((key) => {
+                if (!key.startsWith(`folder:remove:`)) return false;
+
+                matchingSourcePath = key.split(":").at(-1) as string;
+                console.log("found matchingSourcePath:", matchingSourcePath);
+
+                return true;
+              });
+
+              if (found) {
+                controllers.get(matchingSourcePath)?.abort();
+                controllers.delete(matchingSourcePath);
+
+                Deno.renameSync(join(buildPath, matchingSourcePath), dest);
+                console.log(`moved ${relativePath}`);
+              } else {
+                console.log("couldn't find rename source folder", path);
+              }
+            } else if (event.kind === "remove") {
+              const controller = new AbortController();
+              controllers.set(relativePath, controller);
+
+              // Postpone deletion in case it's a rename
+              setTimeoutWithAbort(
+                () => {
+                  try {
+                    Deno.removeSync(dest, { recursive: true });
+                    controllers.delete(relativePath);
+                    console.log("removed", relativePath);
+                  } catch (error) {
+                    if (!(error instanceof Deno.errors.NotFound)) {
+                      throw error;
+                    }
+                  }
+                },
+                timeout,
+                controller.signal,
+              );
+            }
+
+            // TODO: rebuild routes
             if (!throttle.has("route")) {
               // Update routes
               if (
@@ -289,11 +320,13 @@ export const start = async (options?: StartOptions): Promise<void> => {
           [".html", ".css", ".js", ".ts"].includes(extname(p))
         )
       ) {
+        throttle.add(`reload`);
         console.log("Hot-Reloading...");
         for (const client of clients) {
-          client.send("reload");
+          if (client.readyState === WebSocket.OPEN) {
+            client.send("reload");
+          }
         }
-        throttle.add(`reload`);
       }
     }
   }
