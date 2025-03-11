@@ -1,6 +1,6 @@
 import { ensureDirSync, walk } from "@std/fs";
 import { join } from "@std/path";
-import { buildFolder, generatedFolder } from "./conventions.ts";
+import { buildFolder, generatedFolder } from "./constants.ts";
 
 const size_regex =
   /var\(--(?<size100>\d)(?<size010>\d)(?<size001>\d)(?<unit>r?em)?\)/g;

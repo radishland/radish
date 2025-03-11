@@ -1,7 +1,7 @@
 import { walk } from "@std/fs";
 import { serveDir, type ServeDirOptions, serveFile } from "@std/http";
 import { dirname, join } from "@std/path";
-import { buildFolder, routesFolder } from "../conventions.ts";
+import { buildFolder, routesFolder } from "../constants.ts";
 import type { Context } from "./app.ts";
 
 type HTTPMethod = (typeof ALLOWED_METHODS)[number];

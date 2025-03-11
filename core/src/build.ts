@@ -6,7 +6,8 @@ import {
   generatedFolder,
   libFolder,
   routesFolder,
-} from "./conventions.ts";
+  ts_extension_regex,
+} from "./constants.ts";
 import type {
   ElementManifest,
   Manifest,
@@ -53,7 +54,7 @@ export const buildFile = async (src: string, dest: string): Promise<void> => {
 
   // Transpile .ts files to .js
   if (dest.endsWith(".ts")) {
-    dest = dest.replace(/\.ts$/, ".js");
+    dest = dest.replace(ts_extension_regex, ".js");
   }
 
   Deno.writeTextFileSync(dest, content);
@@ -145,7 +146,7 @@ const buildRoute = (
     if (!element) return undefined;
     return element.kind === "unknown-element" ? undefined : element.path
       .find((p) => p.endsWith(".ts") || p.endsWith(".js"))
-      ?.replace(/\.ts$/, ".js");
+      ?.replace(ts_extension_regex, ".js");
   }).filter((i) => i !== undefined);
 
   if (imports.length > 0) {
