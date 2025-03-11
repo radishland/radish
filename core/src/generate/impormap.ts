@@ -7,7 +7,7 @@ import type { IImportMap } from "@jspm/import-map";
 import { dev } from "$env";
 import { join } from "@std/path";
 import { readDenoConfig } from "../config.ts";
-import { generatedFolder } from "../conventions.ts";
+import { generatedFolder, ts_extension_regex } from "../constants.ts";
 import type { Manifest } from "./manifest.ts";
 
 interface ImportMapOptions {
@@ -95,7 +95,7 @@ export const pureImportMap = async (
     if (target?.startsWith("./")) {
       manualImportMap.set(
         alias,
-        target.replace(/^\.\//, "/").replace(/\.ts$/, ".js"),
+        target.replace(/^\.\//, "/").replace(ts_extension_regex, ".js"),
       );
 
       // npm modules
