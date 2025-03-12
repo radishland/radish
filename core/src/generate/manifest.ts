@@ -47,6 +47,7 @@ export type ElementManifest =
 export type RouteManifest = {
   kind: "route";
   path: string;
+  files: string[];
   templateLoader: () => MFragment;
   dependencies: string[];
   layouts: LayoutManifest[];
@@ -268,6 +269,7 @@ const crawlRoutesFolder = (path = routesFolder) => {
           routesManifest += `"${path}": {
               kind: 'route',
               path: "${path}",
+              files: ["${file.path}"],
               templateLoader: memoize(() => {
                 return fragments.parseOrThrow(Deno.readTextFileSync("${file.path}"));
                 }),
@@ -338,13 +340,11 @@ export const manifest = {
  * Return the build order of a list of components, taking their relative dependencies into account
  */
 export function sortComponents<
-  T extends {
-    tagName?: string;
-    path: string | string[];
-    dependencies: string[];
-  },
+  T extends
+    | Pick<ElementManifest, "tagName" | "dependencies" | "path">
+    | Pick<RouteManifest, "dependencies" | "path">,
 >(components: T[]): T[] {
-  const tags = new Set<string>();
+  const ids = new Set<string>();
 
   let sorted: T[] = [];
 
@@ -352,7 +352,7 @@ export function sortComponents<
   while (components.length > 0) {
     // Find the leaves
     const { leaveNodes, interiorNodes } = Object.groupBy(components, (c) => {
-      return c.dependencies.every((d) => tags.has(d))
+      return c.dependencies.every((d) => ids.has(d))
         ? "leaveNodes"
         : "interiorNodes";
     });
@@ -361,8 +361,8 @@ export function sortComponents<
       sorted = sorted.concat(leaveNodes);
 
       for (const leave of leaveNodes) {
-        if (leave.tagName) {
-          tags.add(leave.tagName);
+        if ("tagName" in leave) {
+          ids.add(leave.tagName);
         }
       }
     }
