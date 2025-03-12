@@ -7,17 +7,13 @@ import {
   libFolder,
   routesFolder,
   ts_extension_regex,
-} from "./constants.ts";
-import type {
-  ElementManifest,
-  Manifest,
-  RouteManifest,
-} from "./generate/manifest.ts";
-import { manifest, sortComponents } from "./generate/manifest.ts";
-import { stripTypes } from "./transforms.ts";
-import type { Transform } from "./types.d.ts";
-import { applyServerEffects, serializeWebComponent } from "./walk.ts";
-import type { SpeculationRules } from "./generate/speculationrules.ts";
+} from "../constants.ts";
+import type { ElementManifest, Manifest, RouteManifest } from "./manifest.ts";
+import { manifest, sortComponents } from "./manifest.ts";
+import { stripTypes } from "../transforms.ts";
+import type { Transform } from "../types.d.ts";
+import { applyServerEffects, serializeWebComponent } from "../walk.ts";
+import type { SpeculationRules } from "./speculationrules.ts";
 import { dev } from "$env";
 
 const cssTransforms: Transform[] = [];
