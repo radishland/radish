@@ -74,45 +74,29 @@ const buildDir = async (src: string, dest: string) => {
   }
 };
 
-const buildElement = async (
-  element: ElementManifest,
-) => {
-  const parents = new Set(element.path.map(dirname));
-
-  if (parents.size > 1) {
-    throw new Error("Multiple parent folders found");
-  }
-
-  const parentFolder = [...parents][0];
-
-  for (const path of element.path) {
-    const srcFile = path;
-    const destFile = join(buildFolder, srcFile);
-
-    ensureDirSync(dirname(destFile));
-
-    if (extname(srcFile) === ".html") {
-      const content = serializeWebComponent(element);
-
-      Deno.writeTextFileSync(destFile, content);
-    } else {
-      await buildFile(srcFile, destFile);
-    }
-  }
-
+const buildElement = async (element: ElementManifest) => {
   for (
-    const entry of walkSync(parentFolder, {
+    const entry of walkSync(element.path, {
       includeFiles: true,
       includeDirs: false,
       maxDepth: 1,
-      exts: [".css"],
     })
   ) {
     const srcFile = entry.path;
     const destFile = join(buildFolder, srcFile);
 
     ensureDirSync(dirname(destFile));
-    await buildFile(srcFile, destFile);
+    if (
+      element.kind === "web-component" &&
+      extname(srcFile) === ".html" &&
+      element.files.includes(srcFile)
+    ) {
+      const content = serializeWebComponent(element);
+
+      Deno.writeTextFileSync(destFile, content);
+    } else {
+      await buildFile(srcFile, destFile);
+    }
   }
 };
 
@@ -144,7 +128,7 @@ const buildRoute = (
   const imports = route.dependencies.toReversed().map((dependency) => {
     const element: ElementManifest | undefined = manifest.elements[dependency];
     if (!element) return undefined;
-    return element.kind === "unknown-element" ? undefined : element.path
+    return element.kind === "unknown-element" ? undefined : element.files
       .find((p) => p.endsWith(".ts") || p.endsWith(".js"))
       ?.replace(ts_extension_regex, ".js");
   }).filter((i) => i !== undefined);
