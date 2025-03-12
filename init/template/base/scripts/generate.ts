@@ -3,7 +3,7 @@ import {
   generateImportMap,
   generateManifest,
   type Manifest,
-  mockGlobals,
+  setGlobals,
 } from "$core";
 
 const args = Deno.args;
@@ -16,7 +16,7 @@ if (args.includes("--dev")) {
 if (args.includes("--manifest")) {
   generateManifest();
 } else {
-  mockGlobals();
+  setGlobals();
   const { manifest } = await import("../_generated/manifest.ts") as {
     manifest: Manifest;
   };
@@ -26,7 +26,7 @@ if (args.includes("--manifest")) {
       install: "@radishland/runtime@^0.1.0/boot",
     });
   } else if (args.includes("--build")) {
-    await build(manifest, {
+    build(manifest, {
       speculationRules: {
         prerender: [{
           where: {
