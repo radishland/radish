@@ -17,7 +17,8 @@
     ".": "./exports/mod.ts",
     "./parser": "./exports/parser.ts",
     "./utils": "./src/utils.ts",
-    "./env": "./exports/env.ts"
+    "./env": "./exports/env.ts",
+    "./types": "./exports/types.ts"
   },
   "fmt": {
     "exclude": ["**/*.md"]
