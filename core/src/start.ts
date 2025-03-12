@@ -1,6 +1,5 @@
 import { UserAgent } from "@std/http/user-agent";
 import { common, extname, join, relative, resolve } from "@std/path";
-import { buildFile } from "./build.ts";
 import {
   buildFolder,
   elementsFolder,
@@ -13,6 +12,7 @@ import { App, type Handle } from "./server/app.ts";
 import { Router } from "./server/router.ts";
 import { dev } from "$env";
 import { setTimeoutWithAbort } from "./utils.ts";
+import type { RadishPlugin } from "./types.d.ts";
 
 const handle: Handle = async ({ context, resolve }) => {
   // Avoid mime type sniffing
@@ -48,6 +48,7 @@ type StartOptions = {
      */
     nodeModulesRoot?: string;
   };
+  plugins?: RadishPlugin[];
 };
 
 export const start = async (options?: StartOptions): Promise<void> => {
@@ -219,14 +220,14 @@ export const start = async (options?: StartOptions): Promise<void> => {
         const dest = join(buildPath, relativePath);
 
         if (extname(path)) {
-          // Build files
+          // File
           const key = `file:${event.kind}:${relativePath}`;
           if (!throttle.has(key)) {
             throttle.add(key);
 
             if (["create", "modify", "rename"].includes(event.kind)) {
               // TODO distinguish, elements, libs etc
-              await buildFile(path, dest);
+              // await buildFile(path, dest);
               console.log("built", relativePath);
             } else if (event.kind === "remove") {
               try {
@@ -244,7 +245,7 @@ export const start = async (options?: StartOptions): Promise<void> => {
             }
           }
         } else {
-          // Update folder structure
+          // Folder
           const key = `folder:${event.kind}:${relativePath}`;
           if (!throttle.has(key)) {
             throttle.add(key);

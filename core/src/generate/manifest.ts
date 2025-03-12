@@ -16,7 +16,8 @@ export type ElementManifest =
   | {
     kind: "custom-element";
     tagName: string;
-    path: string[];
+    path: string;
+    files: string[];
     class: Constructor;
     dependencies: string[];
     templateLoader?: never;
@@ -25,7 +26,8 @@ export type ElementManifest =
   | {
     kind: "web-component";
     tagName: string;
-    path: string[];
+    path: string;
+    files: string[];
     class: Constructor;
     templateLoader: () => MFragment;
     dependencies: string[];
@@ -34,7 +36,8 @@ export type ElementManifest =
   | {
     kind: "unknown-element";
     tagName: string;
-    path: string[];
+    path: string;
+    files: string[];
     class?: never;
     templateLoader: () => MFragment;
     dependencies: string[];
@@ -44,6 +47,7 @@ export type ElementManifest =
 export type RouteManifest = {
   kind: "route";
   path: string;
+  files: string[];
   templateLoader: () => MFragment;
   dependencies: string[];
   layouts: LayoutManifest[];
@@ -72,7 +76,7 @@ const extractImports = (source: string) => {
   return Array.from(source.matchAll(import_regex), (match) => match[1]);
 };
 
-const crawlComponentsFolder = () => {
+const crawlElementsFolder = () => {
   for (
     const entry of Array.from(walkSync(elementsFolder, {
       includeSymlinks: false,
@@ -102,7 +106,8 @@ const crawlComponentsFolder = () => {
     const elementMetaData = {
       kind: "",
       tagName: elementName,
-      path: [] as string[],
+      path: entry.path,
+      files: [] as string[],
       class: "undefined",
       templateLoader: "undefined",
       dependencies: [] as string[],
@@ -118,7 +123,7 @@ const crawlComponentsFolder = () => {
         case ".html":
           // a shadow root template is an .html descendant of the elements folder, with the same name than its parent folder
           hasShadowRootTemplate = entry.name + ".html" === file.name;
-          elementMetaData.path.push(file.path);
+          elementMetaData.files.push(file.path);
 
           if (hasShadowRootTemplate) {
             const content = Deno.readTextFileSync(file.path);
@@ -162,7 +167,7 @@ const crawlComponentsFolder = () => {
             }";\n`;
 
             elementMetaData.class = `${className}`;
-            elementMetaData.path.push(file.path);
+            elementMetaData.files.push(file.path);
             elementMetaData.imports = imports;
           }
           break;
@@ -176,7 +181,8 @@ const crawlComponentsFolder = () => {
     elementsManifest += `"${elementMetaData.tagName}": {
       kind: "${elementMetaData.kind}",
       tagName: "${elementMetaData.tagName}",
-      path: ${JSON.stringify(elementMetaData.path)},
+      path: "${elementMetaData.path}",
+      files: ${JSON.stringify(elementMetaData.files)},
       class: ${elementMetaData.class},
       templateLoader: ${elementMetaData.templateLoader},
       dependencies: ${JSON.stringify(elementMetaData.dependencies)},
@@ -263,6 +269,7 @@ const crawlRoutesFolder = (path = routesFolder) => {
           routesManifest += `"${path}": {
               kind: 'route',
               path: "${path}",
+              files: ["${file.path}"],
               templateLoader: memoize(() => {
                 return fragments.parseOrThrow(Deno.readTextFileSync("${file.path}"));
                 }),
@@ -288,7 +295,8 @@ const crawlRoutesFolder = (path = routesFolder) => {
               tagName: "${tagName}",
               kind: "custom-element",
               class: ${className},
-              path: ["${file.path}"],
+              path: "${path}",
+              files: ["${file.path}"],
               dependencies: [],
               imports: ${JSON.stringify(imports)}
              },\n`;
@@ -311,7 +319,7 @@ export const generateManifest = (
 import { memoize } from '$core/utils';
 import type { Manifest } from "$core";\n\n`;
 
-  crawlComponentsFolder();
+  crawlElementsFolder();
   crawlRoutesFolder();
 
   manifest += classImports;
@@ -332,13 +340,11 @@ export const manifest = {
  * Return the build order of a list of components, taking their relative dependencies into account
  */
 export function sortComponents<
-  T extends {
-    tagName?: string;
-    path: string | string[];
-    dependencies: string[];
-  },
+  T extends
+    | Pick<ElementManifest, "tagName" | "dependencies" | "path">
+    | Pick<RouteManifest, "dependencies" | "path">,
 >(components: T[]): T[] {
-  const tags = new Set<string>();
+  const ids = new Set<string>();
 
   let sorted: T[] = [];
 
@@ -346,7 +352,7 @@ export function sortComponents<
   while (components.length > 0) {
     // Find the leaves
     const { leaveNodes, interiorNodes } = Object.groupBy(components, (c) => {
-      return c.dependencies.every((d) => tags.has(d))
+      return c.dependencies.every((d) => ids.has(d))
         ? "leaveNodes"
         : "interiorNodes";
     });
@@ -355,8 +361,8 @@ export function sortComponents<
       sorted = sorted.concat(leaveNodes);
 
       for (const leave of leaveNodes) {
-        if (leave.tagName) {
-          tags.add(leave.tagName);
+        if ("tagName" in leave) {
+          ids.add(leave.tagName);
         }
       }
     }

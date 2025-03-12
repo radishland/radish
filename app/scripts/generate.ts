@@ -3,7 +3,7 @@ import {
   generateImportMap,
   generateManifest,
   Manifest,
-  mockGlobals,
+  setGlobals,
 } from "@radish/core";
 import { dev } from "@radish/core/env";
 
@@ -26,7 +26,7 @@ if (args.includes("--manifest")) {
     },
   });
 } else {
-  mockGlobals();
+  setGlobals();
   const { manifest } = await import("../_generated/manifest.ts") as {
     manifest: Manifest;
   };
@@ -57,7 +57,7 @@ if (args.includes("--manifest")) {
   } else if (args.includes("--build")) {
     // Build section
 
-    await build(manifest, {
+    build(manifest, {
       // speculationRules: {
       //   prerender: [{
       //     where: {
