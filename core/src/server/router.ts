@@ -1,4 +1,4 @@
-import { walk } from "@std/fs";
+import { walkSync } from "@std/fs";
 import { serveDir, type ServeDirOptions, serveFile } from "@std/http";
 import { dirname, join } from "@std/path";
 import { buildFolder, routesFolder } from "../constants.ts";
@@ -79,11 +79,11 @@ export class Router {
     return this;
   };
 
-  generateFileBasedRoutes = async () => {
+  generateFileBasedRoutes = () => {
     const routes: string[] = [];
 
-    for await (
-      const entry of walk(this.routesFolder, {
+    for (
+      const entry of walkSync(this.routesFolder, {
         exts: [".html"],
         includeSymlinks: false,
       })
