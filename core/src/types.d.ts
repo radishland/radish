@@ -45,11 +45,11 @@ export interface Plugin {
    */
   name: string;
   /**
-   * This hook and lets you read the resolved config object. This is useful when the plugin needs to adjust its behavior based on the config or command being run
+   * Reads the resolved config object, which is useful when a plugin needs to adjust its behavior based on the config or command being run
    */
   configResolved?: (options: BuildOptions) => void;
   /**
-   * This hook allows to transform individual files
+   * Transforms individual files
    *
    * If you return an `ast` object or `meta` properties, they will be passed to subsequent transforms via the `TransformContext`. This can avoid the need to re-parse files
    */
