@@ -41,14 +41,15 @@ class Builder {
     emptyDirSync(buildFolder);
 
     for (const plugin of this.#plugins) {
-      if (plugin.buildStart) {
-        plugin.buildStart(this.#options);
+      if (plugin.configResolved) {
+        plugin.configResolved(this.#options);
       }
     }
   };
 
   processFile = (path: string) => {
     let code = Deno.readTextFileSync(path);
+
     const context: TransformContext = {
       format: extname(path),
       manifest: this.#manifest,

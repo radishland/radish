@@ -45,9 +45,9 @@ export interface RadishPlugin {
    */
   name: string;
   /**
-   * This hook is called at the beginning of every build, and lets you read the options object
+   * This hook and lets you read the resolved config object. This is useful when the plugin needs to adjust its behavior based on the config or command being run
    */
-  buildStart?: (options: BuildOptions) => void;
+  configResolved?: (options: BuildOptions) => void;
   /**
    * This hook allows to transform individual files
    *

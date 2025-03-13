@@ -66,7 +66,7 @@ export const pluginTransformRoutes: () => RadishPlugin = () => {
 
   return {
     name: "radish-plugin-transform-routes",
-    buildStart: (options) => {
+    configResolved: (options) => {
       speculationRules = options?.speculationRules;
     },
     transform: (_code, path, context) => {

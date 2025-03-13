@@ -214,12 +214,12 @@ The Radish core can be extended with its plugin API modelled after Vite/Rollup p
 
 The main hook is the `transform(code: string, path: string, context: TransformContext)` hook. It has the same signature as the Rollup `transform` hook but adds a third parameter allowing to optionally reuse an ast returned by the previous transform (avoiding re-parses), or read meta data annotations.
 
-The `buildStart(options: BuildOptions) => void` hook allows to read the options object when a plugin needs some setup.
+The `configResolved(config: BuildOptions) => void` hook allows to read the config object when a plugin needs some setup or adjusts its behavior depending on the command being run.
 
 The `emit(path: string) => string | null` hook is specific to Radish and lets you modify the path where the file will be emitted
 
 Hooks:
-- `buildStart`
+- `configResolved`
 - `transform`
 - `emit`
 
