@@ -15,6 +15,12 @@ const handle: Handle = async ({ context, resolve }) => {
   return await resolve(context);
 };
 
-export const start = (config: Config = {}): void => {
+export const startApp = (config: Config = {}): void => {
+  const dev = Deno.args.includes("--dev");
+
+  if (dev) {
+    Deno.env.set("dev", "");
+  }
+
   new App(config, handle);
 };

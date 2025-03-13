@@ -1,11 +1,8 @@
-import { start } from "@radish/core";
+import { startApp } from "@radish/core";
+import type { Config } from "@radish/core/types";
 
-const dev = Deno.args.includes("--dev");
-
-if (dev) {
-  Deno.env.set("dev", "");
-}
-
-await start({
+const config: Config = {
   router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
-});
+};
+
+startApp(config);

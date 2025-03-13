@@ -1,9 +1,8 @@
-import { start } from "$core";
+import { startApp } from "$core";
+import type { Config } from "$core/types";
 
-const dev = Deno.args.includes("--dev");
+const config: Config = {
+  router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
+};
 
-if (dev) {
-  Deno.env.set("dev", "");
-}
-
-await start();
+startApp(config);

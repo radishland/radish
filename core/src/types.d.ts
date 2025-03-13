@@ -63,3 +63,28 @@ export interface Plugin {
    */
   emit?: (path: string) => string | null;
 }
+
+export type Config = {
+  router?: {
+    /**
+     * An object mapping matcher names to their corresponding regexp definition.
+     *
+     * Matchers allow to filter dynamic routes like `[id=number]` with a "number" matcher.
+     * For example:
+     *
+     * ```ts
+     * matchers: {
+     *  number: /^\d+$/
+     * }
+     * ```
+     */
+    matchers?: Record<string, RegExp>;
+    /**
+     * Specifies the location of the node_modules folder relative to the deno.json file to serve local dependencies from in dev mode, like `.` or `..` etc.
+     *
+     * @default `.`
+     */
+    nodeModulesRoot?: string;
+  };
+  plugins?: Plugin[];
+};

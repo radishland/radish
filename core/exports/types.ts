@@ -1,1 +1,1 @@
-export type { Plugin } from "../src/types.d.ts";
+export type { Config, Plugin } from "../src/types.d.ts";
