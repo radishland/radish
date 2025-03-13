@@ -39,7 +39,7 @@ export type BuildOptions = {
   speculationRules?: SpeculationRules;
 };
 
-export interface RadishPlugin {
+export interface Plugin {
   /**
    * The name of the plugin with a `radish-plugin-` prefix
    */

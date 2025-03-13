@@ -12,7 +12,7 @@ import { App, type Handle } from "./server/app.ts";
 import { Router } from "./server/router.ts";
 import { dev } from "$env";
 import { setTimeoutWithAbort } from "./utils.ts";
-import type { RadishPlugin } from "./types.d.ts";
+import type { Plugin } from "./types.d.ts";
 
 const handle: Handle = async ({ context, resolve }) => {
   // Avoid mime type sniffing
@@ -48,7 +48,7 @@ type StartOptions = {
      */
     nodeModulesRoot?: string;
   };
-  plugins?: RadishPlugin[];
+  plugins?: Plugin[];
 };
 
 export const start = async (options?: StartOptions): Promise<void> => {

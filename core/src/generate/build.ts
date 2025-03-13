@@ -12,21 +12,17 @@ import {
   pluginTransformElements,
   pluginTransformRoutes,
 } from "../plugins.ts";
-import type {
-  BuildOptions,
-  RadishPlugin,
-  TransformContext,
-} from "../types.d.ts";
+import type { BuildOptions, Plugin, TransformContext } from "../types.d.ts";
 import type { Manifest } from "./manifest.ts";
 import { manifest, sortComponents } from "./manifest.ts";
 
 class Builder {
-  #plugins: RadishPlugin[];
+  #plugins: Plugin[];
   #options: BuildOptions;
   #manifest: Manifest;
 
   constructor(
-    plugins: RadishPlugin[],
+    plugins: Plugin[],
     options: BuildOptions,
     manifest: Manifest,
   ) {

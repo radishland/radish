@@ -1,1 +1,1 @@
-export type { RadishPlugin } from "../src/types.d.ts";
+export type { Plugin } from "../src/types.d.ts";

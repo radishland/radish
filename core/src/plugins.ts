@@ -6,14 +6,14 @@ import {
   routesFolder,
   ts_extension_regex,
 } from "./constants.ts";
-import type { RadishPlugin } from "./types.d.ts";
+import type { Plugin } from "./types.d.ts";
 import { applyServerEffects, serializeWebComponent } from "./walk.ts";
 import type { ElementManifest } from "./generate/manifest.ts";
 import { dev } from "$env";
 import { serializeFragments } from "../../htmlcrunch/mod.ts";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
 
-export const pluginDefaultEmit: RadishPlugin = {
+export const pluginDefaultEmit: Plugin = {
   name: "radish-plugin-default-emit",
   emit: (path) => join(buildFolder, path),
 };
@@ -23,7 +23,7 @@ export const pluginDefaultEmit: RadishPlugin = {
  *
  * Removes type annotations and comments
  */
-export const pluginStripTypes: RadishPlugin = {
+export const pluginStripTypes: Plugin = {
   name: "radish-plugin-strip-types",
   transform: (code, path, context) => {
     if (context.format !== ".ts" || path.endsWith(".d.ts")) return null;
@@ -39,7 +39,7 @@ export const pluginStripTypes: RadishPlugin = {
   },
 };
 
-export const pluginTransformElements: RadishPlugin = {
+export const pluginTransformElements: Plugin = {
   name: "radish-plugin-transform-elements",
   transform: (_code, path, context) => {
     if (context.format !== ".html") return null;
@@ -53,7 +53,7 @@ export const pluginTransformElements: RadishPlugin = {
   },
 };
 
-export const pluginTransformRoutes: () => RadishPlugin = () => {
+export const pluginTransformRoutes: () => Plugin = () => {
   const appContent = Deno.readTextFileSync(
     join(routesFolder, "_app.html"),
   );
