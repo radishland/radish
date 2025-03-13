@@ -112,7 +112,7 @@ export const pluginTransformRoutes: () => RadishPlugin = () => {
         <script>
           const ws = new WebSocket("ws://localhost:1235/ws");
           ws.onmessage = (e) => {
-            if (e.data === "reload") {
+            if (e.data === "full-reload") {
               console.log("Reload triggered by server");
               location.reload();
             }

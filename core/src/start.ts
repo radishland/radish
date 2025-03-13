@@ -315,17 +315,17 @@ export const start = async (options?: StartOptions): Promise<void> => {
       // Hot-reloading
       // Reload if there was an update to an html, css, js or ts file
       if (
-        !throttle.has(`reload`) &&
+        !throttle.has(`full-reload`) &&
         event.kind === "modify" &&
         event.paths.some((p) =>
           [".html", ".css", ".js", ".ts"].includes(extname(p))
         )
       ) {
-        throttle.add(`reload`);
+        throttle.add(`full-reload`);
         console.log("Hot-Reloading...");
         for (const client of clients) {
           if (client.readyState === WebSocket.OPEN) {
-            client.send("reload");
+            client.send("full-reload");
           }
         }
       }
