@@ -17,8 +17,8 @@ import type {
   Plugin,
   TransformContext,
 } from "../types.d.ts";
-import type { Manifest } from "./manifest.ts";
 import { sortComponents } from "./manifest.ts";
+import type { Manifest } from "../plugins.ts";
 
 export class Builder {
   #plugins: Plugin[];
@@ -39,7 +39,7 @@ export class Builder {
     emptyDirSync(buildFolder);
   };
 
-  processFile = (path: string) => {
+  #processFile = async (path: string) => {
     let code = Deno.readTextFileSync(path);
 
     const context: TransformContext = {
@@ -49,7 +49,7 @@ export class Builder {
 
     for (const plugin of this.#plugins) {
       if (plugin?.transform) {
-        const result = plugin.transform(code, path, context);
+        const result = await plugin.transform(code, path, context);
 
         if (typeof result === "string") {
           code = result;
@@ -73,7 +73,7 @@ export class Builder {
     }
   };
 
-  processFolder = (
+  #processFolder = async (
     path: string,
     options?: WalkOptions,
   ) => {
@@ -93,23 +93,23 @@ export class Builder {
           }
         }
       } else {
-        this.processFile(entry.path);
+        await this.#processFile(entry.path);
       }
     }
   };
 
-  process = (path: string) => {
+  process = async (path: string): Promise<void> => {
     if (extname(path)) {
-      this.processFile(path);
+      await this.#processFile(path);
     } else {
-      this.processFolder(path);
+      await this.#processFolder(path);
     }
   };
 
   /**
    * Starts the build pipeline
    */
-  build = () => {
+  build = async (): Promise<void> => {
     console.log("Building...");
 
     this.#buildStart();
@@ -126,11 +126,11 @@ export class Builder {
     const folders = [libFolder, elementsFolder, routesFolder];
 
     for (const folder of folders) {
-      this.processFolder(folder, { skip: paths.map((p) => new RegExp(p)) });
+      this.#processFolder(folder, { skip: paths.map((p) => new RegExp(p)) });
     }
 
     for (const path of paths) {
-      this.processFile(path);
+      await this.#processFile(path);
     }
   };
 }
