@@ -1,4 +1,4 @@
-import { build, generateImportMap, Manifest } from "@radish/core";
+import { generateImportMap, Manifest } from "@radish/core";
 import { dev } from "@radish/core/env";
 
 const args = Deno.args;
@@ -34,27 +34,5 @@ if (args.includes("--importmap")) {
         scopes: { ...importmap.scopes },
       });
     },
-  });
-} else if (args.includes("--build")) {
-  // Build section
-
-  build(manifest, {
-    // speculationRules: {
-    //   prerender: [{
-    //     where: {
-    //       and: [
-    //         { href_matches: "/*" },
-    //         { not: { selector_matches: ".do-not-prerender" } },
-    //       ],
-    //     },
-    //     eagerness: "moderate",
-    //   }],
-    //   prefetch: [
-    //     {
-    //       where: { not: { href_matches: "/*" } },
-    //       eagerness: "moderate",
-    //     },
-    //   ],
-    // },
   });
 }
