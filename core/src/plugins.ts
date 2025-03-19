@@ -42,16 +42,6 @@ export const pluginDefaultEmit: Plugin = {
           throw error;
         }
       }
-    } else if (event.kind === "rename" && event.from) {
-      Deno.renameSync(join(buildFolder, event.from), event.target);
-      console.log(`${this.name}: moved`, event.path);
-    } else if (event.kind === "create") {
-      if (!event.isFile) {
-        Deno.mkdirSync(event.target);
-      } else {
-        Deno.copyFileSync(event.path, event.target);
-      }
-      console.log(`${this.name}: created`, event.path);
     }
   },
 };
@@ -81,10 +71,11 @@ export const pluginStripTypes: Plugin = {
     if (
       event.isFile &&
       event.kind === "remove" &&
-      extname(event.path) === ".ts"
+      extname(event.path) === ".ts" &&
+      !event.path.endsWith(".d.ts")
     ) {
+      // Delegates removal of the compiled .js file
       event.target = event.target.replace(ts_extension_regex, ".js");
-      // Delegates removal
     }
   },
 };
