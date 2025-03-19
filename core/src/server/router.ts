@@ -36,9 +36,9 @@ export class Router {
 
   get;
   post;
-  defaultHandler;
-  routesFolder;
-  matchers;
+  defaultHandler: Handler<Context>;
+  routesFolder: string;
+  matchers: Record<string, RegExp>;
 
   constructor(
     options: {
@@ -79,7 +79,7 @@ export class Router {
     return this;
   };
 
-  generateFileBasedRoutes = () => {
+  generateFileBasedRoutes = (): void => {
     const routes: string[] = [];
 
     for (
@@ -122,7 +122,7 @@ export class Router {
   serveStatic = (
     patternInput: URLPatternInput,
     options: ServeDirOptions = { fsRoot: "." },
-  ) => {
+  ): void => {
     const pattern = new URLPattern(patternInput);
     this.routes["GET"].push({
       method: "GET",
