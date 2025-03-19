@@ -1,6 +1,5 @@
 export {
-  manifestPlugin,
   pluginDefaultEmit,
+  pluginRadish,
   pluginStripTypes,
-  pluginTransformRoutes,
 } from "../src/plugins.ts";
