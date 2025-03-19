@@ -1,21 +1,59 @@
+import { dev } from "$env";
 import strip from "@fcrozatier/type-strip";
-import { basename, dirname, extname, join } from "@std/path";
+import { fragments, shadowRoot } from "@radish/htmlcrunch";
+import { basename, dirname, extname, join, relative } from "@std/path";
+import { serializeFragments } from "../../htmlcrunch/mod.ts";
 import {
   buildFolder,
+  elementsFolder,
   generatedFolder,
   routesFolder,
   ts_extension_regex,
 } from "./constants.ts";
-import type { Plugin } from "./types.d.ts";
-import { applyServerEffects, serializeWebComponent } from "./walk.ts";
-import type { ElementManifest } from "./generate/manifest.ts";
-import { dev } from "$env";
-import { serializeFragments } from "../../htmlcrunch/mod.ts";
+import type { ElementManifest, Manifest } from "./generate/manifest.ts";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
+import type { Plugin } from "./types.d.ts";
+import { fileName, kebabToPascal } from "./utils.ts";
+import {
+  applyServerEffects,
+  dependencies,
+  serializeWebComponent,
+} from "./walk.ts";
 
+/**
+ * Default plugin mirroring the source folder structure inside the build folder
+ */
 export const pluginDefaultEmit: Plugin = {
   name: "radish-plugin-default-emit",
   emit: (path) => join(buildFolder, path),
+
+  handleHotUpdate(event, context) {
+    if (event.kind === "remove") {
+      try {
+        Deno.removeSync(event.target, { recursive: !event.isFile });
+        console.log(`${this.name}: removed`, event.path);
+
+        // don't process files under the removed path
+        context.paths = context.paths.filter((f) =>
+          relative(event.path, f).startsWith("..")
+        );
+      } catch (error) {
+        if (!(error instanceof Deno.errors.NotFound)) {
+          throw error;
+        }
+      }
+    } else if (event.kind === "rename" && event.from) {
+      Deno.renameSync(join(buildFolder, event.from), event.target);
+      console.log(`${this.name}: moved`, event.path);
+    } else if (event.kind === "create") {
+      if (!event.isFile) {
+        Deno.mkdirSync(event.target);
+      } else {
+        Deno.copyFileSync(event.path, event.target);
+      }
+      console.log(`${this.name}: created`, event.path);
+    }
+  },
 };
 
 /**
@@ -37,6 +75,18 @@ export const pluginStripTypes: Plugin = {
     if (extname(path) !== ".ts" || path.endsWith(".d.ts")) return null;
     return join(buildFolder, path).replace(ts_extension_regex, ".js");
   },
+  handleHotUpdate(event) {
+    if (!event.isFile) return;
+
+    if (
+      event.isFile &&
+      event.kind === "remove" &&
+      extname(event.path) === ".ts"
+    ) {
+      event.target = event.target.replace(ts_extension_regex, ".js");
+      // Delegates removal
+    }
+  },
 };
 
 export const pluginTransformElements: Plugin = {
@@ -44,7 +94,7 @@ export const pluginTransformElements: Plugin = {
   transform: (_code, path, context) => {
     if (context.format !== ".html") return null;
 
-    const filename = basename(path).split(".")[0];
+    const filename = fileName(path);
     const element = context.manifest.elements[filename];
 
     if (!element) return null;
@@ -52,6 +102,11 @@ export const pluginTransformElements: Plugin = {
     return serializeWebComponent(element);
   },
 };
+
+/**
+ * Ensures a path only consists of parent folders
+ */
+const is_parent_path_regex = /^\.\.(\/\.\.)*$/;
 
 export const pluginTransformRoutes: () => Plugin = () => {
   const appContent = Deno.readTextFileSync(
@@ -66,13 +121,13 @@ export const pluginTransformRoutes: () => Plugin = () => {
 
   return {
     name: "radish-plugin-transform-routes",
-    configResolved: (options) => {
-      speculationRules = options?.speculationRules;
+    configResolved: (config) => {
+      speculationRules = config?.speculationRules;
     },
     transform: (_code, path, context) => {
       if (context.format !== ".html") return null;
 
-      const route = context.manifest.routes[dirname(path)];
+      const route = (context.manifest as Manifest).routes[dirname(path)];
 
       if (!route) return null;
 
@@ -126,9 +181,14 @@ export const pluginTransformRoutes: () => Plugin = () => {
         </script>`;
       }
 
-      const pageFragments = route.layouts.map((layout) =>
-        layout.templateLoader()
-      );
+      const layouts = Object.values((context.manifest as Manifest).layouts)
+        .filter((layout) => {
+          return is_parent_path_regex.test(
+            dirname(relative(route.path, layout.path)),
+          );
+        });
+
+      const pageFragments = layouts.map((layout) => layout.templateLoader());
       pageFragments.push(route.templateLoader().map(applyServerEffects));
 
       const pageGroups = Object.groupBy(
@@ -165,4 +225,210 @@ export const pluginTransformRoutes: () => Plugin = () => {
       return pageContent;
     },
   };
+};
+
+/**
+ * Extracts import specifiers
+ */
+const import_regex = /from\s["']([^'"]+)["']|import\(["']([^"']+)["']\)/g;
+
+/**
+ * Returns the deduped array of import aliases
+ */
+const extractImports = (source: string) => {
+  return Array.from(
+    new Set(source.matchAll(import_regex).map((match) => match[1])),
+  );
+};
+
+export const manifestPlugin: Plugin = {
+  name: "radish-plugin-manifest",
+  manifestStart: (controller) => {
+    controller.manifestImports
+      .add('import { fragments, shadowRoot } from "$core/parser";');
+
+    return {
+      ...controller.manifest,
+      elements: {},
+      routes: {},
+      layouts: {},
+    } satisfies Manifest;
+  },
+  manifest: (entry, controller) => {
+    const extension = extname(entry.name);
+
+    if (!entry.isFile || ![".html", ".js", ".ts"].includes(extension)) {
+      return null;
+    }
+
+    if (!relative(elementsFolder, entry.path).startsWith("..")) {
+      /**
+       * Elements
+       */
+
+      const parentFolder = basename(dirname(entry.path));
+      const elementName = fileName(entry.name);
+
+      if (parentFolder !== elementName) {
+        console.warn(
+          `By convention an element file has the same name as its parent folder. Skipping file ${entry.path}`,
+        );
+        return null;
+      }
+
+      if (!elementName.includes("-")) {
+        throw new Error(
+          `An element file name must include a dash.\n\nIn: ${entry.path}`,
+        );
+      }
+
+      const elementMetaData: ElementManifest =
+        (controller.manifest as Manifest).elements[elementName] ?? {
+          kind: undefined,
+          tagName: elementName,
+          path: parentFolder,
+          files: [],
+        };
+
+      switch (extension) {
+        case ".html":
+          {
+            switch (elementMetaData.kind) {
+              case "custom-element":
+                elementMetaData.kind = "web-component";
+                break;
+              case undefined:
+                elementMetaData.kind = "unknown-element";
+                break;
+            }
+
+            elementMetaData.files.push(entry.path);
+
+            let fragment;
+            try {
+              const content = Deno.readTextFileSync(entry.path);
+              fragment = shadowRoot.parseOrThrow(content);
+            } catch (error) {
+              console.error(
+                `Something went wrong while parsing ${entry.path}`,
+              );
+              throw error;
+            }
+
+            elementMetaData.dependencies = dependencies(fragment);
+            // @ts-ignore
+            elementMetaData.templateLoader = () =>
+              `() => {
+            return shadowRoot.parseOrThrow(
+              Deno.readTextFileSync("${entry.path}"),
+            );
+          }`;
+          }
+          break;
+
+        case ".js":
+        case ".ts":
+          {
+            switch (elementMetaData.kind) {
+              case "unknown-element":
+                elementMetaData.kind = "web-component";
+                break;
+              case undefined:
+                elementMetaData.kind = "custom-element";
+                break;
+            }
+
+            const className = kebabToPascal(elementName);
+            const content = Deno.readTextFileSync(entry.path);
+            const imports = extractImports(content);
+
+            const importPath = join("..", entry.path);
+            // @ts-ignore
+            elementMetaData.classLoader = () =>
+              `async () => {
+            return (await import("${importPath}"))["${className}"];
+          }`;
+
+            elementMetaData.files.push(entry.path);
+            elementMetaData.imports = imports;
+          }
+          break;
+      }
+
+      (controller.manifest as Manifest).elements[elementName] = elementMetaData;
+
+      return true;
+    } else if (!relative(routesFolder, entry.path).startsWith("..")) {
+      /**
+       * Routes
+       */
+
+      if (extname(entry.name) === ".html") {
+        let fragment;
+        try {
+          const content = Deno.readTextFileSync(entry.path);
+          fragment = fragments.parseOrThrow(content);
+        } catch (error) {
+          console.error(`Something went wrong while parsing ${entry.path}`);
+          throw error;
+        }
+
+        if (entry.name === "_layout.html") {
+          // Layout
+          (controller.manifest as Manifest).layouts[entry.path] = {
+            kind: "layout",
+            path: entry.path,
+            dependencies: dependencies(fragment),
+            templateLoader: () =>
+              // @ts-ignore
+              `() => {
+            return fragments.parseOrThrow(Deno.readTextFileSync("${entry.path}"));
+            }`,
+          };
+        } else if (entry.name === "index.html") {
+          // Route
+          (controller.manifest as Manifest).routes[entry.path] = {
+            kind: "route",
+            path: entry.path,
+            files: [entry.path],
+            templateLoader: () =>
+              // @ts-ignore
+              `() => {
+                return fragments.parseOrThrow(Deno.readTextFileSync("${entry.path}"));
+              }`,
+            dependencies: dependencies(fragment),
+          };
+        }
+      } else {
+        // The extension is .js or .ts
+
+        if (entry.name.includes("-")) {
+          const tagName = fileName(entry.path);
+          const className = kebabToPascal(tagName);
+          const content = Deno.readTextFileSync(entry.path);
+          const imports = extractImports(content);
+
+          const override = (controller.manifest as Manifest).elements[tagName];
+
+          if (override) {
+            throw new Error(
+              `There already is a custom element called ${tagName}. File ${entry.path}`,
+            );
+          }
+          (controller.manifest as Manifest).elements[tagName] = {
+            kind: "custom-element",
+            tagName,
+            path: entry.path,
+            files: [entry.path],
+            imports,
+            // @ts-ignore
+            classLoader: () =>
+              `async () => {
+            return (await import("${join("..", entry.path)}"))["${className}"];
+            }`,
+          };
+        }
+      }
+    }
+  },
 };
