@@ -49,6 +49,17 @@ export const setTimeoutWithAbort = (
   });
 };
 
+/**
+ * Concatenates many iterators into a single one
+ */
+export function* concatIterators<T>(
+  ...iterators: Iterable<T>[]
+): IterableIterator<T> {
+  for (const iterator of iterators) {
+    yield* iterator;
+  }
+}
+
 type LooseAutocomplete<T extends string> = T | Omit<string, T>;
 
 type Types = LooseAutocomplete<
