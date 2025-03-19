@@ -1,4 +1,9 @@
-import { emptyDirSync, ensureDirSync, walkSync } from "@std/fs";
+import {
+  emptyDirSync,
+  ensureDirSync,
+  type WalkOptions,
+  walkSync,
+} from "@std/fs";
 import { dirname, extname } from "@std/path";
 import {
   buildFolder,
@@ -6,41 +11,32 @@ import {
   libFolder,
   routesFolder,
 } from "../constants.ts";
-import {
-  pluginDefaultEmit,
-  pluginStripTypes,
-  pluginTransformElements,
-  pluginTransformRoutes,
-} from "../plugins.ts";
-import type { BuildOptions, Plugin, TransformContext } from "../types.d.ts";
+import type {
+  BuildOptions,
+  ManifestBase,
+  Plugin,
+  TransformContext,
+} from "../types.d.ts";
 import type { Manifest } from "./manifest.ts";
-import { manifest, sortComponents } from "./manifest.ts";
+import { sortComponents } from "./manifest.ts";
 
-class Builder {
+export class Builder {
   #plugins: Plugin[];
-  #options: BuildOptions;
-  #manifest: Manifest;
+  // #options: BuildOptions;
+  #manifest: ManifestBase;
 
   constructor(
     plugins: Plugin[],
-    options: BuildOptions,
-    manifest: Manifest,
+    manifest: ManifestBase,
+    options?: BuildOptions,
   ) {
     this.#plugins = plugins;
-    this.#options = options;
+    // this.#options = options;
     this.#manifest = manifest;
-
-    this.buildStart();
   }
 
-  buildStart = () => {
+  #buildStart = () => {
     emptyDirSync(buildFolder);
-
-    for (const plugin of this.#plugins) {
-      if (plugin.configResolved) {
-        plugin.configResolved(this.#options);
-      }
-    }
   };
 
   processFile = (path: string) => {
@@ -76,56 +72,65 @@ class Builder {
       }
     }
   };
-}
 
-/**
- * Runs the build process
- */
-export const build = (
-  manifestObject: Manifest,
-  options?: BuildOptions,
-): void => {
-  console.log("Building...");
-
-  manifest.elements = manifestObject.elements;
-  manifest.routes = manifestObject.routes;
-
-  const sorted = sortComponents([
-    ...Object.values(manifest.elements),
-    ...Object.values(manifest.routes),
-  ]);
-
-  const paths = sorted
-    .map((c) => c.files.find((f) => f.endsWith(".html")))
-    .filter((path) => path !== undefined);
-
-  const builder = new Builder(
-    [
-      pluginTransformRoutes(),
-      pluginTransformElements,
-      pluginStripTypes,
-      pluginDefaultEmit,
-    ],
-    options ?? {},
-    manifestObject,
-  );
-
-  const folders = [libFolder, elementsFolder, routesFolder];
-
-  for (const folder of folders) {
+  processFolder = (
+    path: string,
+    options?: WalkOptions,
+  ) => {
     for (
-      const entry of walkSync(folder, {
+      const entry of walkSync(path, {
         includeFiles: true,
-        includeDirs: false,
+        includeDirs: true,
+        ...options,
       })
     ) {
-      if (paths.includes(entry.path)) continue;
-
-      builder.processFile(entry.path);
+      if (entry.isDirectory) {
+        for (const plugin of this.#plugins) {
+          const dest = plugin?.emit?.(path);
+          if (dest) {
+            ensureDirSync(dest);
+            break;
+          }
+        }
+      } else {
+        this.processFile(entry.path);
+      }
     }
-  }
+  };
 
-  for (const path of paths) {
-    builder.processFile(path);
-  }
-};
+  process = (path: string) => {
+    if (extname(path)) {
+      this.processFile(path);
+    } else {
+      this.processFolder(path);
+    }
+  };
+
+  /**
+   * Starts the build pipeline
+   */
+  build = () => {
+    console.log("Building...");
+
+    this.#buildStart();
+
+    const sorted = sortComponents([
+      ...Object.values((this.#manifest as Manifest).elements),
+      ...Object.values((this.#manifest as Manifest).routes),
+    ]);
+
+    const paths = sorted
+      .map((c) => c.files.find((f) => f.endsWith(".html")))
+      .filter((path) => path !== undefined);
+
+    const folders = [libFolder, elementsFolder, routesFolder];
+
+    for (const folder of folders) {
+      this.processFolder(folder, { skip: paths.map((p) => new RegExp(p)) });
+    }
+
+    for (const path of paths) {
+      this.processFile(path);
+    }
+  };
+}
