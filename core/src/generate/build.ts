@@ -1,9 +1,4 @@
-import {
-  emptyDirSync,
-  ensureDirSync,
-  type WalkOptions,
-  walkSync,
-} from "@std/fs";
+import { emptyDirSync, ensureDirSync, type WalkEntry, walkSync } from "@std/fs";
 import { dirname, extname } from "@std/path";
 import {
   buildFolder,
@@ -17,8 +12,7 @@ import type {
   Plugin,
   TransformContext,
 } from "../types.d.ts";
-import { sortComponents } from "./manifest.ts";
-import type { Manifest } from "../plugins.ts";
+import { concatIterators } from "../utils.ts";
 
 export class Builder {
   #plugins: Plugin[];
@@ -35,8 +29,16 @@ export class Builder {
     this.#manifest = manifest;
   }
 
-  #buildStart = () => {
+  #buildStart = (entries: WalkEntry[]) => {
     emptyDirSync(buildFolder);
+
+    for (const plugin of this.#plugins) {
+      if (plugin?.buildStart) {
+        entries = plugin?.buildStart(entries, this.#manifest);
+      }
+    }
+
+    return entries;
   };
 
   #processFile = async (path: string) => {
@@ -73,64 +75,36 @@ export class Builder {
     }
   };
 
-  #processFolder = async (
-    path: string,
-    options?: WalkOptions,
-  ) => {
-    for (
-      const entry of walkSync(path, {
-        includeFiles: true,
-        includeDirs: true,
-        ...options,
-      })
-    ) {
-      if (entry.isDirectory) {
+  /**
+   * Starts the build pipeline, indirectly calling the `buildStart` hooks to sort the entries, followed by the `transform` hooks and finally the `emit` hooks before writing to disk
+   */
+  build = async (
+    paths = [libFolder, elementsFolder, routesFolder],
+  ): Promise<void> => {
+    console.log("Building...");
+
+    const entries = Array.from(
+      new Set(concatIterators(
+        ...paths.map((folder) =>
+          walkSync(folder, { includeDirs: true, includeFiles: true })
+        ),
+      )),
+    );
+
+    const sortedEntries = this.#buildStart(entries);
+
+    for (const entry of sortedEntries) {
+      if (entry.isFile) {
+        await this.#processFile(entry.path);
+      } else {
         for (const plugin of this.#plugins) {
-          const dest = plugin?.emit?.(path);
+          const dest = plugin?.emit?.(entry.path);
           if (dest) {
             ensureDirSync(dest);
             break;
           }
         }
-      } else {
-        await this.#processFile(entry.path);
       }
-    }
-  };
-
-  process = async (path: string): Promise<void> => {
-    if (extname(path)) {
-      await this.#processFile(path);
-    } else {
-      await this.#processFolder(path);
-    }
-  };
-
-  /**
-   * Starts the build pipeline
-   */
-  build = async (): Promise<void> => {
-    console.log("Building...");
-
-    this.#buildStart();
-
-    const sorted = sortComponents([
-      ...Object.values((this.#manifest as Manifest).elements),
-      ...Object.values((this.#manifest as Manifest).routes),
-    ]);
-
-    const paths = sorted
-      .map((c) => c.files.find((f) => f.endsWith(".html")))
-      .filter((path) => path !== undefined);
-
-    const folders = [libFolder, elementsFolder, routesFolder];
-
-    for (const folder of folders) {
-      this.#processFolder(folder, { skip: paths.map((p) => new RegExp(p)) });
-    }
-
-    for (const path of paths) {
-      await this.#processFile(path);
     }
   };
 }
