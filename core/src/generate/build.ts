@@ -30,8 +30,6 @@ export class Builder {
   }
 
   #buildStart = (entries: WalkEntry[]) => {
-    emptyDirSync(buildFolder);
-
     for (const plugin of this.#plugins) {
       if (plugin?.buildStart) {
         entries = plugin?.buildStart(entries, this.#manifest);
@@ -82,6 +80,8 @@ export class Builder {
     paths = [libFolder, elementsFolder, routesFolder],
   ): Promise<void> => {
     console.log("Building...");
+
+    emptyDirSync(buildFolder);
 
     const entries = Array.from(
       new Set(concatIterators(
