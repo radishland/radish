@@ -1,4 +1,3 @@
-import type { MFragment } from "@radish/htmlcrunch";
 import { ensureDirSync, walkSync } from "@std/fs";
 import { join } from "@std/path";
 import { type } from "../../../runtime/src/utils.ts";
@@ -10,42 +9,8 @@ import {
 } from "../constants.ts";
 import type { ManifestBase, Plugin } from "../types.d.ts";
 
-type Constructor<T = any> = new (...args: any[]) => T;
-
-export type ElementManifest = {
-  kind: "web-component" | "custom-element" | "unknown-element" | undefined;
-  tagName: string;
-  path: string;
-  files: string[];
-  classLoader?: () => Promise<Constructor>;
-  templateLoader?: () => MFragment;
-  dependencies?: string[];
-  imports?: string[];
-};
-
-export type RouteManifest = {
-  kind: "route";
-  path: string;
-  files: string[];
-  templateLoader: () => MFragment;
-  dependencies: string[];
-};
-
-export type LayoutManifest = {
-  kind: "layout";
-  path: string;
-  templateLoader: () => MFragment;
-  dependencies: string[];
-};
-
-export type Manifest = ManifestBase & {
-  elements: Record<string, ElementManifest>;
-  routes: Record<string, RouteManifest>;
-  layouts: Record<string, LayoutManifest>;
-};
-
 export class ManifestController {
-  manifestImports = new Set<string>();
+  manifestImports: Set<string> = new Set<string>();
   manifest: ManifestBase = {};
 
   #plugins: Plugin[];
@@ -55,7 +20,7 @@ export class ManifestController {
     new RegExp("^" + libFolder + "/"),
   ];
 
-  loadManifest;
+  loadManifest: () => Promise<ManifestBase>;
 
   constructor(
     plugins: Plugin[] = [],
@@ -68,7 +33,7 @@ export class ManifestController {
     };
   }
 
-  start() {
+  createManifest = (): void => {
     console.log("Generating manifest...");
 
     for (const plugin of this.#plugins) {
@@ -76,17 +41,15 @@ export class ManifestController {
         this.manifest = plugin.manifestStart(this);
       }
     }
-  }
 
-  update() {
-    entries: for (const entry of walkSync(".", { match: this.#match })) {
+    for (const entry of walkSync(".", { match: this.#match })) {
       for (const plugin of this.#plugins) {
         const updated = plugin.manifest?.(entry, this);
 
-        if (updated) continue entries;
+        if (updated) break;
       }
     }
-  }
+  };
 
   #stringifyArray = (arr: Array<any>) => {
     let str = "[";
@@ -168,51 +131,4 @@ export class ManifestController {
 
     Deno.writeTextFileSync(join(generatedFolder, "manifest.ts"), file);
   }
-}
-
-/**
- * Return the build order of a list of components, taking their relative dependencies into account
- */
-export function sortComponents<
-  T extends
-    | Pick<ElementManifest, "tagName" | "dependencies" | "path">
-    | Pick<RouteManifest, "dependencies" | "path">,
->(components: T[]): T[] {
-  const ids = new Set<string>();
-
-  let sorted: T[] = [];
-
-  let prevLength = components.length;
-  while (components.length > 0) {
-    // Find the leaves
-    const { leaveNodes, interiorNodes } = Object.groupBy(components, (c) => {
-      return c.dependencies?.every((d) => ids.has(d))
-        ? "leaveNodes"
-        : "interiorNodes";
-    });
-
-    if (leaveNodes) {
-      sorted = sorted.concat(leaveNodes);
-
-      for (const leave of leaveNodes) {
-        if ("tagName" in leave) {
-          ids.add(leave.tagName);
-        }
-      }
-    }
-
-    if (interiorNodes) {
-      // Update remaining components
-      components = interiorNodes;
-    }
-
-    if (prevLength === components.length) {
-      // In case the dependency graph is not a tree (recursive components?)
-      break;
-    }
-
-    prevLength = components.length;
-  }
-
-  return sorted.concat(components);
 }
