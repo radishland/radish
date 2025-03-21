@@ -7,7 +7,6 @@ import {
 import type { Config } from "$core/types";
 
 const config: Config = {
-  router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
   plugins: [
     pluginRadish(),
     pluginStripTypes,
@@ -34,4 +33,7 @@ const config: Config = {
   // },
 };
 
-startApp(config);
+const loadManifest = async () =>
+  (await import("./_generated/manifest.ts"))["manifest"];
+
+await startApp(loadManifest, config);
