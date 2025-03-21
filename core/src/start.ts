@@ -66,7 +66,6 @@ export const startApp = async (
     const manifest = await manifestController.loadManifest();
     const builder = new Builder(resolvedConfig.plugins, manifest);
 
-    // args.build || args.dev || args.start
     if (args.importmap) {
       await generateImportMap(manifest, resolvedConfig.importmap);
     } else if (args.build) {
