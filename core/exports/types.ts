@@ -1,1 +1,1 @@
-export type { Config, Plugin } from "../src/types.d.ts";
+export type { Config, ManifestBase, Plugin } from "../src/types.d.ts";
