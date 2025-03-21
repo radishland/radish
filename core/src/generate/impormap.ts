@@ -1,14 +1,14 @@
+import { dev } from "$env";
 import {
   Generator,
   type GeneratorOptions,
   type Install,
 } from "@jspm/generator";
 import type { IImportMap } from "@jspm/import-map";
-import { dev } from "$env";
 import { join } from "@std/path";
 import { readDenoConfig } from "../config.ts";
 import { generatedFolder, ts_extension_regex } from "../constants.ts";
-import type { Manifest } from "./manifest.ts";
+import type { ManifestBase } from "../types.d.ts";
 
 interface ImportMapOptions {
   /**
@@ -40,18 +40,16 @@ const findLongestPrefix = (str: string, list: string[]) => {
 };
 
 export const pureImportMap = async (
-  manifest: Manifest,
+  manifest: ManifestBase,
   denoImports: Record<string, string>,
   options?: ImportMapOptions,
 ): Promise<IImportMap> => {
   const projectImports = new Set<string>();
 
   // Collect deduped import specifiers
-  for (const element of Object.values(manifest.elements)) {
-    if (element.kind === "unknown-element") continue;
-
-    for (const elementImport of element.imports) {
-      projectImports.add(elementImport);
+  for (const imports of Object.values(manifest.imports)) {
+    for (const i of imports) {
+      projectImports.add(i);
     }
   }
 
@@ -134,6 +132,16 @@ export const pureImportMap = async (
   };
 };
 
+export interface ImportMap extends ImportMapOptions {
+  /**
+   * Provides a transform hook giving you full control over the generated importmap
+   *
+   * @param importmap The generated importmap
+   * @return The JSON stringified importmap
+   */
+  transform?: (importmap: IImportMap) => string;
+}
+
 /**
  * Generates the importmap of your project based on the current manifest. The file is saved inside `_generated/importmap.json`
  *
@@ -141,16 +149,8 @@ export const pureImportMap = async (
  * @param options
  */
 export const generateImportMap = async (
-  manifest: Manifest,
-  options?: ImportMapOptions & {
-    /**
-     * Provides a transform hook giving you full control over the generated importmap
-     *
-     * @param importmap The generated importmap
-     * @return The JSON stringified importmap
-     */
-    transform?: (importmap: IImportMap) => string;
-  },
+  manifest: ManifestBase,
+  options?: ImportMap,
 ): Promise<void> => {
   console.log("Generating importmap...");
 
