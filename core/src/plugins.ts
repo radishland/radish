@@ -11,10 +11,11 @@ import {
   textNode,
 } from "@radish/htmlcrunch";
 import { basename, dirname, extname, join, relative } from "@std/path";
+import type { HandlerRegistry } from "../../runtime/src/handler-registry.ts";
+import { bindingConfig, spaces_sep_by_comma } from "../../runtime/src/utils.ts";
 import {
   buildFolder,
   elementsFolder,
-  generatedFolder,
   routesFolder,
   ts_extension_regex,
 } from "./constants.ts";
@@ -22,8 +23,6 @@ import type { SpeculationRules } from "./generate/speculationrules.ts";
 import type { ManifestBase, Plugin } from "./types.d.ts";
 import { fileName, kebabToPascal } from "./utils.ts";
 import { dependencies } from "./walk.ts";
-import type { HandlerRegistry } from "../../runtime/src/handler-registry.ts";
-import { bindingConfig, spaces_sep_by_comma } from "../../runtime/src/utils.ts";
 
 /**
  * Emits files inside the build folder in a way that mirrors the source folder structure
@@ -116,7 +115,9 @@ export type Manifest = ManifestBase & {
 };
 
 /**
- * This built-in plugin invalidates the file cache when a file is modified or removed
+ * Built-in plugin
+ *
+ * Invalidates the file cache when a file is modified or removed
  */
 export const pluginCacheInvalidation: Plugin = {
   name: "radish-plugin-invalidate-cache",
@@ -135,7 +136,11 @@ export const pluginDefaultPlugins: Plugin = {
   config: (userConfig) => {
     return {
       ...userConfig,
-      plugins: [pluginCacheInvalidation, ...(userConfig.plugins ?? [])],
+      plugins: [
+        pluginCacheInvalidation,
+        pluginImports,
+        ...(userConfig.plugins ?? []),
+      ],
     };
   },
 };
@@ -155,6 +160,8 @@ const extractImports = (source: string) => {
 };
 
 /**
+ * Built-in plugin
+ *
  * Extracts imports from .js & .ts files into the manifest for the importmap generation
  */
 export const pluginImports: Plugin = {
