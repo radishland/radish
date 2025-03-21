@@ -160,9 +160,7 @@ const extractImports = (source: string) => {
 export const pluginImports: Plugin = {
   name: "radish-plugin-imports",
   manifest: (entry, { manifestController }) => {
-    const extension = extname(entry.path);
-
-    if (!entry.isFile || ![".js", ".ts"].includes(extension)) {
+    if (!entry.isFile || ![".js", ".ts"].includes(extname(entry.path))) {
       return;
     }
 
