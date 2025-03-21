@@ -493,7 +493,7 @@ export const pluginRadish: () => Plugin = () => {
             const tagName = fileName(entry.name);
             isElementOrRoute = manifest.elements[tagName];
           } else if (!relative(routesFolder, entry.path).startsWith("..")) {
-            isElementOrRoute = manifest.routes[dirname(entry.path)];
+            isElementOrRoute = manifest.routes[entry.path];
           }
 
           if (isElementOrRoute) {
@@ -698,7 +698,7 @@ export const pluginRadish: () => Plugin = () => {
         );
       }
 
-      const route = manifest.routes[dirname(path)];
+      const route = manifest.routes[path];
 
       if (!route) return null;
 
@@ -835,10 +835,10 @@ export const pluginRadish: () => Plugin = () => {
             }
           }
         } else if (!relative(routesFolder, event.path).startsWith("..")) {
-          const route = manifest.routes[dirname(event.path)];
+          const route = manifest.routes[event.path];
 
           if (route) {
-            delete manifest.routes[dirname(event.path)];
+            delete manifest.routes[event.path];
           }
         }
       } else if (event.kind === "create" || event.kind === "modify") {
