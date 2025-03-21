@@ -1,11 +1,11 @@
 import { startApp } from "@radish/core";
 import { dev } from "@radish/core/env";
-import type { Config, ManifestBase } from "@radish/core/types";
 import {
   pluginDefaultEmit,
   pluginRadish,
   pluginStripTypes,
 } from "@radish/core/plugins";
+import type { Config } from "@radish/core/types";
 
 const config: Config = {
   importmap: {
@@ -61,6 +61,6 @@ const config: Config = {
 };
 
 const loadManifest = async () =>
-  (await import("./_generated/manifest.ts") as ManifestBase)["manifest"];
+  (await import("./_generated/manifest.ts"))["manifest"];
 
 await startApp(loadManifest, config);
