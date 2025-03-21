@@ -14,8 +14,14 @@ A full-stack framework built around Web Components and Web Standards:
 > Web Components are here to stay, get on board now!
 
 - [Radish!](#radish)
+  - [Motivation \& philosophy](#motivation--philosophy)
   - [Try out the alpha](#try-out-the-alpha)
   - [Project structure](#project-structure)
+  - [Plugin API](#plugin-api)
+    - [Config phase](#config-phase)
+    - [Manifest phase](#manifest-phase)
+    - [Build phase](#build-phase)
+    - [Hot reloading phase](#hot-reloading-phase)
   - [Routing](#routing)
     - [Dynamic routes](#dynamic-routes)
     - [Non-capturing groups](#non-capturing-groups)
@@ -27,7 +33,6 @@ A full-stack framework built around Web Components and Web Standards:
     - [Type-safety](#type-safety)
     - [Auto-imports](#auto-imports)
     - [Debugging](#debugging)
-    - [Plugin API](#plugin-api)
   - [Scoped Handler Registry](#scoped-handler-registry)
   - [Reactivity](#reactivity)
   - [Directives](#directives)
@@ -46,6 +51,14 @@ A full-stack framework built around Web Components and Web Standards:
     - [Importmap](#importmap)
     - [No bundle](#no-bundle)
   - [Resources](#resources)
+
+## Motivation & philosophy
+
+Do you ever wonder what it would look like to build a modern web site without relying on a ton of dependencies and an extremely complex build step? Do you sometimes feel like web development is piling up more and more technologies, raising the barrier to entry and making it more and more complex to maintain and debug your app?
+
+Radish addresses these problems. It's like a framework for writing Vanilla apps. In other words it's as bare metal as possible, embraces the Standards, soften the edges here and there and disappears as the Standards evolve.
+
+It promotes a **minimax** philosophy, seeking the best possible outcome (great DX, future-proofing, and maintainability) while enforcing the lowest possible cost in terms of abstraction, bundling, and deviation from web standards.
 
 ## Try out the alpha
 
@@ -78,7 +91,6 @@ my-rad-project/
 ├ elements/
 ├ lib/
 ├ routes/
-├ scripts/
 ├ static/
 ├ start.ts
 └ deno.json
@@ -87,11 +99,37 @@ my-rad-project/
 Where:
 - `elements` contains your reusable custom elements, web components and unknown elements
 - `routes` contains your routes with optionally colocated custom elements
-- `scripts` contains your app scripts like `start` and `build`.
 - `static` contains the static assets that should be served as-is
-- the `start.ts` script calls the `start` function and passes it your config.
+- the `start.ts` scripts starts the app and contains your config.
 
+## Plugin API
 
+The Radish core is a plugin runner modelled after the Vite/Rollup plugin system, with compatible signatures. The framework features themselves come in the form of built-in plugins which can be extended. For example custom-element transforms, declarative shadow root inlining, server effects, type stripping etc. are just plugins.
+
+The pipeline is articulated around the following hooks and phases:
+
+### Config phase
+
+- The `config: (userConfig: Config, args: Args) => Config` hook can read and modify the user config and receives the arguments of the currently running command
+- The `configResolved: (config: ResolvedConfig) => void` hooks is ran at the end of the config phase and allows plugin to read the resolved config.
+
+### Manifest phase
+
+The manifest holds information about the files of the project, their imports, dependencies etc. and can be extended with information about the elements, routes, layouts etc.
+
+- The `manifestStart: (manifestController: ManifestController) => ManifestBase` hook runs before the manifest generation, and allows to give it the proper shape by adding required fields
+- The `manifest: (entry: WalkEntry, context: ManifestContext) => void` hook is the main hook of this phase, visits entries one by one and is used to populate the manifest file
+- The `manifestWrite: (content: string) => string` hook is a transform which runs when the manifest is written on disk, and allows to modify imports etc.
+
+### Build phase
+
+- The `buildStart: (entries: WalkEntry[],manifest: ManifestBase) => WalkEntry[]` hook runs at the beginning of a build or re-build, and allows plugins to modify the order in which the entries will be built
+- The `transform: (code: string, path: string, context: TransformContext) => MaybePromise<TransformResult>` hook lets you modify the content of a file
+- The `emit: (path: string) => string | null` hook is ran just before the content is written on disk and allows a plugin to modify the default destination
+
+### Hot reloading phase
+
+The dev server handles hot reloading and plugins can hook into this phase too with the `handleHotUpdate: (event: HmrEvent, context: HmrContext) => void` hook. It receives the event, holding information about what happened (creation, modification, path etc.) and the context, allowing to re-run plugins, updating the manifest etc.
 
 ## Routing
 
@@ -207,23 +245,6 @@ Debugging your app is quite simple - and it's rather fun! - as Deno runs TypeScr
 A VS-Code `launch.json` file is provided in the `.vscode` folder of your app to help in the process. Just pass it the args array of the script you want to debug (`"--importmap"`, `"--build"` etc) and launch the debug session!
 
 In the browser debugging also works out of the box, and you can easily step through your code to understand what's going on, since the code running in the browser is just your TypeScript code with the types stripped out, which should be easy to read and a seamless experience.
-
-### Plugin API
-
-The Radish core can be extended with its plugin API modelled after Vite/Rollup plugin system. Some hooks would not make sense in Radish as there is no bundle, or chunks and this greatly simplifies the architecture. Hooks which make sense in Radish have the same signature as their Vite/Rollup counterpart, potentially allowing the reuse of plugins out of the box.
-
-The main hook is the `transform(code: string, path: string, context: TransformContext)` hook. It has the same signature as the Rollup `transform` hook but adds a third parameter allowing to optionally reuse an ast returned by the previous transform (avoiding re-parses), or read meta data annotations.
-
-The `buildStart(options: BuildOptions) => void` hook allows to read the options object when a plugin needs some setup.
-
-The `emit(path: string) => string | null` hook is specific to Radish and lets you modify the path where the file will be emitted
-
-Hooks:
-- `buildStart`
-- `transform`
-- `emit`
-
-The Radish build pipeline itself is built with Radish plugins: custom-element transforms (declarative shadow root inlining, server effects etc), type stripping etc. are just plugins.
 
 ## Scoped Handler Registry
 

@@ -14,14 +14,13 @@
 [x] Generate client importmap
 [x] Hydration script
 [x] auto-import custom elements
+[x] Hot-reloading dev server
 
-[ ] Hot-reloading dev server
 [ ] Scaffolding scripts for project & components
 [ ] Lazy load islands
 [ ] Handle client errors and try-catch components
 [ ] Load effect
 [ ] Option to prerender a component
-[ ] Improve hot reloading: don't location.reload the full page, just push the modified module
 [ ] local first compatible data loading model with storage providers, diffing & merging and smart updates on navigation request
 [?] Convenience: use proxy for state?
 [ ] Distinguish between route level handler registries and others: a global handler throws if it sees an unhandled interaction request

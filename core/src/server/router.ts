@@ -1,4 +1,4 @@
-import { walk } from "@std/fs";
+import { walkSync } from "@std/fs";
 import { serveDir, type ServeDirOptions, serveFile } from "@std/http";
 import { dirname, join } from "@std/path";
 import { buildFolder, routesFolder } from "../constants.ts";
@@ -36,9 +36,9 @@ export class Router {
 
   get;
   post;
-  defaultHandler;
-  routesFolder;
-  matchers;
+  defaultHandler: Handler<Context>;
+  routesFolder: string;
+  matchers: Record<string, RegExp>;
 
   constructor(
     options: {
@@ -79,11 +79,11 @@ export class Router {
     return this;
   };
 
-  generateFileBasedRoutes = async () => {
+  generateFileBasedRoutes = (): void => {
     const routes: string[] = [];
 
-    for await (
-      const entry of walk(this.routesFolder, {
+    for (
+      const entry of walkSync(this.routesFolder, {
         exts: [".html"],
         includeSymlinks: false,
       })
@@ -122,7 +122,7 @@ export class Router {
   serveStatic = (
     patternInput: URLPatternInput,
     options: ServeDirOptions = { fsRoot: "." },
-  ) => {
+  ): void => {
     const pattern = new URLPattern(patternInput);
     this.routes["GET"].push({
       method: "GET",

@@ -1,4 +1,4 @@
-import { emptyDirSync, ensureDirSync, walkSync } from "@std/fs";
+import { emptyDirSync, ensureDirSync, type WalkEntry, walkSync } from "@std/fs";
 import { dirname, extname } from "@std/path";
 import {
   buildFolder,
@@ -6,57 +6,60 @@ import {
   libFolder,
   routesFolder,
 } from "../constants.ts";
-import {
-  pluginDefaultEmit,
-  pluginStripTypes,
-  pluginTransformElements,
-  pluginTransformRoutes,
-} from "../plugins.ts";
 import type {
   BuildOptions,
-  RadishPlugin,
+  ManifestBase,
+  Plugin,
   TransformContext,
 } from "../types.d.ts";
-import type { Manifest } from "./manifest.ts";
-import { manifest, sortComponents } from "./manifest.ts";
+import { concatIterators } from "../utils.ts";
+import type { FileCache } from "../server/app.ts";
+import type { ImportMapController } from "./impormap.ts";
 
-class Builder {
-  #plugins: RadishPlugin[];
-  #options: BuildOptions;
-  #manifest: Manifest;
+export class Builder {
+  #plugins: Plugin[];
+  // #options: BuildOptions;
+  #manifest: ManifestBase;
+  #importmapController: ImportMapController;
+  #fileCache: FileCache;
 
   constructor(
-    plugins: RadishPlugin[],
-    options: BuildOptions,
-    manifest: Manifest,
+    plugins: Plugin[],
+    manifest: ManifestBase,
+    importmapController: ImportMapController,
+    fileCache: FileCache,
+    options?: BuildOptions,
   ) {
     this.#plugins = plugins;
-    this.#options = options;
+    // this.#options = options;
     this.#manifest = manifest;
-
-    this.buildStart();
+    this.#importmapController = importmapController;
+    this.#fileCache = fileCache;
   }
 
-  buildStart = () => {
-    emptyDirSync(buildFolder);
-
+  #buildStart = (entries: WalkEntry[]) => {
     for (const plugin of this.#plugins) {
-      if (plugin.buildStart) {
-        plugin.buildStart(this.#options);
+      if (plugin?.buildStart) {
+        entries = plugin?.buildStart(entries, this.#manifest);
       }
     }
+
+    return entries;
   };
 
-  processFile = (path: string) => {
-    let code = Deno.readTextFileSync(path);
+  #processFile = async (path: string) => {
+    let code = this.#fileCache.readTextFileSync(path);
+
     const context: TransformContext = {
       format: extname(path),
       manifest: this.#manifest,
+      importmapController: this.#importmapController,
+      fileCache: this.#fileCache,
     };
 
     for (const plugin of this.#plugins) {
       if (plugin?.transform) {
-        const result = plugin.transform(code, path, context);
+        const result = await plugin.transform(code, path, context);
 
         if (typeof result === "string") {
           code = result;
@@ -79,56 +82,39 @@ class Builder {
       }
     }
   };
-}
 
-/**
- * Runs the build process
- */
-export const build = (
-  manifestObject: Manifest,
-  options?: BuildOptions,
-): void => {
-  console.log("Building...");
+  /**
+   * Starts the build pipeline, indirectly calling the `buildStart` hooks to sort the entries, followed by the `transform` hooks and finally the `emit` hooks before writing to disk
+   */
+  build = async (
+    paths = [libFolder, elementsFolder, routesFolder],
+  ): Promise<void> => {
+    console.log("Building...");
 
-  manifest.elements = manifestObject.elements;
-  manifest.routes = manifestObject.routes;
+    emptyDirSync(buildFolder);
 
-  const sorted = sortComponents([
-    ...Object.values(manifest.elements),
-    ...Object.values(manifest.routes),
-  ]);
+    const entries = Array.from(
+      new Set(concatIterators(
+        ...paths.map((folder) =>
+          walkSync(folder, { includeDirs: true, includeFiles: true })
+        ),
+      )),
+    );
 
-  const paths = sorted
-    .map((c) => c.files.find((f) => f.endsWith(".html")))
-    .filter((path) => path !== undefined);
+    const sortedEntries = this.#buildStart(entries);
 
-  const builder = new Builder(
-    [
-      pluginTransformRoutes(),
-      pluginTransformElements,
-      pluginStripTypes,
-      pluginDefaultEmit,
-    ],
-    options ?? {},
-    manifestObject,
-  );
-
-  const folders = [libFolder, elementsFolder, routesFolder];
-
-  for (const folder of folders) {
-    for (
-      const entry of walkSync(folder, {
-        includeFiles: true,
-        includeDirs: false,
-      })
-    ) {
-      if (paths.includes(entry.path)) continue;
-
-      builder.processFile(entry.path);
+    for (const entry of sortedEntries) {
+      if (entry.isFile) {
+        await this.#processFile(entry.path);
+      } else {
+        for (const plugin of this.#plugins) {
+          const dest = plugin?.emit?.(entry.path);
+          if (dest) {
+            ensureDirSync(dest);
+            break;
+          }
+        }
+      }
     }
-  }
-
-  for (const path of paths) {
-    builder.processFile(path);
-  }
-};
+  };
+}
