@@ -2,8 +2,8 @@
   "license": "MIT",
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts",
-    "generate": "deno run -A scripts/generate.ts",
-    "build": "deno run -A scripts/generate.ts --manifest && deno run -A scripts/generate.ts --importmap && deno run -A scripts/generate.ts --build && deno fmt build",
+    "generate": "deno run -A start.ts",
+    "build": "deno run -A start.ts --manifest && deno run -A start.ts --importmap && deno run -A start.ts --build && deno fmt build",
     "dev": "deno run -A start.ts --dev",
     "start": "deno run -A start.ts"
   },
