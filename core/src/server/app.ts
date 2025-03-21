@@ -1,17 +1,23 @@
+import { dev } from "$env";
 import { getCookies } from "@std/http/cookie";
-import type { Config, MaybePromise } from "../types.d.ts";
-import { Router } from "./router.ts";
+import { extname, isAbsolute, join, relative } from "@std/path";
 import {
   buildFolder,
   elementsFolder,
   libFolder,
   routesFolder,
   staticFolder,
-  ts_extension_regex,
 } from "../constants.ts";
-import { dev } from "$env";
-import { common, extname, join, relative, resolve } from "@std/path";
-import { setTimeoutWithAbort } from "../utils.ts";
+import type { Builder } from "../generate/build.ts";
+import type { ManifestController } from "../generate/manifest.ts";
+import type { ImportMapController } from "../generate/impormap.ts";
+import type {
+  HmrContext,
+  HmrEvent,
+  MaybePromise,
+  ResolvedConfig,
+} from "../types.d.ts";
+import { Router } from "./router.ts";
 
 export type Context = {
   request: Request;
@@ -65,6 +71,110 @@ const HTTP_SERVER_ERROR_CODES = {
   511: "Network Authentication Required",
 } as const;
 
+/**
+ * Normalizes fs events to prevent duplication and delegates processing to the builder
+ */
+class Hmr extends Map<string, HmrEvent> {
+  /**
+   * Throttle timeout in ms
+   */
+  #timeout = 200;
+  #timers = new Set<number>();
+  #app: App;
+
+  constructor(app: App) {
+    super();
+    this.#app = app;
+  }
+
+  override set(key: string, value: Omit<HmrEvent, "timestamp">): this {
+    super.set(key, {
+      ...value,
+      timestamp: Math.floor(Date.now() / this.#timeout),
+    });
+
+    const id = setTimeout(async () => {
+      await this.process();
+    }, this.#timeout);
+
+    this.#timers.add(id);
+    return this;
+  }
+
+  override clear(): void {
+    super.clear();
+    for (const id of this.#timers) {
+      clearTimeout(id);
+    }
+    this.#timers.clear();
+  }
+
+  process = async () => {
+    const events = [...this.values()];
+    this.clear();
+
+    const paths: string[] = [];
+
+    for (const event of events) {
+      const context: HmrContext = { app: this.#app, paths: [event.path] };
+
+      for (const plugin of this.#app.config.plugins) {
+        plugin.handleHotUpdate?.(event, context);
+      }
+
+      paths.concat(context.paths);
+    }
+
+    this.#app.manifestController.write();
+    const manifest = await this.#app.manifestController.loadManifest();
+
+    if (!this.#app.importmapController.importmap) {
+      await this.#app.importmapController.generate(manifest);
+    }
+
+    await this.#app.builder.build(paths);
+
+    console.log("Hot-Reloading...");
+    this.#app.ws.send("reload");
+  };
+}
+
+class WebSocketServer {
+  clients: Set<WebSocket> = new Set<WebSocket>();
+
+  handleWebSocket(socket: WebSocket) {
+    socket.addEventListener("open", () => {
+      console.log("WebSocket Client connected");
+      this.clients.add(socket);
+    });
+    socket.addEventListener("close", () => {
+      console.log("WebSocket Client disconnected");
+      this.clients.delete(socket);
+    });
+    socket.addEventListener("message", (e) => {
+      console.log("WebSocket message", e);
+    });
+    socket.addEventListener("error", (e) => {
+      console.log("WebSocket error", e);
+    });
+  }
+
+  send(payload: string) {
+    for (const client of this.clients) {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(payload);
+      }
+    }
+  }
+
+  close() {
+    for (const client of this.clients) {
+      client.close();
+    }
+    this.clients.clear();
+  }
+}
+
 export class AppError extends Error {
   public statusCode: keyof typeof HTTP_SERVER_ERROR_CODES;
 
@@ -80,6 +190,48 @@ export class AppError extends Error {
   }
 }
 
+/**
+ * A file store caching `Deno.readTextFileSync` calls for efficient file access
+ */
+export class FileCache {
+  #contents = new Map<string, string>();
+
+  /**
+   * Normalizes to relative paths to ensure unique keys
+   */
+  #normalizePath = (path: string) => {
+    if (isAbsolute(path)) {
+      path = relative(Deno.cwd(), path);
+    }
+    return path;
+  };
+
+  /**
+   * Caches the result of `Deno.readTextFileSync` for efficient file access
+   */
+  readTextFileSync = (path: string): string => {
+    if (this.#contents.has(path)) {
+      return this.#contents.get(path)!;
+    }
+
+    path = this.#normalizePath(path);
+
+    const content = Deno.readTextFileSync(path);
+    this.#contents.set(path, content);
+
+    return content;
+  };
+
+  /**
+   * Removes a file from the cache
+   */
+  invalidate = (path: string) => {
+    path = this.#normalizePath(path);
+
+    return this.#contents.delete(path);
+  };
+}
+
 export type Handle = (input: {
   context: Context;
   resolve: (ctx: Context) => MaybePromise<Response>;
@@ -91,14 +243,42 @@ const defaults = {
 };
 
 export class App {
-  watcher: Deno.FsWatcher | undefined;
-  server: Deno.HttpServer<Deno.NetAddr>;
-  router: Router;
-  ws;
+  builder: Builder;
+  config: ResolvedConfig;
   handle: Handle;
+  manifestController: ManifestController;
+  importmapController: ImportMapController;
+  router: Router;
+  server: Deno.HttpServer<Deno.NetAddr>;
+  watcher: Deno.FsWatcher | undefined;
+  ws: WebSocketServer = new WebSocketServer();
+  fileCache: FileCache;
 
-  constructor(config: Config, handle: Handle) {
+  constructor(
+    options: {
+      config: ResolvedConfig;
+      handle: Handle;
+      manifestController: ManifestController;
+      importmapController: ImportMapController;
+      builder: Builder;
+      fileCache: FileCache;
+    },
+  ) {
+    const {
+      config,
+      handle,
+      builder,
+      fileCache,
+      manifestController,
+      importmapController,
+    } = options;
+
+    this.config = config;
     this.handle = handle;
+    this.builder = builder;
+    this.fileCache = fileCache;
+    this.manifestController = manifestController;
+    this.importmapController = importmapController;
 
     /**
      * Router
@@ -132,36 +312,6 @@ export class App {
         fsRoot: join(config?.router?.nodeModulesRoot ?? "."),
       });
     }
-
-    /**
-     * Web Sockets
-     */
-
-    this.ws = {
-      clients: new Set<WebSocket>(),
-      handleWebSocket(socket: WebSocket) {
-        socket.addEventListener("open", () => {
-          console.log("WebSocket Client connected");
-          this.clients.add(socket);
-        });
-        socket.addEventListener("close", () => {
-          console.log("WebSocket Client disconnected");
-          this.clients.delete(socket);
-        });
-        socket.addEventListener("message", (e) => {
-          console.log("WebSocket message", e);
-        });
-        socket.addEventListener("error", (e) => {
-          console.log("WebSocket error", e);
-        });
-      },
-      close() {
-        for (const client of this.clients) {
-          client.close();
-        }
-        this.clients.clear();
-      },
-    };
 
     /**
      * Server
@@ -205,196 +355,54 @@ export class App {
         staticFolder,
       ], { recursive: true });
 
-      this.hmr();
+      this.watch();
     }
   }
 
-  hmr = async () => {
+  watch = async (): Promise<void> => {
     console.log("HRM server watching...");
-    const routesPath = resolve(routesFolder);
-    const buildPath = resolve(buildFolder);
 
-    /**
-     * Simple throttling mechanism to prevent duplicated File System events
-     */
-    class Throttle<T> extends Set<T> {
-      #timeout: number;
-      #timers = new Set<number>();
-
-      /**
-       * @param {number} timeout Throttle precision timeout in ms
-       */
-      constructor(timeout: number) {
-        super();
-        this.#timeout = timeout;
-      }
-
-      override add(value: T): this {
-        super.add(value);
-
-        const id = setTimeout(() => {
-          super.delete(value);
-          this.#timers.delete(id);
-        }, this.#timeout);
-
-        this.#timers.add(id);
-        return this;
-      }
-
-      override clear(): void {
-        super.clear();
-        for (const id of this.#timers) {
-          clearTimeout(id);
-        }
-        this.#timers.clear();
-      }
-    }
-
-    const timeout = 200;
-    const throttle = new Throttle<string>(timeout);
-    const controllers = new Map<string, AbortController>();
+    const hmr = new Hmr(this);
 
     for await (const event of this.watcher!) {
-      const time = Math.floor(Date.now() / timeout);
-      console.log(`FS Event`, event, time);
-
-      // Update generated CSS variables
-      // if (
-      //   event.kind === "modify" &&
-      //   event.paths.every((p) => [".html", ".css"].includes(extname(p)))
-      // ) {
-      //   if (!throttle.has(`css`)) {
-      //     console.log("Generate css variables");
-      //     await generateCSS();
-      //     throttle.add(`css`);
-      //   }
-      // }
+      console.log(`FS Event`, event.kind, event.paths, Date.now());
 
       for (const path of event.paths) {
         const relativePath = relative(Deno.cwd(), path);
-        const dest = join(buildPath, relativePath);
+        const key = `${event.kind}:${path}`;
 
-        if (extname(path)) {
-          // File
-          const key = `file:${event.kind}:${relativePath}`;
-          if (!throttle.has(key)) {
-            throttle.add(key);
-
-            if (["create", "modify", "rename"].includes(event.kind)) {
-              // TODO distinguish, elements, libs etc
-              // await buildFile(path, dest);
-              console.log("built", relativePath);
-            } else if (event.kind === "remove") {
-              try {
-                if (dest.endsWith(".ts")) {
-                  Deno.removeSync(dest.replace(ts_extension_regex, ".js"));
-                } else {
-                  Deno.removeSync(dest);
-                }
-              } catch (error) {
-                if (!(error instanceof Deno.errors.NotFound)) {
-                  throw error;
-                }
-              }
-              console.log("removed", relativePath);
-            }
-          }
-        } else {
-          // Folder
-          const key = `folder:${event.kind}:${relativePath}`;
-          if (!throttle.has(key)) {
-            throttle.add(key);
-
-            if (event.kind === "create") {
-              Deno.mkdirSync(dest);
-              console.log("created", relativePath);
-            } else if (event.kind === "rename") {
-              let matchingSourcePath = "";
-
-              console.log([...throttle.values()]);
-              // Heuristic to find the correlated renamed source
-              const found = throttle.values().find((key) => {
-                if (!key.startsWith(`folder:remove:`)) return false;
-
-                matchingSourcePath = key.split(":").at(-1) as string;
-                console.log("found matchingSourcePath:", matchingSourcePath);
-
-                return true;
-              });
-
-              if (found) {
-                controllers.get(matchingSourcePath)?.abort();
-                controllers.delete(matchingSourcePath);
-
-                Deno.renameSync(join(buildPath, matchingSourcePath), dest);
-                console.log(`moved ${relativePath}`);
-              } else {
-                console.log("couldn't find rename source folder", path);
-              }
-            } else if (event.kind === "remove") {
-              const controller = new AbortController();
-              controllers.set(relativePath, controller);
-
-              // Postpone deletion in case it's a rename
-              setTimeoutWithAbort(
-                () => {
-                  try {
-                    Deno.removeSync(dest, { recursive: true });
-                    controllers.delete(relativePath);
-                    console.log("removed", relativePath);
-                  } catch (error) {
-                    if (!(error instanceof Deno.errors.NotFound)) {
-                      throw error;
-                    }
-                  }
-                },
-                timeout,
-                controller.signal,
-              );
-            }
-
-            // TODO: rebuild routes
-            if (!throttle.has("route")) {
-              // Update routes
-              if (
-                event.paths.some((p) => common([routesPath, p]) === routesPath)
-              ) {
-                this.router.generateFileBasedRoutes();
-              }
-              throttle.add("route");
-            }
-          }
+        if (!hmr.has(key)) {
+          hmr.set(key, {
+            isFile: !!extname(path),
+            path: relativePath,
+            target: join(buildFolder, relativePath),
+            kind: event.kind,
+          });
         }
-      }
 
-      // Hot-reloading
-      // Reload if there was an update to an html, css, js or ts file
-      if (
-        !throttle.has(`full-reload`) &&
-        event.kind === "modify" &&
-        event.paths.some((p) =>
-          [".html", ".css", ".js", ".ts"].includes(extname(p))
-        )
-      ) {
-        throttle.add(`full-reload`);
-        console.log("Hot-Reloading...");
-        for (const client of this.ws.clients) {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send("full-reload");
-          }
-        }
+        // TODO: update router
+        // if (!throttle.has("route")) {
+        //   // Update routes
+        //   if (
+        //     event.paths.some((p) => common([routesPath, p]) === routesPath)
+        //   ) {
+        //     this.router.generateFileBasedRoutes();
+        //   }
+        //   throttle.add("route");
+        // }
       }
     }
   };
 
-  shutdown = () => {
+  shutdown = (): void => {
     console.log("\nShutting down gracefully...");
 
-    if (dev()) {
-      this.ws.close();
-    }
-
     this.server.shutdown().then(() => {
+      if (dev()) {
+        this.ws.close();
+        this.watcher?.close();
+      }
+
       console.log("Server closed");
 
       Deno.exit();
