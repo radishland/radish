@@ -2,7 +2,10 @@ import type { WalkEntry } from "@std/fs/walk";
 import type { ManifestController } from "./generate/manifest.ts";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
 import type { App, FileCache } from "./server/app.ts";
-import type { ImportMap } from "./generate/impormap.ts";
+import type {
+  ImportMapController,
+  ImportMapOptions,
+} from "./generate/impormap.ts";
 
 export type Maybe<T> = T | undefined;
 export type MaybePromise<T> = T | Promise<T>;
@@ -39,6 +42,7 @@ export interface TransformContext {
    */
   format: string;
   manifest: ManifestBase;
+  importmapController: ImportMapController;
   fileCache: FileCache;
   /**
    * The AST returned by a previous transform plugin
@@ -172,7 +176,7 @@ export interface Config {
    * Options for the builder
    */
   build?: BuildOptions;
-  importmap?: ImportMap;
+  importmap?: ImportMapOptions;
   /**
    * Array of plugins to use
    */

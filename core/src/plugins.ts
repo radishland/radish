@@ -170,24 +170,30 @@ export const pluginImports: Plugin = {
   },
   handleHotUpdate(event, context) {
     if (event.isFile) {
-      const manifestController = context.app.manifestController;
-      if (event.kind === "remove") {
-        delete manifestController.manifest.imports[event.path];
-      } else if (event.kind === "modify") {
-        this.manifest?.({
-          isDirectory: !event.isFile,
-          isFile: event.isFile,
-          isSymlink: false,
-          path: event.path,
-          name: basename(event.path),
-        }, {
-          manifest: context.app.manifestController.manifest,
-          fileCache: context.app.fileCache,
-        });
+      const manifestImports = context.app.manifestController.manifest.imports;
 
-        context.app.fileCache.invalidate(
-          join(generatedFolder, "importmap.json"),
-        );
+      if (event.kind === "remove") {
+        delete manifestImports[event.path];
+      } else if (event.kind === "modify") {
+        if (!event.isFile || ![".js", ".ts"].includes(extname(event.path))) {
+          return;
+        }
+
+        const content = context.app.fileCache.readTextFileSync(event.path);
+        const newImports = extractImports(content);
+        const oldImports = manifestImports[event.path];
+
+        if (
+          !oldImports ||
+          !(newImports.length !== oldImports.length &&
+            (new Set(newImports)).isSubsetOf(new Set(oldImports)))
+        ) {
+          manifestImports[event.path] = newImports;
+
+          if (oldImports) {
+            context.app.importmapController.invalidate();
+          }
+        }
       }
     }
   },
@@ -200,7 +206,6 @@ const is_parent_path_regex = /^\.\.(\/\.\.)*$/;
 
 export const pluginRadish: () => Plugin = () => {
   const appPath = join(routesFolder, "_app.html");
-  const importmapPath = join(generatedFolder, "importmap.json");
 
   let speculationRules: SpeculationRules | undefined;
   let handlerStack: { tagName: string; instance: HandlerRegistry }[] = [];
@@ -692,7 +697,7 @@ export const pluginRadish: () => Plugin = () => {
 
       let pageHeadContent = `
     <script type="importmap">
-      ${context.fileCache.readTextFileSync(importmapPath)}
+      ${context.importmapController.importmap}
     </script>`;
 
       if (speculationRules) {

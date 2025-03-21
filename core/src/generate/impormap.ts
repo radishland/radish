@@ -9,8 +9,9 @@ import { join } from "@std/path";
 import { readDenoConfig } from "../config.ts";
 import { generatedFolder, ts_extension_regex } from "../constants.ts";
 import type { ManifestBase } from "../types.d.ts";
+import type { FileCache } from "../server/app.ts";
 
-interface ImportMapOptions {
+export interface ImportMapOptions {
   /**
    * Manually add a package target into the import map, including all its dependency resolutions via tracing
    *
@@ -21,6 +22,54 @@ interface ImportMapOptions {
    * Options passed to the jspm generator
    */
   generatorOptions?: GeneratorOptions;
+  /**
+   * Provides a transform hook giving you full control over the generated importmap
+   *
+   * @param importmap The generated importmap
+   * @return The JSON stringified importmap
+   */
+  transform?: (importmap: IImportMap) => string;
+}
+
+export class ImportMapController {
+  path = join(generatedFolder, "importmap.json");
+  fileCache: FileCache;
+  importmap: string | undefined;
+  options?: ImportMapOptions;
+
+  constructor(fileCache: FileCache, options?: ImportMapOptions) {
+    this.fileCache = fileCache;
+    this.options = options;
+  }
+
+  invalidate = () => {
+    this.fileCache.invalidate(this.path);
+    this.importmap = undefined;
+  };
+
+  /**
+   * Generates the importmap of your project based on the current manifest. The file is saved inside `_generated/importmap.json`
+   *
+   * @param manifest The project manifest file
+   * @param options
+   */
+  generate = async (manifest: ManifestBase): Promise<string> => {
+    console.log("Generating importmap...");
+
+    const denoConfig = readDenoConfig();
+
+    const importmap = await pureImportMap(
+      manifest,
+      denoConfig.imports ?? {},
+      this.options,
+    );
+
+    this.importmap = this.options?.transform
+      ? this.options.transform(importmap)
+      : JSON.stringify(importmap);
+
+    return this.importmap;
+  };
 }
 
 /**
@@ -130,42 +179,4 @@ export const pureImportMap = async (
     scopes,
     integrity,
   };
-};
-
-export interface ImportMap extends ImportMapOptions {
-  /**
-   * Provides a transform hook giving you full control over the generated importmap
-   *
-   * @param importmap The generated importmap
-   * @return The JSON stringified importmap
-   */
-  transform?: (importmap: IImportMap) => string;
-}
-
-/**
- * Generates the importmap of your project based on the current manifest. The file is saved inside `_generated/importmap.json`
- *
- * @param manifest The project manifest file
- * @param options
- */
-export const generateImportMap = async (
-  manifest: ManifestBase,
-  options?: ImportMap,
-): Promise<void> => {
-  console.log("Generating importmap...");
-
-  const denoConfig = readDenoConfig();
-
-  const importmap = await pureImportMap(
-    manifest,
-    denoConfig.imports ?? {},
-    options,
-  );
-
-  Deno.writeTextFileSync(
-    join(generatedFolder, "importmap.json"),
-    options?.transform
-      ? options.transform(importmap)
-      : JSON.stringify(importmap),
-  );
 };

@@ -6,7 +6,7 @@ import type { Config, ManifestBase, ResolvedConfig } from "./types.d.ts";
 import { parseArgs } from "@std/cli/parse-args";
 import { ManifestController } from "./generate/manifest.ts";
 import { globals } from "./constants.ts";
-import { generateImportMap } from "./generate/impormap.ts";
+import { ImportMapController } from "./generate/impormap.ts";
 import { pluginDefaultPlugins } from "./plugins.ts";
 
 const args = parseArgs(Deno.args, {
@@ -64,16 +64,27 @@ export const startApp = async (
     manifestController.write();
   } else {
     const manifest = await manifestController.loadManifest();
-    const builder = new Builder(resolvedConfig.plugins, manifest, fileCache);
+    const importmapController = new ImportMapController(
+      fileCache,
+      resolvedConfig.importmap,
+    );
+    const builder = new Builder(
+      resolvedConfig.plugins,
+      manifest,
+      importmapController,
+      fileCache,
+    );
 
     if (args.importmap) {
-      await generateImportMap(manifest, resolvedConfig.importmap);
+      const importmap = await importmapController.generate(manifest);
+      Deno.writeTextFileSync(importmapController.path, importmap);
     } else if (args.build) {
       await builder.build();
     } else {
       new App({
         config: resolvedConfig,
         manifestController,
+        importmapController,
         builder,
         handle,
         fileCache,

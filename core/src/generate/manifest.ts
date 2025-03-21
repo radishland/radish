@@ -11,6 +11,7 @@ import type { ManifestBase, ManifestContext, Plugin } from "../types.d.ts";
 import type { FileCache } from "../server/app.ts";
 
 export class ManifestController {
+  path: string = join(generatedFolder, "manifest.ts");
   manifestImports: Set<string> = new Set<string>();
   manifest: ManifestBase = { imports: {} };
   fileCache: FileCache;
@@ -136,6 +137,6 @@ export class ManifestController {
       }
     }
 
-    Deno.writeTextFileSync(join(generatedFolder, "manifest.ts"), file);
+    Deno.writeTextFileSync(this.path, file);
   }
 }

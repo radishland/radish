@@ -14,22 +14,26 @@ import type {
 } from "../types.d.ts";
 import { concatIterators } from "../utils.ts";
 import type { FileCache } from "../server/app.ts";
+import type { ImportMapController } from "./impormap.ts";
 
 export class Builder {
   #plugins: Plugin[];
   // #options: BuildOptions;
   #manifest: ManifestBase;
+  #importmapController: ImportMapController;
   #fileCache: FileCache;
 
   constructor(
     plugins: Plugin[],
     manifest: ManifestBase,
+    importmapController: ImportMapController,
     fileCache: FileCache,
     options?: BuildOptions,
   ) {
     this.#plugins = plugins;
     // this.#options = options;
     this.#manifest = manifest;
+    this.#importmapController = importmapController;
     this.#fileCache = fileCache;
   }
 
@@ -49,6 +53,7 @@ export class Builder {
     const context: TransformContext = {
       format: extname(path),
       manifest: this.#manifest,
+      importmapController: this.#importmapController,
       fileCache: this.#fileCache,
     };
 
