@@ -64,7 +64,7 @@ export const startApp = async (
     manifestController.write();
   } else {
     const manifest = await manifestController.loadManifest();
-    const builder = new Builder(resolvedConfig.plugins, manifest);
+    const builder = new Builder(resolvedConfig.plugins, manifest, fileCache);
 
     if (args.importmap) {
       await generateImportMap(manifest, resolvedConfig.importmap);

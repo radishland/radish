@@ -13,20 +13,24 @@ import type {
   TransformContext,
 } from "../types.d.ts";
 import { concatIterators } from "../utils.ts";
+import type { FileCache } from "../server/app.ts";
 
 export class Builder {
   #plugins: Plugin[];
   // #options: BuildOptions;
   #manifest: ManifestBase;
+  #fileCache: FileCache;
 
   constructor(
     plugins: Plugin[],
     manifest: ManifestBase,
+    fileCache: FileCache,
     options?: BuildOptions,
   ) {
     this.#plugins = plugins;
     // this.#options = options;
     this.#manifest = manifest;
+    this.#fileCache = fileCache;
   }
 
   #buildStart = (entries: WalkEntry[]) => {
@@ -40,11 +44,12 @@ export class Builder {
   };
 
   #processFile = async (path: string) => {
-    let code = Deno.readTextFileSync(path);
+    let code = this.#fileCache.readTextFileSync(path);
 
     const context: TransformContext = {
       format: extname(path),
       manifest: this.#manifest,
+      fileCache: this.#fileCache,
     };
 
     for (const plugin of this.#plugins) {

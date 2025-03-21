@@ -47,7 +47,8 @@ export class ManifestController {
     }
 
     const context: ManifestContext = {
-      manifestController: this,
+      manifest: this.manifest,
+      fileCache: this.fileCache,
     };
 
     for (const entry of walkSync(".", { match: this.#match })) {

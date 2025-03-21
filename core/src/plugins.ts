@@ -159,14 +159,14 @@ const extractImports = (source: string) => {
  */
 export const pluginImports: Plugin = {
   name: "radish-plugin-imports",
-  manifest: (entry, { manifestController }) => {
+  manifest: (entry, { manifest, fileCache }) => {
     if (!entry.isFile || ![".js", ".ts"].includes(extname(entry.path))) {
       return;
     }
 
-    const content = manifestController.fileCache.readTextFileSync(entry.path);
+    const content = fileCache.readTextFileSync(entry.path);
 
-    manifestController.manifest.imports[entry.path] = extractImports(content);
+    manifest.imports[entry.path] = extractImports(content);
   },
   handleHotUpdate(event, context) {
     if (event.isFile) {
@@ -180,7 +180,14 @@ export const pluginImports: Plugin = {
           isSymlink: false,
           path: event.path,
           name: basename(event.path),
-        }, { manifestController });
+        }, {
+          manifest: context.app.manifestController.manifest,
+          fileCache: context.app.fileCache,
+        });
+
+        context.app.fileCache.invalidate(
+          join(generatedFolder, "importmap.json"),
+        );
       }
     }
   },
@@ -192,13 +199,8 @@ export const pluginImports: Plugin = {
 const is_parent_path_regex = /^\.\.(\/\.\.)*$/;
 
 export const pluginRadish: () => Plugin = () => {
-  const appContent = Deno.readTextFileSync(
-    join(routesFolder, "_app.html"),
-  );
-
-  const importmapContent = Deno.readTextFileSync(
-    join(generatedFolder, "importmap.json"),
-  );
+  const appPath = join(routesFolder, "_app.html");
+  const importmapPath = join(generatedFolder, "importmap.json");
 
   let speculationRules: SpeculationRules | undefined;
   let handlerStack: { tagName: string; instance: HandlerRegistry }[] = [];
@@ -515,8 +517,7 @@ export const pluginRadish: () => Plugin = () => {
         layouts: {},
       } satisfies Manifest;
     },
-    manifest: (entry, { manifestController }) => {
-      const manifest = manifestController.manifest;
+    manifest: (entry, { manifest, fileCache }) => {
       const extension = extname(entry.name);
 
       if (!entry.isFile || ![".html", ".js", ".ts"].includes(extension)) {
@@ -559,7 +560,7 @@ export const pluginRadish: () => Plugin = () => {
 
               let fragment;
               try {
-                const content = Deno.readTextFileSync(entry.path);
+                const content = fileCache.readTextFileSync(entry.path);
                 fragment = shadowRoot.parseOrThrow(content);
               } catch (error) {
                 console.error(
@@ -605,7 +606,7 @@ export const pluginRadish: () => Plugin = () => {
         if (extname(entry.name) === ".html") {
           let fragment;
           try {
-            const content = Deno.readTextFileSync(entry.path);
+            const content = fileCache.readTextFileSync(entry.path);
             fragment = fragments.parseOrThrow(content);
           } catch (error) {
             console.error(`Something went wrong while parsing ${entry.path}`);
@@ -644,7 +645,7 @@ export const pluginRadish: () => Plugin = () => {
           if (entry.name.includes("-")) {
             const tagName = fileName(entry.path);
             const className = kebabToPascal(tagName);
-            const content = Deno.readTextFileSync(entry.path);
+            const content = fileCache.readTextFileSync(entry.path);
             const imports = extractImports(content);
 
             manifest.elements[tagName] = {
@@ -691,7 +692,7 @@ export const pluginRadish: () => Plugin = () => {
 
       let pageHeadContent = `
     <script type="importmap">
-      ${importmapContent}
+      ${context.fileCache.readTextFileSync(importmapPath)}
     </script>`;
 
       if (speculationRules) {
@@ -781,7 +782,7 @@ export const pluginRadish: () => Plugin = () => {
         });
       }
 
-      const pageContent = appContent
+      const pageContent = context.fileCache.readTextFileSync(appPath)
         .replace("%radish.head%", pageHeadContent)
         .replace("%radish.body%", pageBodyContent);
 
@@ -837,7 +838,10 @@ export const pluginRadish: () => Plugin = () => {
             path: event.path,
             name: basename(event.path),
           },
-          { manifestController: context.app.manifestController },
+          {
+            manifest: context.app.manifestController.manifest,
+            fileCache: context.app.fileCache,
+          },
         );
       }
     },
