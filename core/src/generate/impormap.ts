@@ -34,7 +34,7 @@ export interface ImportMapOptions {
 export class ImportMapController {
   path = join(generatedFolder, "importmap.json");
   fileCache: FileCache;
-  importmap: string | undefined;
+  #importmap: string | undefined;
   options?: ImportMapOptions;
 
   constructor(fileCache: FileCache, options?: ImportMapOptions) {
@@ -42,9 +42,16 @@ export class ImportMapController {
     this.options = options;
   }
 
+  get importmap() {
+    if (!this.#importmap) {
+      this.#importmap = Deno.readTextFileSync(this.path);
+    }
+    return this.#importmap;
+  }
+
   invalidate = () => {
     this.fileCache.invalidate(this.path);
-    this.importmap = undefined;
+    this.#importmap = undefined;
   };
 
   /**
@@ -64,7 +71,7 @@ export class ImportMapController {
       this.options,
     );
 
-    this.importmap = this.options?.transform
+    this.#importmap = this.options?.transform
       ? this.options.transform(importmap)
       : JSON.stringify(importmap);
 
