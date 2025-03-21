@@ -7,11 +7,13 @@ import {
   libFolder,
   routesFolder,
 } from "../constants.ts";
-import type { ManifestBase, Plugin } from "../types.d.ts";
+import type { ManifestBase, ManifestContext, Plugin } from "../types.d.ts";
+import type { FileCache } from "../server/app.ts";
 
 export class ManifestController {
   manifestImports: Set<string> = new Set<string>();
-  manifest: ManifestBase = {};
+  manifest: ManifestBase = { imports: {} };
+  fileCache: FileCache;
 
   #plugins: Plugin[];
   #match = [
@@ -25,12 +27,14 @@ export class ManifestController {
   constructor(
     plugins: Plugin[] = [],
     load: () => Promise<ManifestBase>,
+    fileCache: FileCache,
   ) {
     this.#plugins = plugins;
     this.loadManifest = async () => {
       this.manifest = await load();
       return this.manifest;
     };
+    this.fileCache = fileCache;
   }
 
   createManifest = (): void => {
@@ -42,11 +46,13 @@ export class ManifestController {
       }
     }
 
+    const context: ManifestContext = {
+      manifestController: this,
+    };
+
     for (const entry of walkSync(".", { match: this.#match })) {
       for (const plugin of this.#plugins) {
-        const updated = plugin.manifest?.(entry, this);
-
-        if (updated) break;
+        plugin.manifest?.(entry, context);
       }
     }
   };
