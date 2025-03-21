@@ -1,13 +1,34 @@
 import { startApp } from "@radish/core";
-import type { Config } from "@radish/core/types";
+import { dev } from "@radish/core/env";
+import type { Config, ManifestBase } from "@radish/core/types";
 import {
   pluginDefaultEmit,
   pluginRadish,
   pluginStripTypes,
 } from "@radish/core/plugins";
-import type { ManifestBase } from "../core/src/types.d.ts";
 
 const config: Config = {
+  importmap: {
+    install: [
+      "@preact/signals-core", // When using the development runtime version
+      "@material/web/button/filled-button",
+      "@material/web/button/outlined-button",
+      "@material/web/checkbox/checkbox",
+      "wired-elements",
+      !dev() && "@shoelace-style/shoelace/dist/components/rating/rating.js",
+    ],
+    transform: (importmap) => {
+      const imports = {
+        // When using the development runtime version
+        "radish": "/_radish/runtime/index.js",
+        "radish/boot": "/_radish/runtime/boot.js",
+      };
+      return JSON.stringify({
+        imports: { ...importmap.imports, ...imports },
+        scopes: { ...importmap.scopes },
+      });
+    },
+  },
   router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
   plugins: [
     {
