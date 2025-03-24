@@ -1,19 +1,18 @@
 import { emptyDirSync, ensureDirSync, type WalkEntry, walkSync } from "@std/fs";
-import { dirname, extname } from "@std/path";
+import { basename, dirname, extname } from "@std/path";
 import {
   buildFolder,
   elementsFolder,
   libFolder,
   routesFolder,
 } from "../constants.ts";
+import type { FileCache } from "../server/app.ts";
 import type {
   BuildOptions,
   ManifestBase,
   Plugin,
   TransformContext,
 } from "../types.d.ts";
-import { concatIterators } from "../utils.ts";
-import type { FileCache } from "../server/app.ts";
 import type { ImportMapController } from "./impormap.ts";
 
 export class Builder {
@@ -84,21 +83,35 @@ export class Builder {
   };
 
   /**
-   * Starts the build pipeline, indirectly calling the `buildStart` hooks to sort the entries, followed by the `transform` hooks and finally the `emit` hooks before writing to disk
+   * Starts the build pipeline, calls the `buildStart` hooks to sort the entries, the `transform` hooks and the `emit` hooks
    */
   build = async (
     paths = [libFolder, elementsFolder, routesFolder],
+    options = { emptyBuildFolder: true },
   ): Promise<void> => {
     console.log("Building...");
 
-    emptyDirSync(buildFolder);
+    if (options.emptyBuildFolder) {
+      emptyDirSync(buildFolder);
+    }
 
-    const entries = Array.from(
-      new Set(concatIterators(
-        ...paths.map((folder) =>
-          walkSync(folder, { includeDirs: true, includeFiles: true })
-        ),
-      )),
+    const entries: WalkEntry[] = Array.from(
+      new Set(
+        paths.flatMap((path) => {
+          if (extname(path)) {
+            return [{
+              isDirectory: false,
+              isFile: true,
+              isSymlink: false,
+              path,
+              name: basename(path),
+            }];
+          }
+          return Array.from(
+            walkSync(path, { includeDirs: true, includeFiles: true }),
+          );
+        }),
+      ),
     );
 
     const sortedEntries = this.#buildStart(entries);
