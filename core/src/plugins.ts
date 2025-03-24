@@ -24,6 +24,8 @@ import type { ManifestBase, Plugin } from "./types.d.ts";
 import { fileName, kebabToPascal } from "./utils.ts";
 import { dependencies } from "./walk.ts";
 
+export const SCOPE = Symbol.for("scope");
+
 /**
  * Emits files inside the build folder in a way that mirrors the source folder structure
  */
@@ -464,6 +466,8 @@ export const pluginRadish: () => Plugin = () => {
       if (interiorNodes) {
         // Update remaining components
         components = interiorNodes;
+      } else {
+        components = [];
       }
 
       if (prevLength === components.length) {
@@ -584,13 +588,16 @@ export const pluginRadish: () => Plugin = () => {
               }
 
               elementMetaData.dependencies = dependencies(fragment);
-              // @ts-ignore
-              elementMetaData.templateLoader = () =>
-                `() => {
-              return shadowRoot.parseOrThrow(
-                Deno.readTextFileSync("${entry.path}"),
-              );
-            }`;
+
+              const path = entry.path;
+              elementMetaData.templateLoader = () => {
+                return shadowRoot.parseOrThrow(
+                  Deno.readTextFileSync(path),
+                );
+              };
+              Object.defineProperty(elementMetaData.templateLoader, SCOPE, {
+                value: { path },
+              });
             }
             break;
 
@@ -598,13 +605,15 @@ export const pluginRadish: () => Plugin = () => {
           case ".ts":
             {
               const className = kebabToPascal(elementName);
-
               const importPath = join("..", entry.path);
-              // @ts-ignore
-              elementMetaData.classLoader = () =>
-                `async () => {
-              return (await import("${importPath}"))["${className}"];
-            }`;
+
+              elementMetaData.classLoader = async () => {
+                return (await import(importPath))[className];
+              };
+
+              Object.defineProperty(elementMetaData.classLoader, SCOPE, {
+                value: { importPath, className },
+              });
 
               if (!elementMetaData.files.includes(entry.path)) {
                 elementMetaData.files.push(entry.path);
@@ -629,29 +638,32 @@ export const pluginRadish: () => Plugin = () => {
             throw error;
           }
 
+          const path = entry.path;
+          const templateLoader = () => {
+            return fragments.parseOrThrow(
+              Deno.readTextFileSync(path),
+            );
+          };
+          Object.defineProperty(templateLoader, SCOPE, {
+            value: { path },
+          });
+
           if (entry.name === "_layout.html") {
             // Layout
-            manifest.layouts[entry.path] = {
+
+            manifest.layouts[path] = {
               kind: "layout",
-              path: entry.path,
+              path: path,
               dependencies: dependencies(fragment),
-              templateLoader: () =>
-                // @ts-ignore
-                `() => {
-              return fragments.parseOrThrow(Deno.readTextFileSync("${entry.path}"));
-              }`,
+              templateLoader,
             };
           } else if (entry.name === "index.html") {
             // Route
-            manifest.routes[entry.path] = {
+            manifest.routes[path] = {
               kind: "route",
-              path: entry.path,
-              files: [entry.path],
-              templateLoader: () =>
-                // @ts-ignore
-                `() => {
-                  return fragments.parseOrThrow(Deno.readTextFileSync("${entry.path}"));
-                }`,
+              path: path,
+              files: [path],
+              templateLoader,
               dependencies: dependencies(fragment),
             };
           }
@@ -660,9 +672,19 @@ export const pluginRadish: () => Plugin = () => {
 
           if (entry.name.includes("-")) {
             const tagName = fileName(entry.path);
-            const className = kebabToPascal(tagName);
             const content = fileCache.readTextFileSync(entry.path);
             const imports = extractImports(content);
+
+            const className = kebabToPascal(tagName);
+            const importPath = join("..", entry.path);
+
+            const classLoader = async () => {
+              return (await import(importPath))[className];
+            };
+
+            Object.defineProperty(classLoader, SCOPE, {
+              value: { importPath, className },
+            });
 
             manifest.elements[tagName] = {
               kind: "element",
@@ -670,12 +692,7 @@ export const pluginRadish: () => Plugin = () => {
               path: entry.path,
               files: [entry.path],
               imports,
-              // @ts-ignore
-              classLoader: () =>
-                `async () => {return (await import("${
-                  join("..", entry.path)
-                }"))["${className}"];
-              }`,
+              classLoader,
             };
           }
         }
