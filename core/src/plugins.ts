@@ -447,17 +447,18 @@ export const pluginRadish: () => Plugin = () => {
 
     let prevLength = components.length;
     while (components.length > 0) {
-      // Find the leaves
-      const { leaveNodes, interiorNodes } = Object.groupBy(components, (c) => {
+      // Find the leafs
+      // TODO restrict the search of leafs to paths and names in the `components` array
+      const { leafNodes, interiorNodes } = Object.groupBy(components, (c) => {
         return c.dependencies?.every((d) => ids.has(d))
-          ? "leaveNodes"
+          ? "leafNodes"
           : "interiorNodes";
       });
 
-      if (leaveNodes) {
-        sorted = sorted.concat(leaveNodes);
+      if (leafNodes) {
+        sorted = sorted.concat(leafNodes);
 
-        for (const leave of leaveNodes) {
+        for (const leave of leafNodes) {
           if ("tagName" in leave) {
             ids.add(leave.tagName);
           }
