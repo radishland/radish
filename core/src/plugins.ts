@@ -568,7 +568,9 @@ export const pluginRadish: () => Plugin = () => {
         switch (extension) {
           case ".html":
             {
-              elementMetaData.files.push(entry.path);
+              if (!elementMetaData.files.includes(entry.path)) {
+                elementMetaData.files.push(entry.path);
+              }
 
               let fragment;
               try {
@@ -604,7 +606,9 @@ export const pluginRadish: () => Plugin = () => {
               return (await import("${importPath}"))["${className}"];
             }`;
 
-              elementMetaData.files.push(entry.path);
+              if (!elementMetaData.files.includes(entry.path)) {
+                elementMetaData.files.push(entry.path);
+              }
             }
             break;
         }
