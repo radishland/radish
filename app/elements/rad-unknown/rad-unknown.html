@@ -4,7 +4,11 @@
     element
   </p>
   <p>
-    Dynamic binding: <span @text="h2"></span>
+    Directives can be bound dynamically: <span @text="h2"></span>
+  </p>
+  <p>
+    This means that the binding doesn't need to be defined at the component
+    level, but can be defined at the page level.
   </p>
   <button @on="click:say">say</button>
 </template>

@@ -54,6 +54,7 @@ type Types = LooseAutocomplete<
   | "string"
   | "symbol"
   | "function"
+  | "AsyncFunction"
   | "class"
   | "array"
   | "date"
@@ -82,11 +83,10 @@ export function type(value: unknown): Types {
 
   // Symbol.toStringTag often specifies the "display name" of the
   // object's class. It's used in Object.prototype.toString().
-  if (typeof value === "object" && Symbol.toStringTag in value) {
-    const tag = value[Symbol.toStringTag];
-    if (typeof tag === "string") {
-      return tag;
-    }
+  // @ts-expect-error
+  const tag = value[Symbol.toStringTag];
+  if (typeof tag === "string") {
+    return tag;
   }
 
   // If it's a function whose source code starts with the "class" keyword

@@ -10,6 +10,7 @@ import {
   shadowRoot,
   textNode,
 } from "@radish/htmlcrunch";
+import type { WalkEntry } from "@std/fs/walk";
 import { basename, dirname, extname, join, relative } from "@std/path";
 import type { HandlerRegistry } from "../../runtime/src/handler-registry.ts";
 import { bindingConfig, spaces_sep_by_comma } from "../../runtime/src/utils.ts";
@@ -23,6 +24,8 @@ import type { SpeculationRules } from "./generate/speculationrules.ts";
 import type { ManifestBase, Plugin } from "./types.d.ts";
 import { fileName, kebabToPascal } from "./utils.ts";
 import { dependencies } from "./walk.ts";
+
+export const SCOPE = Symbol.for("scope");
 
 /**
  * Emits files inside the build folder in a way that mirrors the source folder structure
@@ -444,17 +447,18 @@ export const pluginRadish: () => Plugin = () => {
 
     let prevLength = components.length;
     while (components.length > 0) {
-      // Find the leaves
-      const { leaveNodes, interiorNodes } = Object.groupBy(components, (c) => {
+      // Find the leafs
+      // TODO restrict the search of leafs to paths and names in the `components` array
+      const { leafNodes, interiorNodes } = Object.groupBy(components, (c) => {
         return c.dependencies?.every((d) => ids.has(d))
-          ? "leaveNodes"
+          ? "leafNodes"
           : "interiorNodes";
       });
 
-      if (leaveNodes) {
-        sorted = sorted.concat(leaveNodes);
+      if (leafNodes) {
+        sorted = sorted.concat(leafNodes);
 
-        for (const leave of leaveNodes) {
+        for (const leave of leafNodes) {
           if ("tagName" in leave) {
             ids.add(leave.tagName);
           }
@@ -464,6 +468,8 @@ export const pluginRadish: () => Plugin = () => {
       if (interiorNodes) {
         // Update remaining components
         components = interiorNodes;
+      } else {
+        components = [];
       }
 
       if (prevLength === components.length) {
@@ -483,40 +489,57 @@ export const pluginRadish: () => Plugin = () => {
       speculationRules = config?.speculationRules;
     },
     buildStart: (entries, manifest) => {
-      const components: (ElementManifest | RouteManifest)[] = [];
+      const otherEntries: WalkEntry[] = [];
+      const elementsOrRoutes: (ElementManifest | RouteManifest)[] = [];
 
-      const byElementOrRoute = Object.groupBy(entries, (entry) => {
+      for (const entry of entries) {
         if (entry.isFile && extname(entry.name) === ".html") {
-          let isElementOrRoute: ElementManifest | RouteManifest | undefined;
-
           if (!relative(elementsFolder, entry.path).startsWith("..")) {
             const tagName = fileName(entry.name);
-            isElementOrRoute = manifest.elements[tagName];
+            const elementOrRoute = manifest.elements[tagName];
+
+            if (elementOrRoute) {
+              elementsOrRoutes.push(elementOrRoute);
+            }
+
+            if (manifest.elements && manifest.routes) {
+              elementsOrRoutes.push(
+                ...Object.values(
+                  (manifest as Manifest).elements,
+                ).filter((element) => element.dependencies?.includes(tagName)),
+              );
+
+              elementsOrRoutes.push(
+                ...Object.values(
+                  (manifest as Manifest).routes,
+                ).filter((element) => element.dependencies?.includes(tagName)),
+              );
+            }
           } else if (!relative(routesFolder, entry.path).startsWith("..")) {
-            isElementOrRoute = manifest.routes[entry.path];
+            const route = manifest.routes[entry.path];
+            if (route) {
+              elementsOrRoutes.push(route);
+            }
+          } else {
+            otherEntries.push(entry);
           }
-
-          if (isElementOrRoute) {
-            components.push(isElementOrRoute);
-            return "_";
-          }
-          return "rest";
+        } else {
+          otherEntries.push(entry);
         }
-        return "rest";
-      });
+      }
 
-      const sorted = sortComponents(components)
+      const sorted = sortComponents(Array.from(new Set(elementsOrRoutes)))
         .map((c) => {
-          if (c.kind === "route") {
-            return byElementOrRoute._?.find((entry) => entry.path === c.path);
-          }
+          return {
+            isDirectory: false,
+            isFile: true,
+            isSymlink: false,
+            name: basename(c.path),
+            path: c.files.find((f) => f.endsWith(".html")),
+          } as WalkEntry;
+        });
 
-          return byElementOrRoute._?.find((entry) =>
-            entry.path === c.files.find((f) => f.endsWith(".html"))
-          );
-        }).filter((p) => p !== undefined);
-
-      return [...(byElementOrRoute?.rest ?? []), ...sorted];
+      return [...otherEntries, ...sorted];
     },
     manifestStart: (controller) => {
       controller.manifestImports
@@ -568,7 +591,9 @@ export const pluginRadish: () => Plugin = () => {
         switch (extension) {
           case ".html":
             {
-              elementMetaData.files.push(entry.path);
+              if (!elementMetaData.files.includes(entry.path)) {
+                elementMetaData.files.push(entry.path);
+              }
 
               let fragment;
               try {
@@ -582,13 +607,16 @@ export const pluginRadish: () => Plugin = () => {
               }
 
               elementMetaData.dependencies = dependencies(fragment);
-              // @ts-ignore
-              elementMetaData.templateLoader = () =>
-                `() => {
-              return shadowRoot.parseOrThrow(
-                Deno.readTextFileSync("${entry.path}"),
-              );
-            }`;
+
+              const path = entry.path;
+              elementMetaData.templateLoader = () => {
+                return shadowRoot.parseOrThrow(
+                  Deno.readTextFileSync(path),
+                );
+              };
+              Object.defineProperty(elementMetaData.templateLoader, SCOPE, {
+                value: { path },
+              });
             }
             break;
 
@@ -596,15 +624,19 @@ export const pluginRadish: () => Plugin = () => {
           case ".ts":
             {
               const className = kebabToPascal(elementName);
-
               const importPath = join("..", entry.path);
-              // @ts-ignore
-              elementMetaData.classLoader = () =>
-                `async () => {
-              return (await import("${importPath}"))["${className}"];
-            }`;
 
-              elementMetaData.files.push(entry.path);
+              elementMetaData.classLoader = async () => {
+                return (await import(importPath))[className];
+              };
+
+              Object.defineProperty(elementMetaData.classLoader, SCOPE, {
+                value: { importPath, className },
+              });
+
+              if (!elementMetaData.files.includes(entry.path)) {
+                elementMetaData.files.push(entry.path);
+              }
             }
             break;
         }
@@ -625,29 +657,32 @@ export const pluginRadish: () => Plugin = () => {
             throw error;
           }
 
+          const path = entry.path;
+          const templateLoader = () => {
+            return fragments.parseOrThrow(
+              Deno.readTextFileSync(path),
+            );
+          };
+          Object.defineProperty(templateLoader, SCOPE, {
+            value: { path },
+          });
+
           if (entry.name === "_layout.html") {
             // Layout
-            manifest.layouts[entry.path] = {
+
+            manifest.layouts[path] = {
               kind: "layout",
-              path: entry.path,
+              path: path,
               dependencies: dependencies(fragment),
-              templateLoader: () =>
-                // @ts-ignore
-                `() => {
-              return fragments.parseOrThrow(Deno.readTextFileSync("${entry.path}"));
-              }`,
+              templateLoader,
             };
           } else if (entry.name === "index.html") {
             // Route
-            manifest.routes[entry.path] = {
+            manifest.routes[path] = {
               kind: "route",
-              path: entry.path,
-              files: [entry.path],
-              templateLoader: () =>
-                // @ts-ignore
-                `() => {
-                  return fragments.parseOrThrow(Deno.readTextFileSync("${entry.path}"));
-                }`,
+              path: path,
+              files: [path],
+              templateLoader,
               dependencies: dependencies(fragment),
             };
           }
@@ -656,9 +691,19 @@ export const pluginRadish: () => Plugin = () => {
 
           if (entry.name.includes("-")) {
             const tagName = fileName(entry.path);
-            const className = kebabToPascal(tagName);
             const content = fileCache.readTextFileSync(entry.path);
             const imports = extractImports(content);
+
+            const className = kebabToPascal(tagName);
+            const importPath = join("..", entry.path);
+
+            const classLoader = async () => {
+              return (await import(importPath))[className];
+            };
+
+            Object.defineProperty(classLoader, SCOPE, {
+              value: { importPath, className },
+            });
 
             manifest.elements[tagName] = {
               kind: "element",
@@ -666,12 +711,7 @@ export const pluginRadish: () => Plugin = () => {
               path: entry.path,
               files: [entry.path],
               imports,
-              // @ts-ignore
-              classLoader: () =>
-                `async () => {return (await import("${
-                  join("..", entry.path)
-                }"))["${className}"];
-              }`,
+              classLoader,
             };
           }
         }

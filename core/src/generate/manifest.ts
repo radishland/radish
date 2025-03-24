@@ -9,6 +9,7 @@ import {
 } from "../constants.ts";
 import type { ManifestBase, ManifestContext, Plugin } from "../types.d.ts";
 import type { FileCache } from "../server/app.ts";
+import { SCOPE } from "../plugins.ts";
 
 export class ManifestController {
   path: string = join(generatedFolder, "manifest.ts");
@@ -33,6 +34,14 @@ export class ManifestController {
     this.#plugins = plugins;
     this.loadManifest = async () => {
       this.manifest = await load();
+
+      this.manifestImports.clear();
+      this.manifestImports = new Set(
+        this.fileCache
+          .readTextFileSync(this.path)
+          .matchAll(/^import.*;$/gm)
+          .map((m) => m[0]),
+      );
       return this.manifest;
     };
     this.fileCache = fileCache;
@@ -59,6 +68,24 @@ export class ManifestController {
     }
   };
 
+  #stringifyFunction = (fn: (...args: unknown[]) => unknown) => {
+    let serialized = fn.toString();
+
+    if (!Object.hasOwn(fn, SCOPE)) return serialized;
+
+    const scope = Object.getOwnPropertyDescriptor(fn, SCOPE)?.value;
+
+    for (const key of Object.keys(scope)) {
+      const value = JSON.stringify(scope[key]);
+      serialized = serialized.replaceAll(
+        new RegExp(`\\b${key}\\b`, "g"),
+        value,
+      );
+    }
+
+    return serialized;
+  };
+
   #stringifyArray = (arr: Array<any>) => {
     let str = "[";
 
@@ -76,7 +103,7 @@ export class ManifestController {
           str += `${this.#stringifyObject(v)},`;
         }
       } else if (typeof v === "function") {
-        str += `${v()},`;
+        str += `${this.#stringifyFunction(v)},`;
       }
     }
 
@@ -107,7 +134,8 @@ export class ManifestController {
           str += `${key}: ${v},`;
           break;
         case "function":
-          str += `${key}: ${v()},`;
+        case "AsyncFunction":
+          str += `${key}: ${this.#stringifyFunction(v)},`;
           break;
         case "object":
           str += `${key}: ${this.#stringifyObject(v)},`;

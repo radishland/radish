@@ -113,7 +113,7 @@ class Hmr extends Map<string, HmrEvent> {
     const events = [...this.values()];
     this.clear();
 
-    const paths: string[] = [];
+    let paths: string[] = [];
 
     for (const event of events) {
       const context: HmrContext = { app: this.#app, paths: [event.path] };
@@ -122,7 +122,7 @@ class Hmr extends Map<string, HmrEvent> {
         plugin.handleHotUpdate?.(event, context);
       }
 
-      paths.concat(context.paths);
+      paths = paths.concat(context.paths);
     }
 
     this.#app.manifestController.write();
@@ -132,7 +132,7 @@ class Hmr extends Map<string, HmrEvent> {
       await this.#app.importmapController.generate(manifest);
     }
 
-    await this.#app.builder.build(paths);
+    await this.#app.builder.build(paths, { emptyBuildFolder: false });
 
     console.log("Hot-Reloading...");
     this.#app.ws.send("reload");
