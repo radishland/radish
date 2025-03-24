@@ -10,6 +10,7 @@ import {
   shadowRoot,
   textNode,
 } from "@radish/htmlcrunch";
+import type { WalkEntry } from "@std/fs/walk";
 import { basename, dirname, extname, join, relative } from "@std/path";
 import type { HandlerRegistry } from "../../runtime/src/handler-registry.ts";
 import { bindingConfig, spaces_sep_by_comma } from "../../runtime/src/utils.ts";
@@ -487,40 +488,57 @@ export const pluginRadish: () => Plugin = () => {
       speculationRules = config?.speculationRules;
     },
     buildStart: (entries, manifest) => {
-      const components: (ElementManifest | RouteManifest)[] = [];
+      const otherEntries: WalkEntry[] = [];
+      const elementsOrRoutes: (ElementManifest | RouteManifest)[] = [];
 
-      const byElementOrRoute = Object.groupBy(entries, (entry) => {
+      for (const entry of entries) {
         if (entry.isFile && extname(entry.name) === ".html") {
-          let isElementOrRoute: ElementManifest | RouteManifest | undefined;
-
           if (!relative(elementsFolder, entry.path).startsWith("..")) {
             const tagName = fileName(entry.name);
-            isElementOrRoute = manifest.elements[tagName];
+            const elementOrRoute = manifest.elements[tagName];
+
+            if (elementOrRoute) {
+              elementsOrRoutes.push(elementOrRoute);
+            }
+
+            if (manifest.elements && manifest.routes) {
+              elementsOrRoutes.push(
+                ...Object.values(
+                  (manifest as Manifest).elements,
+                ).filter((element) => element.dependencies?.includes(tagName)),
+              );
+
+              elementsOrRoutes.push(
+                ...Object.values(
+                  (manifest as Manifest).routes,
+                ).filter((element) => element.dependencies?.includes(tagName)),
+              );
+            }
           } else if (!relative(routesFolder, entry.path).startsWith("..")) {
-            isElementOrRoute = manifest.routes[entry.path];
+            const route = manifest.routes[entry.path];
+            if (route) {
+              elementsOrRoutes.push(route);
+            }
+          } else {
+            otherEntries.push(entry);
           }
-
-          if (isElementOrRoute) {
-            components.push(isElementOrRoute);
-            return "_";
-          }
-          return "rest";
+        } else {
+          otherEntries.push(entry);
         }
-        return "rest";
-      });
+      }
 
-      const sorted = sortComponents(components)
+      const sorted = sortComponents(Array.from(new Set(elementsOrRoutes)))
         .map((c) => {
-          if (c.kind === "route") {
-            return byElementOrRoute._?.find((entry) => entry.path === c.path);
-          }
+          return {
+            isDirectory: false,
+            isFile: true,
+            isSymlink: false,
+            name: basename(c.path),
+            path: c.files.find((f) => f.endsWith(".html")),
+          } as WalkEntry;
+        });
 
-          return byElementOrRoute._?.find((entry) =>
-            entry.path === c.files.find((f) => f.endsWith(".html"))
-          );
-        }).filter((p) => p !== undefined);
-
-      return [...(byElementOrRoute?.rest ?? []), ...sorted];
+      return [...otherEntries, ...sorted];
     },
     manifestStart: (controller) => {
       controller.manifestImports
