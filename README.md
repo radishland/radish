@@ -54,11 +54,13 @@ A full-stack framework built around Web Components and Web Standards:
 
 ## Motivation & philosophy
 
-Do you ever wonder what it would look like to build a modern web site without relying on a ton of dependencies and an extremely complex build step? Do you sometimes feel like web development is piling up more and more technologies, raising the barrier to entry and making it more and more complex to maintain and debug your app?
+Have you ever wondered what it would be like to build a modern web site without a pile of  dependencies and an overly complex build step?
 
-Radish addresses these problems. It's like a framework for writing Vanilla apps. In other words it's as bare metal as possible, embraces the Standards, soften the edges here and there and disappears as the Standards evolve.
+Radish is like a framework for writing *Vanilla* apps, staying as close as possible to the platform while smoothing out rough edges. It embraces Web Standards and evolves alongside the platform rather than against it.
 
-It promotes a **minimax** philosophy, seeking the best possible outcome (great DX, future-proofing, and maintainability) while enforcing the lowest possible cost in terms of abstraction, bundling, and deviation from web standards.
+It promotes a **minimax** philosophy: seeking the best possible outcome (great DX, future-proofing, and maintainability) while enforcing the lowest possible cost in terms of abstraction, bundling, and deviation from web standards.
+
+Try it, and you'll see how refreshing it is to read and debug your code in the browser at every stage, while deepening your understanding of platform technologies and making your apps more robust and future-proof!
 
 ## Try out the alpha
 
@@ -104,32 +106,32 @@ Where:
 
 ## Plugin API
 
-The Radish core is a plugin runner modelled after the Vite/Rollup plugin system, with compatible signatures. The framework features themselves come in the form of built-in plugins which can be extended. For example custom-element transforms, declarative shadow root inlining, server effects, type stripping etc. are just plugins.
+The Radish core is a plugin runner modelled after the Vite/Rollup plugin system, with compatible signatures. The framework features themselves come in the form of built-in plugins which can be extended. For example declarative shadow root inlining, server effects, type stripping etc. are all plugins.
 
 The pipeline is articulated around the following hooks and phases:
 
 ### Config phase
 
 - The `config: (userConfig: Config, args: Args) => Config` hook can read and modify the user config and receives the arguments of the currently running command
-- The `configResolved: (config: ResolvedConfig) => void` hooks is ran at the end of the config phase and allows plugin to read the resolved config.
+- The `configResolved: (config: ResolvedConfig) => void` hooks runs at the end of the config phase and allows plugins to read the resolved config.
 
 ### Manifest phase
 
 The manifest holds information about the files of the project, their imports, dependencies etc. and can be extended with information about the elements, routes, layouts etc.
 
 - The `manifestStart: (manifestController: ManifestController) => ManifestBase` hook runs before the manifest generation, and allows to give it the proper shape by adding required fields
-- The `manifest: (entry: WalkEntry, context: ManifestContext) => void` hook is the main hook of this phase, visits entries one by one and is used to populate the manifest file
-- The `manifestWrite: (content: string) => string` hook is a transform which runs when the manifest is written on disk, and allows to modify imports etc.
+- The `manifest: (entry: WalkEntry, context: ManifestContext) => void` hook is the main hook of this phase, is called on each visited entry, allowing to populate the manifest object
+- The `manifestWrite: (content: string) => string` hook is a transform which runs when the manifest is cached on disk, and allows to modify imports etc.
 
 ### Build phase
 
-- The `buildStart: (entries: WalkEntry[],manifest: ManifestBase) => WalkEntry[]` hook runs at the beginning of a build or re-build, and allows plugins to modify the order in which the entries will be built
+- The `buildStart: (entries: WalkEntry[],manifest: ManifestBase) => WalkEntry[]` hook runs at the beginning of a build or re-build, and allows plugins to modify the order in which the entries are built
 - The `transform: (code: string, path: string, context: TransformContext) => MaybePromise<TransformResult>` hook lets you modify the content of a file
-- The `emit: (path: string) => string | null` hook is ran just before the content is written on disk and allows a plugin to modify the default destination
+- The `emit: (path: string) => string | null` hook runs just before the content is written on disk and allows a plugin to modify the default destination
 
 ### Hot reloading phase
 
-The dev server handles hot reloading and plugins can hook into this phase too with the `handleHotUpdate: (event: HmrEvent, context: HmrContext) => void` hook. It receives the event, holding information about what happened (creation, modification, path etc.) and the context, allowing to re-run plugins, updating the manifest etc.
+The dev server handles hot reloading and plugins can hook into this phase too with the `handleHotUpdate: (event: HmrEvent, context: HmrContext) => void` hook. It receives the event, holding information about what happened (creation, modification, path etc.) and the context, allowing to re-run plugins, update the manifest etc.
 
 ## Routing
 
