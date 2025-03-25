@@ -13,8 +13,8 @@ import {
 import type { WalkEntry } from "@std/fs/walk";
 import { basename, dirname, extname, join, relative } from "@std/path";
 import { toPascalCase } from "@std/text";
-import type { HandlerRegistry } from "../../runtime/src/handler-registry.ts";
-import { bindingConfig, spaces_sep_by_comma } from "../../runtime/src/utils.ts";
+import type { HandlerRegistry } from "@radish/runtime";
+import { bindingConfig, spaces_sep_by_comma } from "@radish/runtime/utils";
 import {
   buildFolder,
   elementsFolder,
