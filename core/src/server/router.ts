@@ -34,8 +34,9 @@ export class Router {
     POST: [],
   };
 
-  get;
-  post;
+  get: (patternInput: URLPatternInput, handler: Handler<Context>) => this;
+  post: (patternInput: URLPatternInput, handler: Handler<Context>) => this;
+
   defaultHandler: Handler<Context>;
   routesFolder: string;
   matchers: Record<string, RegExp>;

@@ -225,7 +225,7 @@ export class FileCache {
   /**
    * Removes a file from the cache
    */
-  invalidate = (path: string) => {
+  invalidate = (path: string): boolean => {
     path = this.#normalizePath(path);
 
     return this.#contents.delete(path);

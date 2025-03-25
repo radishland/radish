@@ -27,7 +27,7 @@ export class ManifestController {
   loadManifest: () => Promise<ManifestBase>;
 
   constructor(
-    plugins: Plugin[] = [],
+    plugins: Plugin[],
     load: () => Promise<ManifestBase>,
     fileCache: FileCache,
   ) {

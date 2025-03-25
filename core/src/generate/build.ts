@@ -76,7 +76,7 @@ export class Builder {
 
       if (dest) {
         ensureDirSync(dirname(dest));
-        Deno.writeTextFileSync(dest, code);
+        await Deno.writeTextFile(dest, code);
         break;
       }
     }
