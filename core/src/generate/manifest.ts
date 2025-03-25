@@ -1,6 +1,6 @@
 import { ensureDirSync, walkSync } from "@std/fs";
 import { join } from "@std/path";
-import { type } from "../../../runtime/src/utils.ts";
+import { type } from "@radish/runtime/utils";
 import {
   elementsFolder,
   generatedFolder,
