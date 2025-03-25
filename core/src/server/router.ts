@@ -34,8 +34,9 @@ export class Router {
     POST: [],
   };
 
-  get;
-  post;
+  get: (patternInput: URLPatternInput, handler: Handler<Context>) => this;
+  post: (patternInput: URLPatternInput, handler: Handler<Context>) => this;
+
   defaultHandler: Handler<Context>;
   routesFolder: string;
   matchers: Record<string, RegExp>;
@@ -71,9 +72,9 @@ export class Router {
   ) => {
     const pattern = new URLPattern(patternInput);
     if (
-      !this.routes[method].find((r) => r.pattern.pathname === pattern.pathname)
+      !this.routes[method]?.find((r) => r.pattern.pathname === pattern.pathname)
     ) {
-      this.routes[method].push({ method, pattern, handler });
+      this.routes[method]?.push({ method, pattern, handler });
     }
 
     return this;
@@ -124,7 +125,7 @@ export class Router {
     options: ServeDirOptions = { fsRoot: "." },
   ): void => {
     const pattern = new URLPattern(patternInput);
-    this.routes["GET"].push({
+    this.routes["GET"]?.push({
       method: "GET",
       pattern,
       handler: async ({ request }) => {
@@ -134,8 +135,12 @@ export class Router {
   };
 
   handler: Handler = (ctx) => {
+    const routes = this.routes[ctx.request.method];
+
+    if (!routes) return this.defaultHandler(ctx);
+
     // Use PatternList https://github.com/whatwg/urlpattern/pull/166
-    for (const route of this.routes[ctx.request.method]) {
+    for (const route of routes) {
       const patternResult = route.pattern.exec(ctx.request.url);
 
       if (patternResult) {

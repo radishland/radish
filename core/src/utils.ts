@@ -28,7 +28,7 @@ export const memoize = <T>(fn: () => T): () => T => {
  * Returns the file name without the extension
  */
 export const fileName = (path: string): string => {
-  return basename(path).split(".")[0];
+  return basename(path).split(".")[0]!;
 };
 
 export const setTimeoutWithAbort = (

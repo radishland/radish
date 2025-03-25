@@ -54,7 +54,7 @@ export const startApp = async (
 
   const fileCache = new FileCache();
   const manifestController = new ManifestController(
-    config.plugins,
+    resolvedConfig.plugins,
     loadManifest,
     fileCache,
   );
@@ -77,7 +77,7 @@ export const startApp = async (
 
     if (args.importmap) {
       const importmap = await importmapController.generate(manifest);
-      Deno.writeTextFileSync(importmapController.path, importmap);
+      await Deno.writeTextFile(importmapController.path, importmap);
     } else if (args.build) {
       await builder.build();
     } else {
