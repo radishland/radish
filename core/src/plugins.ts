@@ -149,7 +149,7 @@ export const pluginDefaultPlugins: Plugin = {
 };
 
 /**
- * Extracts import specifiers
+ * Extracts import specifiers from import declarations or dynamic imports
  */
 const import_regex = /from\s["']([^'"]+)["']|import\(["']([^"']+)["']\)/g;
 
@@ -158,8 +158,8 @@ const import_regex = /from\s["']([^'"]+)["']|import\(["']([^"']+)["']\)/g;
  */
 const extractImports = (source: string) => {
   return Array.from(
-    new Set(source.matchAll(import_regex).map((match) => match[1])),
-  );
+    new Set(source.matchAll(import_regex).map((match) => match[1] || match[2])),
+  ).filter((str) => str !== undefined);
 };
 
 /**
@@ -222,9 +222,8 @@ export const pluginRadish: () => Plugin = () => {
 
   const contextLookup = (identifier: string) => {
     for (let i = handlerStack.length - 1; i >= 0; i--) {
-      const { instance } = handlerStack[i];
-      if (identifier in instance) {
-        // @ts-ignore identifier is in registry
+      const instance = handlerStack[i]?.instance;
+      if (instance && Object.hasOwn(instance, identifier)) {
         return instance.lookup(identifier)?.valueOf(); // runs the getter and returns the property or method value
       }
     }
@@ -301,6 +300,16 @@ export const pluginRadish: () => Plugin = () => {
           const [attribute, maybeIdentifier] = assignment.split(":");
           const identifier = maybeIdentifier || attribute;
 
+          if (!identifier) {
+            console.warn("Missing @attr identifier");
+            continue;
+          }
+
+          if (!attribute) {
+            console.warn("Missing @attr attribute");
+            continue;
+          }
+
           const value = contextLookup(identifier);
           if (value !== null && value !== undefined) {
             setAttribute(attributes, attribute, value);
@@ -341,6 +350,17 @@ export const pluginRadish: () => Plugin = () => {
         for (const booleanAttribute of booleanAttributes) {
           const [attribute, maybeIdentifier] = booleanAttribute.split(":");
           const identifier = maybeIdentifier || attribute;
+
+          if (!identifier) {
+            console.warn("Missing @attr identifier");
+            continue;
+          }
+
+          if (!attribute) {
+            console.warn("Missing @attr attribute");
+            continue;
+          }
+
           const value = contextLookup(identifier);
 
           if (value) {
