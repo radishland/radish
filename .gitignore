@@ -1,5 +1,8 @@
 .env
 .DS_Store
+
+deno.lock
+
 _generated/
 node_modules/
 build/
