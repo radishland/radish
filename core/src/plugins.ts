@@ -12,6 +12,7 @@ import {
 } from "@radish/htmlcrunch";
 import type { WalkEntry } from "@std/fs/walk";
 import { basename, dirname, extname, join, relative } from "@std/path";
+import { toPascalCase } from "@std/text";
 import type { HandlerRegistry } from "../../runtime/src/handler-registry.ts";
 import { bindingConfig, spaces_sep_by_comma } from "../../runtime/src/utils.ts";
 import {
@@ -22,7 +23,7 @@ import {
 } from "./constants.ts";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
 import type { ManifestBase, Plugin } from "./types.d.ts";
-import { fileName, kebabToPascal } from "./utils.ts";
+import { fileName } from "./utils.ts";
 import { dependencies } from "./walk.ts";
 
 export const SCOPE = Symbol.for("scope");
@@ -643,7 +644,7 @@ export const pluginRadish: () => Plugin = () => {
           case ".js":
           case ".ts":
             {
-              const className = kebabToPascal(elementName);
+              const className = toPascalCase(elementName);
               const importPath = join("..", entry.path);
 
               elementMetaData.classLoader = async () => {
@@ -714,7 +715,7 @@ export const pluginRadish: () => Plugin = () => {
             const content = fileCache.readTextFileSync(entry.path);
             const imports = extractImports(content);
 
-            const className = kebabToPascal(tagName);
+            const className = toPascalCase(tagName);
             const importPath = join("..", entry.path);
 
             const classLoader = async () => {
