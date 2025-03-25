@@ -31,4 +31,4 @@ jobs:
           tar -C init/template/base -czf init/template/base.tar.gz .
 
       - name: Publish to JSR
-        run: deno publish
+        run: deno publish --allow-dirty
