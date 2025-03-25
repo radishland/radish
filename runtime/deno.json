@@ -1,6 +1,6 @@
 {
   "name": "@radish/runtime",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts",
     "build": "pnpm build"
