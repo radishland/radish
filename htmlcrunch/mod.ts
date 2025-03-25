@@ -179,7 +179,7 @@ export const element: Parser<MElement> = createParser((input, position) => {
     value: { tagName, attributes },
     remaining,
     position: openTagPosition,
-  } = openTag.results[0];
+  } = openTag.results[0]!;
 
   const kind = elementKind(tagName);
 
@@ -218,18 +218,22 @@ export const element: Parser<MElement> = createParser((input, position) => {
     openTagPosition,
   );
 
-  if (!childrenElements.success) return childrenElements;
+  if (!childrenElements.success) {
+    return childrenElements;
+  }
 
   const {
     value: children,
     remaining: childrenRemaining,
     position: childrenPosition,
-  } = childrenElements.results[0];
+  } = childrenElements.results[0]!;
 
   const res = endTagParser.parse(childrenRemaining, childrenPosition);
 
   // End tag omission would be managed here
   if (!res.success) return res;
+
+  const result = res.results[0]!;
 
   return {
     success: true,
@@ -240,8 +244,8 @@ export const element: Parser<MElement> = createParser((input, position) => {
         attributes,
         children,
       } satisfies MElement,
-      remaining: res.results[0].remaining,
-      position: res.results[0].position,
+      remaining: result.remaining,
+      position: result.position,
     }],
   };
 });
@@ -265,7 +269,8 @@ export const shadowRoot: Parser<MFragment> = createParser(
 
     if (!result.success) return result;
 
-    const maybeTemplate = result.results[0].value.at(-1) as MElement;
+    const maybeTemplate = result.results[0]?.value.at(-1) as MElement;
+
     if (maybeTemplate.tagName !== "template") {
       return {
         success: false,
