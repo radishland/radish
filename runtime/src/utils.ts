@@ -1,47 +1,4 @@
-const is_upper = /[A-Z]/;
 export const spaces_sep_by_comma = /\s*,\s*/;
-
-/**
- * Idempotent string conversion to kebab-case
- */
-export const toKebabCase = (str: string): string => {
-  let kebab = "";
-  for (let index = 0; index < str.length; index++) {
-    const char = str[index];
-
-    if (index !== 0 && is_upper.test(char)) {
-      kebab += `-${char.toLowerCase()}`;
-    } else {
-      kebab += char.toLowerCase();
-    }
-  }
-  return kebab;
-};
-
-/**
- * Idempotent string conversion to PascalCase
- */
-export const toPascalCase = (str: string): string => {
-  let pascal = "";
-  let toUpper = true;
-
-  for (let index = 0; index < str.length; index++) {
-    const char = str[index];
-
-    if (char === "-") {
-      toUpper = true;
-      continue;
-    }
-
-    if (toUpper) {
-      pascal += char.toUpperCase();
-      toUpper = false;
-    } else {
-      pascal += char.toLowerCase();
-    }
-  }
-  return pascal;
-};
 
 type LooseAutocomplete<T extends string> = T | Omit<string, T>;
 
