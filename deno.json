@@ -12,6 +12,18 @@
       "dependencies": ["load-env", "build"]
     }
   },
+  "lint": {
+    "rules": {
+      "include": [
+        "default-param-last",
+        "no-slow-types",
+        "no-sync-fn-in-async-fn",
+        "prefer-ascii",
+        "verbatim-module-syntax"
+      ],
+      "tags": ["jsr", "recommended"]
+    }
+  },
   "fmt": {
     "exclude": ["**/*.md", "**/pnpm-lock.yaml"]
   },
