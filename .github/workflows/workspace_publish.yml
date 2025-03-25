@@ -24,5 +24,11 @@ jobs:
       - name: Format
         run: deno fmt --check
 
+      - name: Make init template tar ball
+        run: |
+          deno fmt init/template/
+          tar -C init/template -czf init/template/vscode.tar.gz .vscode
+          tar -C init/template/base -czf init/template/base.tar.gz .
+
       - name: Publish to JSR
         run: deno publish
