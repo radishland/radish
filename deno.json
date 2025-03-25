@@ -1,6 +1,5 @@
 {
   "workspace": ["./core", "./init", "./runtime", "./app", "./htmlcrunch"],
-  "license": "MIT",
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts",
     "load-env": "deno run -A scripts/load-env.ts",
