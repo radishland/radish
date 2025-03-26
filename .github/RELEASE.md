@@ -9,7 +9,8 @@ To cut a release, follow these steps:
    ```sh
    deno run -A jsr:@deno/bump-workspaces@0.1.22/cli
    ```
-   Note: it will throw a "No target files found" error but this may be in prerelease only
+   Note: it will throw a "No target files found" error but this may be in
+   prerelease only
 
 1. Review the changes and create a PR
 
