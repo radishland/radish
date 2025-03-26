@@ -17,9 +17,7 @@ jobs:
         uses: denoland/setup-deno@v2
 
       - name: Run workspaces version bump
-        run: |
-          git fetch --unshallow origin
-          deno run -A jsr:@deno/bump-workspaces@^0.1/cli
+        run: deno run -A jsr:@deno/bump-workspaces@^0.1/cli
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GIT_USER_NAME: ${{ github.actor }}
