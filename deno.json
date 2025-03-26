@@ -45,7 +45,6 @@
     "@std/fs": "jsr:@std/fs@^1.0.13",
     "@std/http": "jsr:@std/http@^1.0.13",
     "@std/jsonc": "jsr:@std/jsonc@^1.0.1",
-    "@std/path": "jsr:@std/path@^1.0.8",
-    "@std/tar": "jsr:@std/tar@^0.1.5"
+    "@std/path": "jsr:@std/path@^1.0.8"
   }
 }
