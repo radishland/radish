@@ -5,7 +5,6 @@
     "load-env": "deno run -A scripts/load-env.ts",
     "css": "deno run -A scripts/css.ts",
     "create": "deno run -A scripts/create.ts",
-    "make-init-tar": "deno fmt init/template/ && tar -C init/template -czf init/template/vscode.tar.gz .vscode && tar -C init/template/base -czf init/template/base.tar.gz .",
     "dev": {
       "command": "deno run -A src/start.ts",
       "dependencies": ["load-env", "build"]
@@ -46,7 +45,6 @@
     "@std/fs": "jsr:@std/fs@^1.0.13",
     "@std/http": "jsr:@std/http@^1.0.13",
     "@std/jsonc": "jsr:@std/jsonc@^1.0.1",
-    "@std/path": "jsr:@std/path@^1.0.8",
-    "@std/tar": "jsr:@std/tar@^0.1.5"
+    "@std/path": "jsr:@std/path@^1.0.8"
   }
 }
