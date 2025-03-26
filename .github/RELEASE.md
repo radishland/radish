@@ -5,16 +5,18 @@ maintainer, you don't need to read this.
 
 To cut a release, follow these steps:
 
-1. Trigger the version_bump action with the `main` branch selected.
+1. Create a release branch and run the version bump script:
+   ```sh
+   deno run -A jsr:@deno/bump-workspaces@0.1.22/cli
+   ```
+   Note: it will throw a "No target files found" error but this may be in
+   prerelease only
 
-2. Wait for the bot to create a release PR. Note: the tool automatically
-   determines the necessary version upgrades.
+1. Review the changes and create a PR
 
-3. Review the PR, and update it if necessary.
+1. Land the PR
 
-4. Land the PR.
-
-5. Tag the main branch with release-YYY-MM-DD (this step can be automated in the
+1. Tag the main branch with release-YYY-MM-DD (this step can be automated in the
    future):
 
    ```sh
@@ -22,6 +24,6 @@ To cut a release, follow these steps:
    git push origin release-YYYY.MM.DD
    ```
 
-6. Publish the tag from github UI (Make sure the tag has the correct form).
+1. Publish the tag from github UI (Make sure the tag has the correct form).
 
-7. Wait for the workspace publish action to publish the new versions to JSR.
+1. Wait for the workspace publish action to publish the new versions to JSR.
