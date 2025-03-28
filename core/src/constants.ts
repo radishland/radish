@@ -13,7 +13,7 @@ export const ts_extension_regex = /\.ts$/;
  * - `window`, and `customElements` are set to `undefined`
  * - methods of `HTMLElement` are no-op on the server
  */
-export const globals = (): void => {
+export function globals() {
   // @ts-ignore mock HTMLElement methods on the server to be noop
   globalThis.HTMLElement = class HTMLElement {
     // Event Target
@@ -105,4 +105,4 @@ export const globals = (): void => {
   globalThis.window = undefined;
   // @ts-ignore no customElements on the server
   globalThis.customElements = undefined;
-};
+}

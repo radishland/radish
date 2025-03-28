@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "core script",
+      "name": "deno run",
       "request": "launch",
       "type": "node",
       "runtimeExecutable": "deno",
@@ -21,7 +21,23 @@
       "attachSimplePort": 9229
     },
     {
-      "name": "app script",
+      "name": "deno test",
+      "request": "launch",
+      "type": "node",
+      "runtimeExecutable": "deno",
+      "cwd": "${workspaceFolder}",
+      "program": "${file}",
+      "runtimeArgs": [
+        "test",
+        "--unstable",
+        "--inspect-wait",
+        "--allow-all"
+      ],
+      "env": {},
+      "attachSimplePort": 9229
+    },
+    {
+      "name": "deno run in app",
       "request": "launch",
       "type": "node",
       "runtimeExecutable": "deno",

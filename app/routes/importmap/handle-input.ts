@@ -1,19 +1,29 @@
 import { computed, HandlerRegistry } from "radish";
 import { signal } from "radish";
 import { round } from "ts-helpers/numbers";
+import { toSnakeCase } from "@std/text/to-snake-case";
 
 export class HandleInput extends HandlerRegistry {
   importmap = signal("");
+
   number = signal(0);
   rounded = computed(() => round(this.number.value, 1));
+
+  text = signal("");
+  snaked = computed(() => toSnakeCase(this.text.value));
 
   override connectedCallback() {
     super.connectedCallback();
 
-    this.importmap.value =
-      document.querySelector<HTMLScriptElement>("script[type='importmap']")
-        ?.textContent ??
-        "";
+    this.importmap.value = JSON.stringify(
+      JSON.parse(
+        document.querySelector<HTMLScriptElement>("script[type='importmap']")
+          ?.textContent ??
+          "",
+      ),
+      null,
+      2,
+    );
   }
 }
 

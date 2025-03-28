@@ -19,6 +19,7 @@
         "prefer-ascii",
         "verbatim-module-syntax"
       ],
+      "exclude": ["no-explicit-any"],
       "tags": ["jsr", "recommended"]
     }
   },

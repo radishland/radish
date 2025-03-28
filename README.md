@@ -1,6 +1,6 @@
 # Radish!
 
-A full-stack framework built around Web Components and Web Standards:
+A fullstack framework built around Web Components and Web Standards:
 - No custom DSL, just vanilla Web Components
 - Simple, type-safe authoring
 - Server-Side rendered templates with declarative shadow root
@@ -15,7 +15,8 @@ A full-stack framework built around Web Components and Web Standards:
 
 - [Radish!](#radish)
   - [Motivation \& philosophy](#motivation--philosophy)
-  - [Try out the alpha](#try-out-the-alpha)
+  - [Try-out the alpha](#try-out-the-alpha)
+    - [Examples](#examples)
   - [Project structure](#project-structure)
   - [Plugin API](#plugin-api)
     - [Config phase](#config-phase)
@@ -54,39 +55,41 @@ A full-stack framework built around Web Components and Web Standards:
 
 ## Motivation & philosophy
 
-Have you ever wondered what it would be like to build a modern web site without a pile of  dependencies and an overly complex build step?
+Have you ever wondered what it would be like to build a modern website without a pile of  dependencies and an overly complex build step?
 
-Radish is like a framework for writing *Vanilla* apps, staying as close as possible to the platform while smoothing out rough edges. It embraces Web Standards and evolves alongside the platform rather than against it.
+Radish is like a framework for writing apps that are as close as possible to the Vanilla platform capabilities, while smoothing out rough edges. It embraces Web Standards and evolves alongside the platform rather than against it.
 
 It promotes a **minimax** philosophy: seeking the best possible outcome (great DX, future-proofing, and maintainability) while enforcing the lowest possible cost in terms of abstraction, bundling, and deviation from web standards.
 
-Try it, and you'll see how refreshing it is to read and debug your code in the browser at every stage, while deepening your understanding of platform technologies and making your apps more robust and future-proof!
+Try it and you'll see how refreshing it is to be able to read and debug your code in the browser at every stage, while deepening your understanding of platform technologies and making your apps more robust and future-proof.
 
-## Try out the alpha
+## Try-out the alpha
 
-- Create a new project:
+**Create a new project:**
 
 ```sh
-deno run -A jsr:@radish/init@1.0.0-alpha-17 my-rad-project
+deno run -A jsr:@radish/init@1.0.0-alpha-20 my-rad-project
 ```
 
-or have a look at the /app folder of the repo for syntax examples
-
-- Build your project:
+**Build your project:**
 
 ```sh
 deno task build
 ```
 
-- Start your project:
+**Start your project:**
 
 ```sh
 deno task start
 ```
 
+### Examples
+
+You can have a look at the [`/app`](https://github.com/radishland/radish/tree/main/app) folder of the repo for some syntax examples
+
 ## Project structure
 
-A Radish project structure looks like:
+A Radish project structure looks like this:
 
 ```
 my-rad-project/
@@ -100,13 +103,13 @@ my-rad-project/
 
 Where:
 - `elements` contains your reusable custom elements, web components and unknown elements
-- `routes` contains your routes with optionally colocated custom elements
+- `routes` contains your routes and one-off colocated custom elements
 - `static` contains the static assets that should be served as-is
-- the `start.ts` scripts starts the app and contains your config.
+- `start.ts` starts the app and contains your project config.
 
 ## Plugin API
 
-The Radish core is a plugin runner modelled after the Vite/Rollup plugin system, with compatible signatures. The framework features themselves come in the form of built-in plugins which can be extended. For example declarative shadow root inlining, server effects, type stripping etc. are all plugins.
+The Radish core is a plugin runner modelled after the [Vite](https://vite.dev/guide/api-plugin.html)/[Rollup](https://rollupjs.org/plugin-development/) plugin system, with compatible signatures. The framework features themselves come in the form of built-in plugins which can be extended. For example declarative shadow root inlining, server effects, type stripping etc. are all plugins.
 
 The pipeline is articulated around the following hooks and phases:
 
@@ -252,7 +255,7 @@ In the browser debugging also works out of the box, and you can easily step thro
 
 A scoped handler registry is a custom element extending the `HandlerRegistry` class. This is where you can define handlers for various directives listed below.
 
-Once in your markup, a handler registry will handle all the interaction requests it receives from its subtree of elements if it implements the requested handler. Handler registries are scoped: only the closest parent of a given element will handle its interactions if it can.
+Once in your markup, a handler registry handles all the interaction requests from its subtree of elements if it implements the requested handler. Handler registries are scoped: only the closest parent of a given element will handle its interactions if it can.
 
 In this example, the `handle-hover` custom element implements the `showTooltip` event handler and the `handle-click` implements `handleClick`.
 
@@ -293,7 +296,7 @@ obj.a.b = 2 // Deep reactivity
 console.log(a) // 2
 ```
 
-- Handler Registries have a `this.effect(() => void)` method to create an effect which is automatically cleaned up when the element is disconnected. For advanced use cases an unowned effect can be created directly with the `effect` helper an accepts an abortion signal
+- Handler Registries have a `this.effect(() => void)` method to create an effect which is automatically cleaned up when the element is disconnected. For advanced use cases an unowned effect can be created directly with the `effect` helper and accepts an `AbortSignal`
 
 ## Directives
 
@@ -308,7 +311,7 @@ The following directives are available:
 - @text
 - @use
 
-@on, @prop and @use only have client-only semantics while the other directives are universal: they have both server and client semantics and can be restricted with |server and |client.
+@on, @prop and @use only have client semantics while the other directives are universal: they have both server and client semantics and can be restricted with `|server` and `|client`.
 
 ### @attr directive
 
@@ -492,13 +495,13 @@ You can use a hook defined in a parent handler registry, similar to if it were a
 
 ### <radish:head>
 
-This component lets you declaratively add content to the document's head, and provide it with a title, description etc.
+This lets you declaratively add content to the document's head, and provide it with a title, description etc.
 
 It must appear at the top-level of your component
 
 ```html
 <radish:head>
-  <title></title>
+  <title>The page title</title>
 </radish:head>
 ```
 
@@ -506,35 +509,35 @@ It must appear at the top-level of your component
 
 ### Importmap
 
-When building your project, an importmap of the runtime dependencies is generated and inlined in the  `head` of the html. This relies on the [importmap](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) Web Standard.
+When building your project, an [importmap](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) of your runtime dependencies is automatically generated and inserted in the `<head>`.
 
-In dev mode the importmap resolves modules from the node_modules folder by default and allows off-line development, and in production it resolves modules from the jspm.io CDN by default. This is entirely configurable.
+<!-- In dev mode the importmap resolves modules from the node_modules folder by default and allows off-line development, and in production it resolves modules from the [esm.sh](https://esm.sh/) CDN. -->
 
-The importmap is generated in the `_generated` folder, and you can inspect it with the following commands:
+The importmap resolves modules from the [esm.sh](https://esm.sh/) CDN:
+- both [npm](https://www.npmjs.com/) and [jsr](https://jsr.io/) modules are handled,
+- the build target is automatically determined by checking the `User-Agent` header. So users of your site get precisely what they need, not more, not less.
 
-- `deno task generate --importmap --dev` generated the dev importmap
-- `deno task generate --importmap` generated the production importmap
+The importmap can be generated in the `_generated` folder with the following command:
 
-You have full control over the importmap generation in the `scripts/generate.ts` file:
+```sh
+deno task generate --importmap
+```
 
-- a `transform(importmap: ImportMap): string` hook allows you to modify the generated importmap before the file is saved on disk.
-- an `install` option lets you force install any package that can't be statically detected.
-- further options (default registry, custom providers etc) can be passed to the jspm generator
+You have full control over the importmap in your `start.ts` script, with options for manually including packages, or transforming the result of the importmap generation.
 
 ### No bundle
 
-The production importmap lets the browser resolve dependencies (and their dependencies) from standard CDNs. This means that your code and dependencies are not bundled together, and instead there is a clean separation between the code that you author and everything else. This has several benefits:
+The [importmap](#importmap) lets the browser resolve dependencies (and higher-order dependencies) from the [esm.sh](https://esm.sh/) CDN. This means your code and its dependencies are not bundled together, and instead there is a clean separation between the code that you author and everything else. This allows them to move on asynchronously at their own pace and has several benefits:
 
-- Better caching. Dependencies can be cached by the browser separately from your modules, so that updating a typo in your code only invalidates that file.
-- Smaller downloads. Since dependencies are not inlined with your code, they're only downloaded on first load or whenever you update their version; not with every bundle.
-- Less bandwidth usage. Resolving dependencies client-side and downloading them from CDNs means that much less traffic on your infrastructure. This can make a difference in terms of cost and usage
+- Better caching. Dependencies can be cached by the browser separately from your modules, *e.g.* updating a typo in your code only invalidates that file.
+- Smaller downloads. Since dependencies are not inlined with your code, they're only downloaded on first load or whenever you update their version — not with every bundle.
+- Less bandwidth usage. Resolving dependencies client-side and downloading them from CDNs means that much less traffic on your infrastructure. This can make a difference in terms of cost and usage.
 
 ## Resources
 
-Here are a few resources to learn more about various aspects of Web Components:
-
-- web.dev article on [Custom Element Best Practices](https://web.dev/articles/custom-elements-best-practices)
+- The [importmap spec](https://html.spec.whatwg.org/multipage/webappapis.html#import-maps)
 - [Declarative Shadow DOM](https://web.dev/articles/declarative-shadow-dom)
+- [Custom Element Best Practices](https://web.dev/articles/custom-elements-best-practices)
 - MDN 3 parts guide:
   - [Using custom elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements)
   - [Using Shadow DOM](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM)

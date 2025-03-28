@@ -17,6 +17,7 @@
   "imports": {
     "@material/web": "npm:@material/web@^2.2.0",
     "@shoelace-style/shoelace": "npm:@shoelace-style/shoelace@^2.20.0",
+    "@std/text": "jsr:@std/text@^1.0.12",
     // "radish": "npm:@radishland/runtime@^0.1.0"
     "ts-helpers": "npm:@fcrozatier/ts-helpers@^2.8.0",
     "wired-elements": "npm:wired-elements@^3.0.0-rc.6"
