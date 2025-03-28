@@ -93,9 +93,9 @@ export function type(value: unknown): Types {
     return baseType;
   }
 
-  // Symbol.toStringTag often specifies the "display name" of the
-  // object's class. It's used in Object.prototype.toString().
-  // @ts-expect-error
+  // `Symbol.toStringTag` often specifies the "display name" of the
+  // object's class. It's used in `Object.prototype.toString()`.
+  // @ts-expect-error it's fine if there is no `Symbol.toStringTag`
   const tag = value[Symbol.toStringTag];
   if (typeof tag === "string") {
     return tag;
