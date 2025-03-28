@@ -1,4 +1,4 @@
-import { assert, assertExists } from "@std/assert";
+import { assert, assertExists, assertObjectMatch } from "@std/assert";
 import { parseArgs } from "@std/cli/parse-args";
 import { Spinner } from "@std/cli/unstable-spinner";
 import { bold, green } from "@std/fmt/colors";
@@ -57,8 +57,8 @@ spinner.start();
 try {
   spinner.message = "Fetching meta data...";
   const res = await fetch(metaURL);
-  const metadata = await res.json() as { manifest: Record<string, any> };
-  assertExists(metadata);
+  const metadata = await res.json();
+  assertObjectMatch(metadata, { manifest: {} });
 
   const pathsByArgs = Object.groupBy(Object.keys(metadata.manifest), (k) => {
     if (k.startsWith("/template/base/")) return "base";
@@ -67,9 +67,7 @@ try {
   });
 
   spinner.message = "Fetching template files...";
-  for (
-    const arg of Object.keys(pathsByArgs) as (keyof typeof pathsByArgs)[]
-  ) {
+  for (const arg of Object.keys(pathsByArgs) as (keyof typeof pathsByArgs)[]) {
     switch (arg) {
       case "skip":
         continue;
