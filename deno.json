@@ -30,7 +30,8 @@
     "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"],
     "checkJs": true,
     "noImplicitOverride": true,
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true
   },
   "nodeModulesDir": "auto",
   "imports": {

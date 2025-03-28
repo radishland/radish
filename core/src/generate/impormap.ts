@@ -67,7 +67,7 @@ export class ImportMapController {
   path: string = join(generatedFolder, "importmap.json");
   fileCache: FileCache;
   #importmap: string | undefined;
-  options?: ImportMapOptions;
+  options?: ImportMapOptions | undefined;
 
   constructor(fileCache: FileCache, options?: ImportMapOptions) {
     this.fileCache = fileCache;

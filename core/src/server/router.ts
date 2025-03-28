@@ -3,6 +3,7 @@ import { serveDir, type ServeDirOptions, serveFile } from "@std/http";
 import { dirname, join } from "@std/path";
 import { buildFolder, routesFolder } from "../constants.ts";
 import type { Context } from "./app.ts";
+import { assertExists } from "@std/assert";
 
 type HTTPMethod = (typeof ALLOWED_METHODS)[number];
 
@@ -39,20 +40,20 @@ export class Router {
 
   defaultHandler: Handler<Context>;
   routesFolder: string;
-  matchers: Record<string, RegExp>;
+  matchers?: Record<string, RegExp> | undefined;
 
   constructor(
     options: {
       routesFolder: string;
       defaultHandler: Handler;
-      matchers?: Record<string, RegExp>;
+      matchers?: Record<string, RegExp> | undefined;
     },
   ) {
     this.get = this.#add.bind(this, "GET");
     this.post = this.#add.bind(this, "POST");
     this.defaultHandler = options.defaultHandler;
     this.routesFolder = options.routesFolder;
-    this.matchers = options.matchers ?? {};
+    this.matchers = options.matchers;
 
     const dirname = import.meta.dirname;
 
@@ -98,10 +99,9 @@ export class Router {
           square_brackets_around_named_group,
           (_match, _, namedGroup, matcherName) => {
             if (matcherName) {
-              const matcher = this.matchers[matcherName];
-              if (!matcher) {
-                throw new Error(`Regex matcher not found: ${matcherName}`);
-              }
+              const matcher = this.matchers?.[matcherName];
+              assertExists(matcher, `Regex matcher not found: ${matcherName}`);
+
               return `:${namedGroup}(${matcher.source})`;
             }
             return `:${namedGroup}`;
