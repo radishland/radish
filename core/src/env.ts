@@ -38,4 +38,6 @@ export const getEnv = (key: string) => {
 /**
  * Whether the app is running in dev mode
  */
-export const dev = (): boolean => Deno.env.get("dev") !== undefined;
+export function dev() {
+  return Deno.args.includes("--dev");
+}

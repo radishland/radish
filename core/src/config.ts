@@ -4,7 +4,7 @@ import { existsSync } from "@std/fs/exists";
 /**
  * returns the JSON-parsed deno config and throws if it can't find it
  */
-export const readDenoConfig = (): Record<string, any> => {
+export const readDenoConfig = () => {
   const fileName =
     ["deno.json", "deno.jsonc"].find((fileName) => existsSync(fileName)) ?? "";
   const content = Deno.readTextFileSync(fileName);

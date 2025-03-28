@@ -25,10 +25,10 @@ const handle: Handle = async ({ context, resolve }) => {
   return await resolve(context);
 };
 
-export const startApp = async (
+export async function startApp(
   loadManifest: () => Promise<ManifestBase>,
   config: Config = {},
-): Promise<void> => {
+) {
   if (args.dev) {
     Deno.env.set("dev", "");
   }
@@ -91,4 +91,4 @@ export const startApp = async (
       });
     }
   }
-};
+}
