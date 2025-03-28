@@ -1,3 +1,4 @@
+import { assertExists } from "@std/assert";
 import type {
   AttrRequestDetail,
   BindableProperty,
@@ -16,6 +17,8 @@ const hydrateElement = (element: Element) => {
 
   for (const attribute of attributes) {
     const [key, value] = attribute.split(":");
+
+    assertExists(key);
 
     const attrRequest = new CustomEvent("@attr-request", {
       bubbles: true,
@@ -57,6 +60,8 @@ const hydrateElement = (element: Element) => {
   if (booleanAttributes) {
     for (const bool of booleanAttributes) {
       const [key, value] = bool.split(":");
+
+      assertExists(key);
 
       element.dispatchEvent(
         new CustomEvent("@bool-request", {
@@ -112,6 +117,8 @@ const hydrateElement = (element: Element) => {
     for (const event of events) {
       const [type, handler] = event.split(":");
 
+      assertExists(type);
+
       const onRequest = new CustomEvent("@on-request", {
         bubbles: true,
         cancelable: true,
@@ -133,6 +140,8 @@ const hydrateElement = (element: Element) => {
   if (props) {
     for (const prop of props) {
       const [key, value] = prop.split(":");
+
+      assertExists(key);
 
       const propRequest = new CustomEvent("@prop-request", {
         bubbles: true,
