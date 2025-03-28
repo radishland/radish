@@ -15,6 +15,7 @@ import { bindingConfig, spaces_sep_by_comma } from "@radish/runtime/utils";
 import {
   type AnyConstructor,
   assert,
+  assertArrayIncludes,
   assertExists,
   assertObjectMatch,
 } from "@std/assert";
@@ -245,11 +246,11 @@ export const pluginRadish: () => Plugin = () => {
     attribute: string,
     value: unknown,
   ) => {
-    if (!["string", "number", "boolean"].includes(typeof value)) {
-      throw new Error(
-        "Can only set primitive values as attributes",
-      );
-    }
+    assertArrayIncludes(
+      ["string", "number", "boolean"],
+      [typeof value],
+      "Can only set primitive values as attributes",
+    );
 
     if (booleanAttributes.includes(attribute)) {
       value && attributes.push([attribute, ""]);
@@ -382,9 +383,7 @@ export const pluginRadish: () => Plugin = () => {
         const identifier = attribute[1] || "class";
         const value = contextLookup(identifier);
 
-        if (!value || typeof value !== "object") {
-          throw new Error("@class should reference an object");
-        }
+        assert(typeof value === "object", "@class should reference an object");
 
         const classAttr = attributes.find(([k, _]) => k === "class");
         let classes = classAttr?.[1] ?? "";
@@ -411,11 +410,7 @@ export const pluginRadish: () => Plugin = () => {
         const identifier = attribute[1] || "text";
         const value = contextLookup(identifier);
 
-        if (kind === Kind.VOID) {
-          throw new Error(
-            "Void elements can't have textContent",
-          );
-        }
+        assert(kind !== Kind.VOID, "Void elements can't have textContent");
 
         if (value !== null && value !== undefined) {
           textContent.text = `${value}`;
@@ -426,11 +421,7 @@ export const pluginRadish: () => Plugin = () => {
         const identifier = attribute[1] || "html";
         const value = contextLookup(identifier);
 
-        if (kind === Kind.VOID) {
-          throw new Error(
-            "Void elements can't have innerHTML",
-          );
-        }
+        assert(kind !== Kind.VOID, "Void elements can't have innerHTML");
 
         if (value !== null && value !== undefined) {
           innerHTML.push(textNode(`${value}`));
@@ -608,11 +599,10 @@ export const pluginRadish: () => Plugin = () => {
           return;
         }
 
-        if (!elementName.includes("-")) {
-          throw new Error(
-            `An element file name must include a dash.\n\nIn: ${entry.path}`,
-          );
-        }
+        assert(
+          elementName.includes("-"),
+          `An element file name must include a dash.\n\nIn: ${entry.path}`,
+        );
 
         const elementMetaData: ElementManifest =
           manifest.elements[elementName] ?? {
