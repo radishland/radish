@@ -1,3 +1,4 @@
+import { assert, assertExists, assertObjectMatch } from "@std/assert";
 import { parseArgs } from "@std/cli/parse-args";
 import { Spinner } from "@std/cli/unstable-spinner";
 import { bold, green } from "@std/fmt/colors";
@@ -56,45 +57,51 @@ spinner.start();
 try {
   spinner.message = "Fetching meta data...";
   const res = await fetch(metaURL);
-  const metadata = await res.json() as { manifest: Record<string, any> };
+  const metadata = await res.json();
+  assertObjectMatch(metadata, { manifest: {} });
 
-  if (metadata?.manifest) {
-    const pathsByArgs = Object.groupBy(Object.keys(metadata.manifest), (k) => {
-      if (k.startsWith("/template/base/")) return "base";
-      else if (k.startsWith("/template/vscode/")) return "vscode";
-      return "skip";
-    });
+  const pathsByArgs = Object.groupBy(Object.keys(metadata.manifest), (k) => {
+    if (k.startsWith("/template/base/")) return "base";
+    else if (k.startsWith("/template/vscode/")) return "vscode";
+    return "skip";
+  });
 
-    spinner.message = "Fetching template files...";
-    for (
-      const arg of Object.keys(pathsByArgs) as (keyof typeof pathsByArgs)[]
-    ) {
-      switch (arg) {
-        case "skip":
-          continue;
+  spinner.message = "Fetching template files...";
+  for (const arg of Object.keys(pathsByArgs) as (keyof typeof pathsByArgs)[]) {
+    switch (arg) {
+      case "skip":
+        continue;
 
-        case "vscode":
-          if (!vscode) continue;
-      }
+      case "vscode":
+        if (!vscode) continue;
+    }
 
-      const paths = pathsByArgs[arg]!;
-      const textFiles = await Promise.all(
-        paths.map(async (path) => {
-          const res = await fetch(`${packageUrl}${version}${path}`);
-          return await res.text();
-        }),
+    const paths = pathsByArgs[arg];
+    assertExists(paths);
+
+    const textFiles = await Promise.all(
+      paths.map(async (path) => {
+        const res = await fetch(`${packageUrl}${version}${path}`);
+        return await res.text();
+      }),
+    );
+
+    assert(paths.length === textFiles.length);
+
+    for (let i = 0; i < paths.length; i++) {
+      const path: string | undefined = paths[i];
+      const content = textFiles[i];
+
+      assertExists(path);
+      assertExists(content);
+
+      const dest = join(
+        projectPath,
+        path.replaceAll(new RegExp(`^/template/${arg}/`, "g"), ""),
       );
 
-      for (let i = 0; i < paths.length; i++) {
-        const path = paths[i]!;
-        const dest = join(
-          projectPath,
-          path.replaceAll(new RegExp(`^/template/${arg}/`, "g"), ""),
-        );
-
-        Deno.mkdirSync(dirname(dest), { recursive: true });
-        Deno.writeTextFileSync(dest, textFiles[i]!);
-      }
+      Deno.mkdirSync(dirname(dest), { recursive: true });
+      Deno.writeTextFileSync(dest, content);
     }
   }
 } catch (error) {

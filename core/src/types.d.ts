@@ -54,7 +54,7 @@ export interface TransformContext {
   meta?: { [plugin: string]: any } | null;
 }
 
-export type BuildOptions = {};
+export type BuildOptions = Record<string, any>;
 
 export type HmrEvent = {
   /**

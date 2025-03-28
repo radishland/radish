@@ -1,4 +1,5 @@
 import { dev } from "$env";
+import { assertExists } from "@std/assert";
 import { getCookies } from "@std/http/cookie";
 import { extname, isAbsolute, join, relative } from "@std/path";
 import {
@@ -9,8 +10,8 @@ import {
   staticFolder,
 } from "../constants.ts";
 import type { Builder } from "../generate/build.ts";
-import type { ManifestController } from "../generate/manifest.ts";
 import type { ImportMapController } from "../generate/impormap.ts";
+import type { ManifestController } from "../generate/manifest.ts";
 import type {
   HmrContext,
   HmrEvent,
@@ -363,8 +364,9 @@ export class App {
     console.log("HRM server watching...");
 
     const hmr = new Hmr(this);
+    assertExists(this.watcher);
 
-    for await (const event of this.watcher!) {
+    for await (const event of this.watcher) {
       console.log(`FS Event`, event.kind, event.paths, Date.now());
 
       for (const path of event.paths) {

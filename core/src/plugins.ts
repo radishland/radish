@@ -10,11 +10,17 @@ import {
   shadowRoot,
   textNode,
 } from "@radish/htmlcrunch";
+import type { HandlerRegistry } from "@radish/runtime";
+import { bindingConfig, spaces_sep_by_comma } from "@radish/runtime/utils";
+import {
+  type AnyConstructor,
+  assert,
+  assertExists,
+  assertObjectMatch,
+} from "@std/assert";
 import type { WalkEntry } from "@std/fs/walk";
 import { basename, dirname, extname, join, relative } from "@std/path";
 import { toPascalCase } from "@std/text";
-import type { HandlerRegistry } from "@radish/runtime";
-import { bindingConfig, spaces_sep_by_comma } from "@radish/runtime/utils";
 import {
   buildFolder,
   elementsFolder,
@@ -25,7 +31,6 @@ import type { SpeculationRules } from "./generate/speculationrules.ts";
 import type { ManifestBase, Plugin } from "./types.d.ts";
 import { fileName } from "./utils.ts";
 import { dependencies } from "./walk.ts";
-import type { AnyConstructor } from "@std/assert";
 
 export const SCOPE = Symbol.for("scope");
 
@@ -216,6 +221,12 @@ const is_parent_path_regex = /^\.\.(\/\.\.)*$/;
 
 export const pluginRadish: () => Plugin = () => {
   const appPath = join(routesFolder, "_app.html");
+  const manifestShape = {
+    elements: {},
+    imports: {},
+    layouts: {},
+    routes: {},
+  } satisfies Manifest;
 
   let speculationRules: SpeculationRules | undefined;
   let handlerStack: { tagName: string; instance: HandlerRegistry }[] = [];
@@ -322,22 +333,20 @@ export const pluginRadish: () => Plugin = () => {
           ":",
         )[1] as keyof typeof bindingConfig;
 
-        if (!Object.keys(bindingConfig).includes(property)) {
-          throw new Error(`${property} is not bindable`);
-        }
+        assert(
+          Object.keys(bindingConfig).includes(property),
+          `${property} is not bindable`,
+        );
 
         const identifier = attribute[1] || property;
         const value = contextLookup(identifier);
 
-        if (
-          !bindingConfig[property].type.includes(typeof value)
-        ) {
-          throw new Error(
-            `@bind:${property}=${identifier} should reference a value of type ${
-              bindingConfig[property].type.join("|")
-            } and "${identifier}" has type ${typeof value}`,
-          );
-        }
+        assert(
+          bindingConfig[property].type.includes(typeof value),
+          `@bind:${property}=${identifier} should reference a value of type ${
+            bindingConfig[property].type.join("|")
+          } and "${identifier}" has type ${typeof value}`,
+        );
 
         setAttribute(attributes, property, value);
       } else if (attribute[0] === "@bool") {
@@ -512,6 +521,8 @@ export const pluginRadish: () => Plugin = () => {
       const otherEntries: WalkEntry[] = [];
       const elementsOrRoutes: (ElementManifest | RouteManifest)[] = [];
 
+      assertObjectMatch(manifest, manifestShape);
+
       for (const entry of entries) {
         if (entry.isFile && extname(entry.name) === ".html") {
           if (!relative(elementsFolder, entry.path).startsWith("..")) {
@@ -550,13 +561,16 @@ export const pluginRadish: () => Plugin = () => {
 
       const sorted = sortComponents(Array.from(new Set(elementsOrRoutes)))
         .map((c) => {
+          const path = c.files.find((f) => f.endsWith(".html"));
+          assertExists(path);
+
           return {
             isDirectory: false,
             isFile: true,
             isSymlink: false,
             name: basename(c.path),
-            path: c.files.find((f) => f.endsWith(".html")),
-          } as WalkEntry;
+            path,
+          } satisfies WalkEntry;
         });
 
       return [...otherEntries, ...sorted];
@@ -741,6 +755,7 @@ export const pluginRadish: () => Plugin = () => {
       if (context.format !== ".html") return null;
 
       const manifest = context.manifest as Manifest;
+      assertObjectMatch(manifest, manifestShape);
 
       handlerStack = [];
 
@@ -863,6 +878,7 @@ export const pluginRadish: () => Plugin = () => {
     handleHotUpdate(event, context) {
       const extension = extname(event.path);
       const manifest = context.app.manifestController.manifest as Manifest;
+      assertObjectMatch(manifest, manifestShape);
 
       if (!event.isFile || ![".html", ".js", ".ts"].includes(extension)) {
         return null;

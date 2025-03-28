@@ -15,6 +15,7 @@ import {
   whitespace,
   whitespaces,
 } from "@fcrozatier/monarch/common";
+import { assertExists } from "@std/assert";
 
 /**
  * A comment node
@@ -175,11 +176,14 @@ export const element: Parser<MElement> = createParser((input, position) => {
 
   if (!openTag.success) return openTag;
 
+  const openTagResult = openTag.results[0];
+  assertExists(openTagResult);
+
   const {
     value: { tagName, attributes },
     remaining,
     position: openTagPosition,
-  } = openTag.results[0]!;
+  } = openTagResult;
 
   const kind = elementKind(tagName);
 
@@ -222,18 +226,22 @@ export const element: Parser<MElement> = createParser((input, position) => {
     return childrenElements;
   }
 
+  const childrenElementsResult = childrenElements.results[0];
+  assertExists(childrenElementsResult);
+
   const {
     value: children,
     remaining: childrenRemaining,
     position: childrenPosition,
-  } = childrenElements.results[0]!;
+  } = childrenElementsResult;
 
   const res = endTagParser.parse(childrenRemaining, childrenPosition);
 
   // End tag omission would be managed here
   if (!res.success) return res;
 
-  const result = res.results[0]!;
+  const result = res.results[0];
+  assertExists(result);
 
   return {
     success: true,
