@@ -51,7 +51,7 @@ export interface TransformContext {
   /**
    * Contains the custom meta-data annotations set by previous transform plugins on this file
    */
-  meta?: { [plugin: string]: any } | null;
+  meta?: { [plugin: string]: any } | null | undefined;
 }
 
 export type BuildOptions = Record<string, any>;
