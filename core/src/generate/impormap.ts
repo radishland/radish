@@ -1,4 +1,5 @@
 import { dev } from "$env";
+import { assert, assertExists, unimplemented } from "@std/assert";
 import { extname, join } from "@std/path";
 import { readDenoConfig } from "../config.ts";
 import { generatedFolder, ts_extension_regex } from "../constants.ts";
@@ -174,9 +175,10 @@ export const pureImportMap = (
     // relative imports
     if (target?.startsWith("./")) {
       if (extname(target)) {
-        if (paths.some((p) => p !== "")) {
-          throw new Error("Can't target a subpath of a module");
-        }
+        assert(
+          paths.some((p) => p !== ""),
+          "Can't target a subpath of a module",
+        );
 
         importsMap.set(
           alias,
@@ -218,15 +220,16 @@ export const pureImportMap = (
       for (const path of paths) {
         importsMap.set(alias + path, target + path);
       }
+    } else {
+      unimplemented(` registry in ${target}.`);
     }
   };
 
   for (const [alias, paths] of pathsByAlias.entries()) {
     const target = denoImports[alias];
 
-    if (target) {
-      addPackage(target, alias, paths);
-    }
+    assertExists(target);
+    addPackage(target, alias, paths);
   }
 
   if (options?.include) {
@@ -236,9 +239,8 @@ export const pureImportMap = (
         const paths = entrypoints.map((entry) => entry.replace(/^\./, ""));
         const target = denoImports[alias];
 
-        if (target) {
-          addPackage(target, alias, paths);
-        }
+        assertExists(target);
+        addPackage(target, alias, paths);
       }
     }
   }

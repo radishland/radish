@@ -25,6 +25,7 @@ import type { SpeculationRules } from "./generate/speculationrules.ts";
 import type { ManifestBase, Plugin } from "./types.d.ts";
 import { fileName } from "./utils.ts";
 import { dependencies } from "./walk.ts";
+import type { AnyConstructor } from "@std/assert";
 
 export const SCOPE = Symbol.for("scope");
 
@@ -85,14 +86,12 @@ export const pluginStripTypes: Plugin = {
   },
 };
 
-type Constructor<T = any> = new (...args: any[]) => T;
-
 export type ElementManifest = {
   kind: "element";
   tagName: string;
   path: string;
   files: string[];
-  classLoader?: () => Promise<Constructor>;
+  classLoader?: () => Promise<AnyConstructor>;
   templateLoader?: () => MFragment;
   dependencies?: string[];
 };
