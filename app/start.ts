@@ -1,5 +1,4 @@
 import { startApp } from "@radish/core";
-import { dev } from "@radish/core/env";
 import {
   pluginDefaultEmit,
   pluginRadish,
@@ -10,12 +9,22 @@ import type { Config } from "@radish/core/types";
 const config: Config = {
   importmap: {
     install: [
-      "@preact/signals-core", // When using the development runtime version
-      "@material/web/button/filled-button",
-      "@material/web/button/outlined-button",
-      "@material/web/checkbox/checkbox",
-      "wired-elements",
-      !dev() && "@shoelace-style/shoelace/dist/components/rating/rating.js",
+      { package: "npm:@preact/signals-core" }, // When using the development runtime version
+    ],
+    include: [
+      {
+        alias: "@material/web",
+        entrypoints: [
+          "/button/filled-button",
+          "/button/outlined-button",
+          "/checkbox/checkbox",
+        ],
+      },
+      { alias: "wired-elements" },
+      {
+        alias: "@shoelace-style/shoelace",
+        entrypoints: ["/cdn/components/rating/rating.js"],
+      },
     ],
     transform: (importmap) => {
       const imports = {
