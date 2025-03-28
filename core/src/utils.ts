@@ -1,9 +1,10 @@
+import { assert } from "@std/assert";
 import { basename } from "@std/path/basename";
 
 /**
  * Generic memoize decorator for a function with no arguments
  */
-export const memoize = <T>(fn: () => T): () => T => {
+export const memoize = <T>(fn: () => T) => {
   let computed = false;
   let result: T;
 
@@ -19,8 +20,11 @@ export const memoize = <T>(fn: () => T): () => T => {
 /**
  * Returns the file name without the extension
  */
-export const fileName = (path: string): string => {
-  return basename(path).split(".")[0]!;
+export const fileName = (path: string) => {
+  const name = basename(path).split(".")[0];
+  assert(!!name, `Expected ${path} filename to not be falsy`);
+
+  return name;
 };
 
 export const setTimeoutWithAbort = (
@@ -46,7 +50,7 @@ export const setTimeoutWithAbort = (
  */
 export function* concatIterators<T>(
   ...iterators: Iterable<T>[]
-): IterableIterator<T> {
+) {
   for (const iterator of iterators) {
     yield* iterator;
   }
