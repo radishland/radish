@@ -8,11 +8,17 @@
     <input type="number" step="0.01" @bind:value="number">
   </label>
 
+  <label>
+    text
+    <input type="text" @bind:value="text">
+  </label>
+
   <p>rounded value: <output @text="rounded"></output></p>
+  <p>to snake case: <output @text="snaked"></output></p>
 
   <p>
-    For the sake of the example, here we use a helper library to round a number
-    to 1 decimal place
+    A helper library is used to round a number to 1 decimal place, and the
+    @std/text package from jsr is used directly to convert text to snake_case
   </p>
 
   <p>
