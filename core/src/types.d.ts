@@ -116,10 +116,14 @@ export interface Plugin {
   ) => WalkEntry[];
   /**
    * Modifies the config before it's resolved. This hook receives the user config with the CLI args of the currently running command
+   *
+   * Kind: sequential
    */
   config?: (config: Config, args: Args) => Config;
   /**
    * Reads the resolved config object, which is useful when a plugin needs to adjust its behavior based on the config or command being run
+   *
+   * Kind: sequential
    */
   configResolved?: (config: ResolvedConfig) => void;
   /**
@@ -127,7 +131,7 @@ export interface Plugin {
    *
    * Kind: first
    */
-  emit?: (path: string) => string | null;
+  emit?: (path: string) => string | null | undefined;
   /**
    * Handles the side effects of the hot update before the incremental rebuild phase. This hook has access to information about the fs event emitted and the context, allowing to update the manifest, do IO etc.
    *
