@@ -127,7 +127,7 @@ class Hmr extends Map<string, HmrEvent> {
     }
 
     this.#app.manifestController.write();
-    const manifest = await this.#app.manifestController.loadManifest();
+    const manifest = await this.#app.manifestController.reloadManifest();
 
     if (!this.#app.importmapController.importmap) {
       await this.#app.importmapController.generate(manifest);

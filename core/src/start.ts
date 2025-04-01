@@ -63,7 +63,7 @@ export async function startApp(
     manifestController.createManifest();
     manifestController.write();
   } else {
-    const manifest = await manifestController.loadManifest();
+    const manifest = await manifestController.reloadManifest();
     const importmapController = new ImportMapController(
       fileCache,
       resolvedConfig.importmap,
