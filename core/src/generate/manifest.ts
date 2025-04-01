@@ -11,8 +11,12 @@ import type { ManifestBase, ManifestContext, Plugin } from "../types.d.ts";
 import type { FileCache } from "../server/app.ts";
 import { SCOPE } from "../plugins.ts";
 
+/**
+ * The path to the manifest file
+ */
+export const manifestPath = join(generatedFolder, "manifest.ts");
+
 export class ManifestController {
-  path: string = join(generatedFolder, "manifest.ts");
   manifestImports: Set<string> = new Set<string>();
   manifest: ManifestBase = { imports: {} };
   fileCache: FileCache;
@@ -24,7 +28,10 @@ export class ManifestController {
     new RegExp("^" + libFolder + "/"),
   ];
 
-  loadManifest: () => Promise<ManifestBase>;
+  /**
+   * Reloads the `manifest` object in memory and clears the old `manifestImports` Set
+   */
+  reloadManifest: () => Promise<ManifestBase>;
 
   constructor(
     plugins: Plugin[],
@@ -32,13 +39,13 @@ export class ManifestController {
     fileCache: FileCache,
   ) {
     this.#plugins = plugins;
-    this.loadManifest = async () => {
+    this.reloadManifest = async () => {
       this.manifest = await load();
 
       this.manifestImports.clear();
       this.manifestImports = new Set(
         this.fileCache
-          .readTextFileSync(this.path)
+          .readTextFileSync(manifestPath)
           .matchAll(/^import.*;$/gm)
           .map((m) => m[0]),
       );
@@ -67,6 +74,22 @@ export class ManifestController {
       }
     }
   };
+
+  write() {
+    ensureDirSync(generatedFolder);
+
+    let file = [...this.manifestImports.keys()].join("\n");
+    file += "\n\nexport const manifest = ";
+    file += this.#stringifyObject(this.manifest);
+
+    for (const plugin of this.#plugins) {
+      if (plugin.manifestWrite) {
+        file = plugin.manifestWrite(file);
+      }
+    }
+
+    Deno.writeTextFileSync(manifestPath, file);
+  }
 
   #stringifyFunction = (fn: (...args: unknown[]) => unknown) => {
     let serialized = fn.toString();
@@ -151,20 +174,4 @@ export class ManifestController {
 
     return str;
   };
-
-  write() {
-    ensureDirSync(generatedFolder);
-
-    let file = [...this.manifestImports.keys()].join("\n");
-    file += "\n\nexport const manifest = ";
-    file += this.#stringifyObject(this.manifest);
-
-    for (const plugin of this.#plugins) {
-      if (plugin.manifestWrite) {
-        file = plugin.manifestWrite(file);
-      }
-    }
-
-    Deno.writeTextFileSync(this.path, file);
-  }
 }
