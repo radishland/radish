@@ -3,6 +3,7 @@ import type { ManifestController } from "./generate/manifest.ts";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
 import type { App, FileCache } from "./server/app.ts";
 import type { ImportMapOptions } from "./generate/impormap.ts";
+import type { Required } from "@fcrozatier/ts-helpers";
 import type {
   buildOrder,
   buildTransform,
@@ -11,24 +12,6 @@ import type {
 
 export type Maybe<T> = T | undefined;
 export type MaybePromise<T> = T | Promise<T>;
-
-/**
- * Prettifies types (intersections etc) by ensuring type expansion
- */
-export type Prettify<T> =
-  & {
-    [K in keyof T]: T[K];
-  }
-  & {};
-
-/**
- * Requires only certain keys of T
- */
-export type Required<T, K extends keyof T> = Prettify<
-  {
-    [P in keyof T as P extends K ? P : never]-?: T[P];
-  } & Omit<T, K>
->;
 
 interface SourceDescription {
   code: string;
