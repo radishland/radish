@@ -2,11 +2,12 @@ import type { WalkEntry } from "@std/fs/walk";
 import type { ManifestController } from "./generate/manifest.ts";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
 import type { App, FileCache } from "./server/app.ts";
+import type { ImportMapOptions } from "./generate/impormap.ts";
 import type {
-  ImportMapController,
-  ImportMapOptions,
-} from "./generate/impormap.ts";
-import type { buildOrder } from "./effects/index.ts";
+  buildOrder,
+  buildTransform,
+  emitOperation,
+} from "./effects/index.ts";
 
 export type Maybe<T> = T | undefined;
 export type MaybePromise<T> = T | Promise<T>;
@@ -29,30 +30,10 @@ export type Required<T, K extends keyof T> = Prettify<
   } & Omit<T, K>
 >;
 
-type TransformResult = string | null | Partial<SourceDescription>;
-
 interface SourceDescription {
   code: string;
   ast?: any;
   meta?: { [plugin: string]: any } | null;
-}
-
-export interface TransformContext {
-  /**
-   * The format of the file as returned by `extname`
-   */
-  format: string;
-  manifest: ManifestBase;
-  importmapController: ImportMapController;
-  fileCache: FileCache;
-  /**
-   * The AST returned by a previous transform plugin
-   */
-  ast?: any;
-  /**
-   * Contains the custom meta-data annotations set by previous transform plugins on this file
-   */
-  meta?: { [plugin: string]: any } | null | undefined;
 }
 
 export type BuildOptions = Record<string, any>;
@@ -109,13 +90,13 @@ export interface Plugin {
   /**
    * Updates the build order
    *
-   * Kind: sequential
+   * Kind: chained
    */
   buildOrder?: typeof buildOrder.__type;
   /**
    * Modifies the config before it's resolved. This hook receives the user config with the CLI args of the currently running command
    *
-   * Kind: sequential
+   * Kind: chained
    */
   config?: (config: Config, args: Args) => Config;
   /**
@@ -129,7 +110,7 @@ export interface Plugin {
    *
    * Kind: first
    */
-  emit?: (path: string) => string | null | undefined;
+  emit?: typeof emitOperation.__type;
   /**
    * Handles the side effects of the hot update before the incremental rebuild phase. This hook has access to information about the fs event emitted and the context, allowing to update the manifest, do IO etc.
    *
@@ -141,7 +122,7 @@ export interface Plugin {
   /**
    * Runs before the manifest generation. This hook is an initialization phase allowing to modify the manifest object by adding the required keys.
    *
-   * Kind: sequential
+   * Kind: chained
    */
   manifestStart?: (manifestController: ManifestController) => ManifestBase;
   /**
@@ -156,7 +137,7 @@ export interface Plugin {
   /**
    * Performs a transform before the manifest is written on disk. This allows to modify paths, imports etc.
    *
-   * Kind: sequential
+   * Kind: chained
    */
   manifestWrite?: (content: string) => string;
   /**
@@ -166,11 +147,7 @@ export interface Plugin {
    *
    * Kind: async sequential
    */
-  transform?: (
-    code: string,
-    path: string,
-    context: TransformContext,
-  ) => MaybePromise<TransformResult>;
+  transform?: typeof buildTransform.__type;
 }
 
 export interface Config {
