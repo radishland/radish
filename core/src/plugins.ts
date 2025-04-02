@@ -508,7 +508,7 @@ export const pluginRadish: () => Plugin = () => {
     configResolved: (config) => {
       speculationRules = config?.speculationRules;
     },
-    buildStart: (entries, manifest) => {
+    buildOrder: (entries, manifest) => {
       const otherEntries: WalkEntry[] = [];
       const elementsOrRoutes: (ElementManifest | RouteManifest)[] = [];
 

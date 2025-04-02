@@ -38,8 +38,8 @@ export class Builder {
 
   #buildStart = (entries: WalkEntry[]) => {
     for (const plugin of this.#plugins) {
-      if (plugin?.buildStart) {
-        entries = plugin?.buildStart(entries, this.#manifest);
+      if (plugin?.buildOrder) {
+        entries = plugin?.buildOrder(entries, this.#manifest);
       }
     }
 

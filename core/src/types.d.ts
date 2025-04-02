@@ -6,6 +6,7 @@ import type {
   ImportMapController,
   ImportMapOptions,
 } from "./generate/impormap.ts";
+import type { buildOrder } from "./effects/index.ts";
 
 export type Maybe<T> = T | undefined;
 export type MaybePromise<T> = T | Promise<T>;
@@ -110,10 +111,7 @@ export interface Plugin {
    *
    * Kind: sequential
    */
-  buildStart?: (
-    entries: WalkEntry[],
-    manifest: ManifestBase,
-  ) => WalkEntry[];
+  buildOrder?: typeof buildOrder.__type;
   /**
    * Modifies the config before it's resolved. This hook receives the user config with the CLI args of the currently running command
    *
@@ -166,7 +164,7 @@ export interface Plugin {
    *
    * If you return an `ast` object or `meta` properties, they will be passed to subsequent transforms via the `TransformContext`. This can avoid the need to re-parse files
    *
-   * Kind: sequential
+   * Kind: async sequential
    */
   transform?: (
     code: string,
