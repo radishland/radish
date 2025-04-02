@@ -36,6 +36,7 @@
   "nodeModulesDir": "auto",
   "imports": {
     "$env": "./src/env.ts",
+    "@fcrozatier/ts-helpers": "npm:@fcrozatier/ts-helpers@^2.10.0",
     "@preact/signals-core": "npm:@preact/signals-core@^1.8.0",
     "@std/text": "jsr:@std/text@^1.0.12",
     "radish": "./runtime/src/index.ts",
