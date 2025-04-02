@@ -7,7 +7,7 @@ import type {
   buildOrder,
   buildTransform,
   emitOperation,
-} from "./effects/index.ts";
+} from "./effects/operations.ts";
 
 export type Maybe<T> = T | undefined;
 export type MaybePromise<T> = T | Promise<T>;
