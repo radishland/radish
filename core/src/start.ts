@@ -1,5 +1,4 @@
 import { dev } from "$env";
-import { Builder } from "./generate/build.ts";
 import { UserAgent } from "@std/http/user-agent";
 import { App, FileCache, type Handle } from "./server/app.ts";
 import type { Config, ManifestBase, ResolvedConfig } from "./types.d.ts";
@@ -8,10 +7,16 @@ import { ManifestController } from "./generate/manifest.ts";
 import { globals } from "./constants.ts";
 import { ImportMapController } from "./generate/impormap.ts";
 import { pluginDefaultPlugins } from "./plugins.ts";
+import { build } from "./generate/build.ts";
+import { perform } from "./effects/registry.ts";
+import { modifyConfig, readConfig } from "./effects/operations.ts";
+import * as effects from "./effects/registry.ts";
 
-const args = parseArgs(Deno.args, {
+const denoArgs = parseArgs(Deno.args, {
   boolean: ["dev", "importmap", "manifest", "build"],
 });
+
+export type DenoArgs = Readonly<typeof denoArgs>;
 
 const handle: Handle = async ({ context, resolve }) => {
   // Avoid mime type sniffing
@@ -29,26 +34,25 @@ export async function startApp(
   loadManifest: () => Promise<ManifestBase>,
   config: Config = {},
 ) {
-  if (args.dev) {
+  if (denoArgs.dev) {
     Deno.env.set("dev", "");
   }
 
   config.plugins = [...(config.plugins ?? []), pluginDefaultPlugins];
 
-  for (const plugin of config.plugins) {
-    if (plugin.config) {
-      config = plugin.config?.(config, args);
-    }
-  }
+  const { config: updatedConfig } = perform(modifyConfig, {
+    config,
+    args: denoArgs,
+  });
 
   const resolvedConfig: ResolvedConfig = Object.assign(
-    { plugins: [], args },
-    config,
+    { plugins: [], args: denoArgs },
+    updatedConfig,
   );
 
-  for (const plugin of resolvedConfig.plugins) {
-    plugin.configResolved?.(resolvedConfig);
-  }
+  effects.addHandler(readConfig, () => {
+    return resolvedConfig;
+  });
 
   globals();
 
@@ -59,7 +63,7 @@ export async function startApp(
     fileCache,
   );
 
-  if (args.manifest) {
+  if (denoArgs.manifest) {
     manifestController.createManifest();
     manifestController.write();
   } else {
@@ -68,24 +72,17 @@ export async function startApp(
       fileCache,
       resolvedConfig.importmap,
     );
-    const builder = new Builder(
-      resolvedConfig.plugins,
-      manifest,
-      importmapController,
-      fileCache,
-    );
 
-    if (args.importmap) {
+    if (denoArgs.importmap) {
       const importmap = await importmapController.generate(manifest);
       await Deno.writeTextFile(importmapController.path, importmap);
-    } else if (args.build) {
-      await builder.build();
+    } else if (denoArgs.build) {
+      await build();
     } else {
       new App({
         config: resolvedConfig,
         manifestController,
         importmapController,
-        builder,
         handle,
         fileCache,
       });
