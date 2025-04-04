@@ -12,11 +12,11 @@ import { perform } from "./effects/registry.ts";
 import { modifyConfig, readConfig } from "./effects/operations.ts";
 import * as effects from "./effects/registry.ts";
 
-const denoArgs = parseArgs(Deno.args, {
+const denoArgs = Object.freeze(parseArgs(Deno.args, {
   boolean: ["dev", "importmap", "manifest", "build"],
-});
+}));
 
-export type DenoArgs = Readonly<typeof denoArgs>;
+export type DenoArgs = typeof denoArgs;
 
 const handle: Handle = async ({ context, resolve }) => {
   // Avoid mime type sniffing
@@ -40,15 +40,13 @@ export async function startApp(
 
   config.plugins = [...(config.plugins ?? []), pluginDefaultPlugins];
 
-  const { config: updatedConfig } = perform(modifyConfig, {
-    config,
-    args: denoArgs,
-  });
+  perform(modifyConfig, { config, args: denoArgs });
 
   const resolvedConfig: ResolvedConfig = Object.assign(
     { plugins: [], args: denoArgs },
-    updatedConfig,
+    config,
   );
+  Object.freeze(resolvedConfig);
 
   effects.addHandler(readConfig, () => {
     return resolvedConfig;
