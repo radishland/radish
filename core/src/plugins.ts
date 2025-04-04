@@ -30,7 +30,7 @@ import {
 } from "./constants.ts";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
 import type { ManifestBase, Plugin } from "./types.d.ts";
-import { fileName } from "./utils.ts";
+import { fileName, throwUnlessNotFound } from "./utils.ts";
 import { dependencies } from "./walk.ts";
 
 export const SCOPE = Symbol.for("scope");
@@ -53,9 +53,7 @@ export const pluginDefaultEmit: Plugin = {
           relative(event.path, f).startsWith("..")
         );
       } catch (error) {
-        if (!(error instanceof Deno.errors.NotFound)) {
-          throw error;
-        }
+        throwUnlessNotFound(error);
       }
     }
   },
