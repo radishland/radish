@@ -1,6 +1,12 @@
 import { assert } from "@std/assert";
 import { basename } from "@std/path/basename";
 
+export function throwUnlessNotFound(error: unknown) {
+  if (!(error instanceof Deno.errors.NotFound)) {
+    throw error;
+  }
+}
+
 /**
  * Generic memoize decorator for a function with no arguments
  */
