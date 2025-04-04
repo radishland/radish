@@ -1,14 +1,10 @@
+import type { Required } from "@fcrozatier/ts-helpers";
 import type { WalkEntry } from "@std/fs/walk";
+import type { ImportMapOptions } from "./generate/impormap.ts";
 import type { ManifestController } from "./generate/manifest.ts";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
 import type { App, FileCache } from "./server/app.ts";
-import type { ImportMapOptions } from "./generate/impormap.ts";
-import type { Required } from "@fcrozatier/ts-helpers";
-import type {
-  buildOrder,
-  buildTransform,
-  emitOperation,
-} from "./effects/operations.ts";
+import type { DenoArgs } from "./start.ts";
 
 export type Maybe<T> = T | undefined;
 export type MaybePromise<T> = T | Promise<T>;
@@ -71,30 +67,6 @@ export interface Plugin {
    */
   name: string;
   /**
-   * Updates the build order
-   *
-   * Kind: chained
-   */
-  buildOrder?: typeof buildOrder.__type;
-  /**
-   * Modifies the config before it's resolved. This hook receives the user config with the CLI args of the currently running command
-   *
-   * Kind: chained
-   */
-  config?: (config: Config, args: Args) => Config;
-  /**
-   * Reads the resolved config object, which is useful when a plugin needs to adjust its behavior based on the config or command being run
-   *
-   * Kind: sequential
-   */
-  configResolved?: (config: ResolvedConfig) => void;
-  /**
-   * This hook allows to modify the path where the file will be emitted
-   *
-   * Kind: first
-   */
-  emit?: typeof emitOperation.__type;
-  /**
    * Handles the side effects of the hot update before the incremental rebuild phase. This hook has access to information about the fs event emitted and the context, allowing to update the manifest, do IO etc.
    *
    * The `event` and `context` objects are shared in a sequence of `handleHotUpdate` calls and can be modified directly to adjust the behavior of following plugins as well as the rebuild phase.
@@ -123,14 +95,6 @@ export interface Plugin {
    * Kind: chained
    */
   manifestWrite?: (content: string) => string;
-  /**
-   * Transforms individual files
-   *
-   * If you return an `ast` object or `meta` properties, they will be passed to subsequent transforms via the `TransformContext`. This can avoid the need to re-parse files
-   *
-   * Kind: async sequential
-   */
-  transform?: typeof buildTransform.__type;
 }
 
 export interface Config {
@@ -174,16 +138,9 @@ export interface Config {
   speculationRules?: SpeculationRules;
 }
 
-type Args = Readonly<{
-  dev: boolean;
-  importmap: boolean;
-  manifest: boolean;
-  build: boolean;
-}>;
-
 export interface ResolvedConfig extends Required<Config, "plugins"> {
   /**
    * The arguments of the current running command
    */
-  args: Args;
+  args: DenoArgs;
 }
