@@ -1,6 +1,7 @@
 import type { WalkEntry } from "@std/fs";
-import type { MaybePromise } from "../types.d.ts";
-import { defineOperation } from "./registry.ts";
+import type { DenoArgs } from "../start.ts";
+import type { Config, MaybePromise, ResolvedConfig } from "../types.d.ts";
+import { defineOperation, type Operation } from "./registry.ts";
 
 /**
  * Defines built-in operations
@@ -10,48 +11,82 @@ import { defineOperation } from "./registry.ts";
  * IO Operations
  */
 
-export const readTextFileSync = defineOperation<(path: string) => string>(
-  "read-text-file-sync",
-  "standalone",
-);
+export const readTextFileSync: Operation<
+  (path: string) => string,
+  "standalone"
+> = defineOperation("read-text-file-sync", "standalone");
 
-export const readTextFileAsync = defineOperation<
-  (path: string) => Promise<string>
->(
-  "read-text-file-async",
-  "standalone",
-);
+export const readTextFileAsync: Operation<
+  (path: string) => Promise<string>,
+  "standalone"
+> = defineOperation("read-text-file-async", "standalone");
 
-export const writeTextFileSync = defineOperation<typeof Deno.writeTextFileSync>(
-  "write-text-file-sync",
-  "standalone",
-);
+export const writeTextFileSync: Operation<
+  typeof Deno.writeTextFileSync,
+  "standalone"
+> = defineOperation("write-text-file-sync", "standalone");
 
 /**
  * TODO: WriteFile implementation calls invalidate in FileCache and ensureDir
  */
-export const writeTextFileAsync = defineOperation<typeof Deno.writeTextFile>(
-  "write-text-file-async",
-  "standalone",
-);
+export const writeTextFileAsync: Operation<
+  typeof Deno.writeTextFile,
+  "standalone"
+> = defineOperation("write-text-file-async", "standalone");
+
+/**
+ * Config
+ */
+
+/**
+ * Modifies the config object before it's resolved.
+ *
+ * Receives the user config with the CLI args of the currently running command
+ */
+export const modifyConfig: Operation<
+  (
+    args: { config: Config; args: DenoArgs },
+  ) => { config: Config; args: DenoArgs },
+  "chained"
+> = defineOperation("modify-config", "chained");
+
+/**
+ * Reads the resolved config
+ */
+export const readConfig: Operation<
+  () => ResolvedConfig,
+  "first-non-nullable"
+> = defineOperation("read-config", "first-non-nullable");
 
 /**
  * Build Operations
  */
 
-export const buildOrder = defineOperation<
-  (entries: WalkEntry[]) => WalkEntry[]
->("build-order", "chained");
+/**
+ * Updates the build order of a list of entries
+ */
+export const buildOrder: Operation<
+  (entries: WalkEntry[]) => WalkEntry[],
+  "chained"
+> = defineOperation("build-order", "chained");
 
-export const buildTransform = defineOperation<
+/**
+ * Transforms individual files
+ */
+export const buildTransform: Operation<
   (
     args: { code: string; path: string },
-  ) => MaybePromise<{ code: string; path: string }>
->("transform", "chained");
+  ) => MaybePromise<{ code: string; path: string }>,
+  "chained"
+> = defineOperation("transform", "chained");
 
-export const emitOperation = defineOperation<
-  (path: string) => string | null | undefined
->("emit", "first-non-nullable");
+/**
+ * Modifies the output path where the file will be emitted
+ */
+export const emitOperation: Operation<
+  (path: string) => string | null | undefined,
+  "first-non-nullable"
+> = defineOperation("emit", "first-non-nullable");
 
 defineOperation("process-file", "first");
 defineOperation("build", "first");
