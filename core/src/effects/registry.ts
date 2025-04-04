@@ -9,10 +9,10 @@ export type ExecutionStrategy =
   | "standalone";
 
 // Phantom type parameters preserve the type information defining handlers' signatures
-interface OperationKey<T, U extends ExecutionStrategy> {
-  readonly __name: string;
-  readonly __type: T;
-  readonly __strategy: U;
+export interface Operation<T, U extends ExecutionStrategy> {
+  readonly name: string;
+  readonly signature: T;
+  readonly strategy: U;
 }
 
 const operations = new Map<
@@ -37,32 +37,34 @@ const queue = [];
  *
  * const logOperation = defineOperation<(message: string) => void>("log","sequential");
  *
+ * @example
  * const fetchOperation = defineOperation<(url: string) => Promise<Response>>("fetch", "first");
  */
+// TODO Refine handler type depending on strategy: chained handlers extend U -> U, sequential handlers return void
 export function defineOperation<T extends (...args: any[]) => any>(
   name: string,
   strategy: "first",
-): OperationKey<T, "first">;
+): Operation<T, "first">;
 export function defineOperation<T extends (...args: any[]) => any>(
   name: string,
   strategy: "first-non-nullable",
-): OperationKey<T, "first-non-nullable">;
+): Operation<T, "first-non-nullable">;
 export function defineOperation<T extends (...args: any[]) => any>(
   name: string,
   strategy: "sequential",
-): OperationKey<T, "sequential">;
+): Operation<T, "sequential">;
 export function defineOperation<T extends (...args: any[]) => any>(
   name: string,
   strategy: "chained",
-): OperationKey<T, "chained">;
+): Operation<T, "chained">;
 export function defineOperation<T extends (...args: any[]) => any>(
   name: string,
   strategy: "standalone",
-): OperationKey<T, "standalone">;
+): Operation<T, "standalone">;
 export function defineOperation<T extends (...args: any[]) => any>(
   name: string,
   strategy: ExecutionStrategy,
-): OperationKey<T, ExecutionStrategy> {
+): Operation<T, ExecutionStrategy> {
   assert(!operations.has(name), `Operation "${name}" is already defined`);
 
   if (strategy === "standalone") {
@@ -77,16 +79,16 @@ export function defineOperation<T extends (...args: any[]) => any>(
   }
 
   return {
-    __name: name,
-    __type: null as unknown as T,
-    __strategy: strategy,
+    name: name,
+    signature: null as unknown as T,
+    strategy: strategy,
   };
 }
 
 /**
  * Adds a handler for a specific operation.
  *
- * @param {OperationKey} operationKey A reference the the operation being handled
+ * @param {Operation} operationKey A reference the the operation being handled
  * @param {T} handler The handler. It is typed according to the signature given by the
  * `defineOperation` type parameter
  *
@@ -101,11 +103,8 @@ export function defineOperation<T extends (...args: any[]) => any>(
 export const addHandler = <
   T extends (...args: any[]) => any,
   U extends ExecutionStrategy,
->(
-  operationKey: OperationKey<T, U>,
-  handler: T,
-): void => {
-  const operationName = operationKey.__name;
+>(operationKey: Operation<T, U>, handler: NoInfer<T>): void => {
+  const operationName = operationKey.name;
   const operation = operations.get(operationName);
   assertExists(operation, `Operation "${operationName}" is not defined`);
 
@@ -130,7 +129,7 @@ export const perform = <
   T extends (...args: any[]) => any,
   U extends ExecutionStrategy,
 >(
-  operationKey: OperationKey<T, U>,
+  operationKey: Operation<T, U>,
   ...args: Parameters<T>
 ): U extends "standalone" ? ReturnType<T>
   : U extends "first" ? ReturnType<T> | null
@@ -138,7 +137,7 @@ export const perform = <
   : U extends "sequential" ? void
   : U extends "chained" ? ReturnType<T>
   : never => {
-  const operationName = operationKey.__name;
+  const operationName = operationKey.name;
   const operation = operations.get(operationName);
 
   assertExists(operation, `Operation "${operationName}" is not defined`);
