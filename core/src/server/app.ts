@@ -9,7 +9,6 @@ import {
   routesFolder,
   staticFolder,
 } from "../constants.ts";
-import type { Builder } from "../generate/build.ts";
 import type { ImportMapController } from "../generate/impormap.ts";
 import type { ManifestController } from "../generate/manifest.ts";
 import type {
@@ -18,6 +17,7 @@ import type {
   MaybePromise,
   ResolvedConfig,
 } from "../types.d.ts";
+import { build } from "../generate/build.ts";
 import { Router } from "./router.ts";
 
 export type Context = {
@@ -127,13 +127,13 @@ class Hmr extends Map<string, HmrEvent> {
     }
 
     this.#app.manifestController.write();
-    const manifest = await this.#app.manifestController.reloadManifest();
+    const manifest = await this.#app.manifestController.load();
 
     if (!this.#app.importmapController.importmap) {
       await this.#app.importmapController.generate(manifest);
     }
 
-    await this.#app.builder.build(paths, { emptyBuildFolder: false });
+    await build(paths, { emptyBuildFolder: false });
 
     console.log("Hot-Reloading...");
     this.#app.ws.send("reload");
@@ -244,7 +244,6 @@ const defaults = {
 };
 
 export class App {
-  builder: Builder;
   config: ResolvedConfig;
   handle: Handle;
   manifestController: ManifestController;
@@ -261,14 +260,12 @@ export class App {
       handle: Handle;
       manifestController: ManifestController;
       importmapController: ImportMapController;
-      builder: Builder;
       fileCache: FileCache;
     },
   ) {
     const {
       config,
       handle,
-      builder,
       fileCache,
       manifestController,
       importmapController,
@@ -276,7 +273,6 @@ export class App {
 
     this.config = config;
     this.handle = handle;
-    this.builder = builder;
     this.fileCache = fileCache;
     this.manifestController = manifestController;
     this.importmapController = importmapController;

@@ -17,7 +17,6 @@ import { SCOPE } from "../plugins.ts";
 export const manifestPath = join(generatedFolder, "manifest.ts");
 
 export class ManifestController {
-  manifestImports: Set<string> = new Set<string>();
   manifest: ManifestBase = { imports: {} };
   fileCache: FileCache;
 
@@ -29,9 +28,9 @@ export class ManifestController {
   ];
 
   /**
-   * Reloads the `manifest` object in memory and clears the old `manifestImports` Set
+   * Loads the `manifest` object in memory and clears the old `manifestImports` Set
    */
-  reloadManifest: () => Promise<ManifestBase>;
+  load: () => Promise<ManifestBase>;
 
   constructor(
     plugins: Plugin[],
@@ -39,18 +38,7 @@ export class ManifestController {
     fileCache: FileCache,
   ) {
     this.#plugins = plugins;
-    this.reloadManifest = async () => {
-      this.manifest = await load();
-
-      this.manifestImports.clear();
-      this.manifestImports = new Set(
-        this.fileCache
-          .readTextFileSync(manifestPath)
-          .matchAll(/^import.*;$/gm)
-          .map((m) => m[0]),
-      );
-      return this.manifest;
-    };
+    this.load = load;
     this.fileCache = fileCache;
   }
 
@@ -78,8 +66,7 @@ export class ManifestController {
   write() {
     ensureDirSync(generatedFolder);
 
-    let file = [...this.manifestImports.keys()].join("\n");
-    file += "\n\nexport const manifest = ";
+    let file = "export const manifest = ";
     file += this.#stringifyObject(this.manifest);
 
     for (const plugin of this.#plugins) {
