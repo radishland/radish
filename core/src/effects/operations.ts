@@ -44,11 +44,9 @@ export const writeTextFileAsync: Operation<
  * Receives the user config with the CLI args of the currently running command
  */
 export const modifyConfig: Operation<
-  (
-    args: { config: Config; args: DenoArgs },
-  ) => { config: Config; args: DenoArgs },
-  "chained"
-> = defineOperation("modify-config", "chained");
+  (args: { config: Config; args: DenoArgs }) => void,
+  "sequential"
+> = defineOperation("modify-config", "sequential");
 
 /**
  * Reads the resolved config
