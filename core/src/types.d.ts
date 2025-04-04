@@ -15,8 +15,6 @@ interface SourceDescription {
   meta?: { [plugin: string]: any } | null;
 }
 
-export type BuildOptions = Record<string, any>;
-
 export type HmrEvent = {
   /**
    * Indicates whether the source of the event is a file
@@ -66,6 +64,7 @@ export interface Plugin {
    * The name of the plugin with a `radish-plugin-` prefix
    */
   name: string;
+  install: () => void;
   /**
    * Handles the side effects of the hot update before the incremental rebuild phase. This hook has access to information about the fs event emitted and the context, allowing to update the manifest, do IO etc.
    *
@@ -98,10 +97,6 @@ export interface Plugin {
 }
 
 export interface Config {
-  /**
-   * Options for the builder
-   */
-  build?: BuildOptions;
   importmap?: ImportMapOptions;
   /**
    * Array of plugins to use
