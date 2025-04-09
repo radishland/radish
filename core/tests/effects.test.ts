@@ -4,7 +4,7 @@ import {
   createHandlers,
   type EffectDefinition,
   type EffectHandlers,
-  runWithHandlers,
+  runWith,
 } from "../src/effects/effects.ts";
 import { assertLessOrEqual } from "@std/assert/less-or-equal";
 import { assertGreaterOrEqual } from "@std/assert/greater-or-equal";
@@ -80,33 +80,37 @@ async function exampleProgram() {
 
   await io.writeFile("output.txt", content);
 
-  await runWithHandlers(
+  await runWith(
     async () => {
       await Console.log(`${count}`);
     },
-    // Local override of the console effect
-    createHandlers(Console, {
-      log: (message) => logs.push(`[log]: ${message}`),
-    }),
+    {
+      // Local override of the console effect
+      handlers: createHandlers(Console, {
+        log: (message) => logs.push(`[log]: ${message}`),
+      }),
+    },
   );
 
   return { content, value, count };
 }
 
-const result = await runWithHandlers(
+const result = await runWith(
   exampleProgram,
   {
-    ...consoleHandlers,
-    ...ioHandlers,
-    ...randomHandlers,
-    ...counterHandlers,
+    handlers: {
+      ...consoleHandlers,
+      ...ioHandlers,
+      ...randomHandlers,
+      ...counterHandlers,
+    },
   },
 );
 
 Deno.test("effect system", () => {
   assertEquals(result.content, "Content of example.txt");
-  assertLessOrEqual(result.value, 1);
   assertGreaterOrEqual(result.value, 0);
+  assertLessOrEqual(result.value, 1);
   assertEquals(result.count, 6);
   assertEquals(logs, [
     "Reading from example.txt",
