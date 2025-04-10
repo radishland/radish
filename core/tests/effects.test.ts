@@ -1,15 +1,13 @@
 import { assertEquals } from "@std/assert/equals";
-import {
-  createEffect,
-  createHandlers,
-  type EffectDefinition,
-  type EffectHandlers,
-  runWith,
-} from "../src/effects/effects.ts";
-import { assertLessOrEqual } from "@std/assert/less-or-equal";
 import { assertGreaterOrEqual } from "@std/assert/greater-or-equal";
+import { assertLessOrEqual } from "@std/assert/less-or-equal";
+import { createEffect, handlerFor, runWith } from "../src/effects/mon.ts";
 
-interface FileSystemOps {
+/**
+ * Effect definitions
+ */
+
+interface IO {
   readFile: (path: string) => Promise<string>;
   writeFile: (path: string, data: string) => Promise<void>;
 }
@@ -28,52 +26,70 @@ interface StateOps<S> {
   update: (updater: (old: S) => S) => void;
 }
 
-const io = createEffect<FileSystemOps>("io");
-const Console = createEffect<ConsoleOps>("console");
-const random = createEffect<RandomOps>("random");
-
-const createState = <S>(initialState: S) => {
-  const stateEffect = createEffect<StateOps<S>>("state");
-  let state = initialState;
-
-  return [
-    stateEffect,
-    createHandlers(stateEffect, {
-      get: () => state,
-      set: (newState) => (state = newState),
-      update: (updater) => {
-        state = updater(state);
-      },
-    }),
-  ] as [EffectDefinition<StateOps<S>>, EffectHandlers];
+const io = {
+  readFile: createEffect<IO["readFile"]>("io/read"),
+  writeFile: createEffect<IO["writeFile"]>("io/write"),
 };
 
-const ioHandlers = createHandlers(io, {
-  readFile: async (path: string) => {
-    Console.log(`Reading from ${path}`);
+const Console = { log: createEffect<ConsoleOps["log"]>("console/log") };
+
+const random = createEffect<RandomOps["random"]>("random");
+
+const createState = <S>(initialState: S) => {
+  const get = createEffect<StateOps<S>["get"]>("state/get");
+  const set = createEffect<StateOps<S>["set"]>("state/set");
+  const update = createEffect<StateOps<S>["update"]>("state/update");
+
+  let state = initialState;
+
+  return {
+    get,
+    set,
+    update,
+    handlers: {
+      ...handlerFor(get, () => state),
+      ...handlerFor(set, (newState) => (state = newState)),
+      ...handlerFor(update, (updater) => {
+        state = updater(state);
+      }),
+    },
+  };
+};
+
+/**
+ * Handlers
+ */
+
+const ioHandlers = {
+  ...handlerFor(io.readFile, async (path: string) => {
+    await Console.log(`Reading from ${path}`);
     await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate I/O
     return `Content of ${path}`;
-  },
-  writeFile: async (path: string, content: string) => {
-    Console.log(`Writing to ${path}: ${content}`);
+  }),
+  ...handlerFor(io.writeFile, async (path: string, content: string) => {
+    await Console.log(`Writing to ${path}: ${content}`);
     await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate I/O
-  },
-});
+  }),
+};
 
 const logs: string[] = [];
-const consoleHandlers = createHandlers(Console, {
-  log: (message: string) => logs.push(message),
-});
 
-const randomHandlers = createHandlers(random, {
-  random: () => Math.random(),
-});
+const consoleHandlers = handlerFor(
+  Console.log,
+  (message: string) => logs.push(message),
+);
 
-const [counter, counterHandlers] = createState(0);
+const randomHandlers = handlerFor(random, () => Math.random());
+
+/**
+ * Program
+ */
+
+const counter = createState(0);
 
 async function exampleProgram() {
   const content = await io.readFile("example.txt");
-  const value = await random.random();
+  const value = await random();
   await counter.set(3);
   await counter.update((n) => 2 * n);
   const count = await counter.get();
@@ -86,9 +102,10 @@ async function exampleProgram() {
     },
     {
       // Local override of the console effect
-      handlers: createHandlers(Console, {
-        log: (message) => logs.push(`[log]: ${message}`),
-      }),
+      handlers: handlerFor(
+        Console.log,
+        (message) => logs.push(`[log]: ${message}`),
+      ),
     },
   );
 
@@ -102,10 +119,14 @@ const result = await runWith(
       ...consoleHandlers,
       ...ioHandlers,
       ...randomHandlers,
-      ...counterHandlers,
+      ...counter.handlers,
     },
   },
 );
+
+/**
+ * Tests
+ */
 
 Deno.test("effect system", () => {
   assertEquals(result.content, "Content of example.txt");

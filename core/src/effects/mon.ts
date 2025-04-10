@@ -1,6 +1,7 @@
 import { assertExists } from "@std/assert";
+import type { MaybePromise } from "../types.d.ts";
 
-type EffectHandler<P, R> = (payload: P) => Promise<R>;
+type EffectHandler<P extends any[], R> = (...payload: P) => MaybePromise<R>;
 type EffectHandlers = Record<string, EffectHandler<any, any>>;
 
 const effectScopes: EffectHandlerScope[] = [];
@@ -23,7 +24,7 @@ export class Effect<A> implements PromiseLike<A> {
       | null
       | undefined,
   ): PromiseLike<TResult1 | TResult2> {
-    return new Effect(() => this.perform().then(onfulfilled, onrejected));
+    return this.perform().then(onfulfilled, onrejected);
   }
 
   // Monadic operations
@@ -44,32 +45,39 @@ export class Effect<A> implements PromiseLike<A> {
 }
 
 // Effect creator
-export function createEffect<P, R>(type: string) {
-  return (payload: P): Effect<R> => {
-    return new Effect((): Promise<R> => {
-      const currentScope = effectScopes.at(-1);
-      assertExists(
-        currentScope,
-        `Effect "${type}" should run inside a handler scope. Use runWith`,
-      );
-      return currentScope.handle(type, payload);
-    });
+export function createEffect<Op extends (...payload: any[]) => any>(
+  type: string,
+): (...payload: Parameters<Op>) => Effect<ReturnType<Op>> {
+  const effectRunner = (...payload: Parameters<Op>): Effect<ReturnType<Op>> => {
+    return new Effect(() => perform(type, ...payload));
   };
+
+  effectRunner[Symbol.toStringTag] = type;
+  return effectRunner;
 }
 
-interface IO {
-  readFile: (path: string) => Promise<string>;
-  writeFile: (path: string, data: string) => Promise<void>;
-}
-
-const io = {
-  readFile: createEffect<string, string>("readFile"),
+const perform = async <P extends any[], R>(
+  type: string,
+  ...payload: P
+): Promise<R> => {
+  const currentScope = effectScopes.at(-1);
+  assertExists(
+    currentScope,
+    `Effect "${type}" should run inside a handler scope. Use runWith`,
+  );
+  return await currentScope.handle<P, R>(type, ...payload);
 };
 
-io.readFile("path");
-
-const readFile = createEffect<string, string>("file/read");
-const content = await readFile("path/to/file");
+export const handlerFor = <P extends any[], R>(
+  effectRunner: (...payload: P) => Effect<R>,
+  handler: NoInfer<(...payload: P) => R>,
+): { [type: string]: EffectHandler<P, R> } => {
+  const type: string = Object.getOwnPropertyDescriptor(
+    effectRunner,
+    Symbol.toStringTag,
+  )?.value;
+  return { [type]: handler };
+};
 
 /**
  * Handlers are dependent on scope, yielding a stratified structure
@@ -85,18 +93,19 @@ class EffectHandlerScope {
     this.#parent = parent;
   }
 
-  register<P, R>(type: string, handler: EffectHandler<P, R>) {
+  register<P extends [], R>(type: string, handler: EffectHandler<P, R>) {
     this.#handlers.set(type, handler);
   }
 
-  handle<P, R>(type: string, payload: P): Promise<R> {
+  async handle<P extends any[], R>(type: string, ...payload: P): Promise<R> {
     if (this.#handlers.has(type)) {
       const handler = this.#handlers.get(type)!;
-      return handler(payload);
+      // @ts-ignore Promise.try is not yet typed in VSCode
+      return await Promise.try(handler, ...payload);
     }
 
     if (this.#parent) {
-      return this.#parent.handle(type, payload);
+      return this.#parent.handle(type, ...payload);
     }
 
     throw new Error(`Unhandled effect "${type}"`);
