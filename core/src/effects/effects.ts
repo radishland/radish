@@ -48,7 +48,6 @@ export const runWith = async <T>(
   fn: () => MaybePromise<T>,
   options?: {
     handlers?: Record<string, Function>;
-    middlewares?: Record<string, EffectMiddleware[]>;
   },
 ): Promise<T> => {
   const currentScope = effectScopes.at(-1);
@@ -57,14 +56,6 @@ export const runWith = async <T>(
 
   for (const [type, handler] of Object.entries(options?.handlers ?? {})) {
     scope.register(type, handler);
-  }
-
-  for (
-    const [type, middlewares] of Object.entries(options?.middlewares ?? {})
-  ) {
-    for (const middleware of middlewares) {
-      scope.use(type, middleware);
-    }
   }
 
   try {
@@ -110,29 +101,13 @@ class EffectPromise<Result> {
 class EffectHandlerScope {
   #parent: EffectHandlerScope | undefined;
   #handlers = new Map<string, Function>();
-  #middlewares = new Map<string, EffectMiddleware[]>();
 
   constructor(parent?: EffectHandlerScope) {
     this.#parent = parent;
   }
 
   register(type: string, handler: Function) {
-    assert(
-      !this.#middlewares.has(type),
-      `Effect "${type}" can't have both a handler and a middleware`,
-    );
     this.#handlers.set(type, handler);
-  }
-
-  use(type: string, middleware: EffectMiddleware) {
-    assert(
-      !this.#handlers.has(type),
-      `Effect "${type}" can't have both a handler and a middleware`,
-    );
-
-    const middlewares = this.#middlewares.get(type) ?? [];
-    middlewares.push(middleware);
-    this.#middlewares.set(type, middlewares);
   }
 
   handle<Result>(effect: EffectPromise<Result>): boolean {
@@ -145,26 +120,6 @@ class EffectHandlerScope {
         .catch((reason?: any) => effect.reject(reason));
 
       return true;
-    }
-
-    if (this.#middlewares.has(effect.type)) {
-      const middlewares = this.#middlewares.get(effect.type)!;
-
-      const runMiddleware = (index: number): boolean => {
-        if (index >= middlewares.length) {
-          return this.handle(effect);
-        }
-
-        const middleware = middlewares[index];
-        assert(
-          middleware,
-          `Missing middleware for effect "${effect.type}" at index ${index}`,
-        );
-
-        return middleware(effect, () => runMiddleware(index + 1));
-      };
-
-      runMiddleware(0);
     }
 
     if (this.#parent) {
