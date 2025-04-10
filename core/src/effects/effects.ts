@@ -1,48 +1,121 @@
-import { assert } from "@std/assert";
+import { assertExists } from "@std/assert";
 import type { MaybePromise } from "../types.d.ts";
 
-const effectNameSymbol = Symbol.for("effect-name");
+type EffectHandler<P extends any[], R> = (...payload: P) => MaybePromise<R>;
+type EffectHandlers = Record<string, EffectHandler<any, any>>;
+
 const effectScopes: EffectHandlerScope[] = [];
-const effects = new Set();
 
-export type EffectHandlers = Record<string, any>;
+// Effect monad
+export class Effect<A> implements PromiseLike<A> {
+  perform: () => Promise<A>;
 
-export type EffectDefinition<T> = {
-  [K in keyof T]: T[K] extends (...args: infer Params) => infer Return
-    ? (...args: Params) => Promise<Return>
-    : never;
-};
-
-export const createEffect = <Ops>(name: string): EffectDefinition<Ops> => {
-  assert(!effects.has("name"), `An effect named "${name}" is already defined`);
-
-  return new Proxy({}, {
-    get(_, prop: string | typeof effectNameSymbol) {
-      if (prop === effectNameSymbol) return name;
-      return (...payload: unknown[]) => perform(`${name}/${prop}`, ...payload);
-    },
-  }) as EffectDefinition<Ops>;
-};
-
-export const createHandlers = <Ops extends {}>(
-  effect: EffectDefinition<Ops>,
-  handlers: NoInfer<Ops>,
-): EffectHandlers => {
-  // @ts-ignore the effect proxy knows its name
-  const effectName = effect[effectNameSymbol] as string;
-  const target: Record<string, any> = {};
-
-  for (const [operation, handler] of Object.entries(handlers)) {
-    target[`${effectName}/${operation}`] = handler;
+  constructor(perform: () => Promise<A>) {
+    this.perform = perform;
   }
 
-  return target;
+  then<TResult1 = A, TResult2 = never>(
+    onfulfilled?:
+      | ((value: A) => TResult1 | PromiseLike<TResult1>)
+      | null
+      | undefined,
+    onrejected?:
+      | ((reason: any) => TResult2 | PromiseLike<TResult2>)
+      | null
+      | undefined,
+  ): PromiseLike<TResult1 | TResult2> {
+    return this.perform().then(onfulfilled, onrejected);
+  }
+
+  // Monadic operations
+  /**
+   * Pure/of
+   */
+  static resolve<A>(a: A): Effect<A> {
+    return new Effect(() => Promise.resolve(a));
+  }
+
+  bind<B>(f: (a: A) => Effect<B>): Effect<B> {
+    return new Effect(() => this.perform().then((a) => f(a).perform()));
+  }
+
+  map<B>(f: (a: A) => B): Effect<B> {
+    return this.bind((a) => Effect.resolve(f(a)));
+  }
+}
+
+// Effect creator
+export function createEffect<Op extends (...payload: any[]) => any>(
+  type: string,
+): (...payload: Parameters<Op>) => Effect<ReturnType<Op>> {
+  const effectRunner = (...payload: Parameters<Op>): Effect<ReturnType<Op>> => {
+    return new Effect(() => perform(type, ...payload));
+  };
+
+  effectRunner[Symbol.toStringTag] = type;
+  return effectRunner;
+}
+
+const perform = async <P extends any[], R>(
+  type: string,
+  ...payload: P
+): Promise<R> => {
+  const currentScope = effectScopes.at(-1);
+  assertExists(
+    currentScope,
+    `Effect "${type}" should run inside a handler scope. Use runWith`,
+  );
+  return await currentScope.handle<P, R>(type, ...payload);
 };
 
+export const handlerFor = <P extends any[], R>(
+  effectRunner: (...payload: P) => Effect<R>,
+  handler: NoInfer<(...payload: P) => R>,
+): { [type: string]: EffectHandler<P, R> } => {
+  const type: string = Object.getOwnPropertyDescriptor(
+    effectRunner,
+    Symbol.toStringTag,
+  )?.value;
+  return { [type]: handler };
+};
+
+/**
+ * Handlers are dependent on scope, yielding a stratified structure
+ *
+ * Note: more precisely, handlers override each other from scope to scope giving a pre-sheaf
+ * over the scopes pre-order category. More succinctly, we've got a fibration over scopes
+ */
+class EffectHandlerScope {
+  #parent: EffectHandlerScope | undefined;
+  #handlers = new Map<string, EffectHandler<any, any>>();
+
+  constructor(parent?: EffectHandlerScope) {
+    this.#parent = parent;
+  }
+
+  register<P extends [], R>(type: string, handler: EffectHandler<P, R>) {
+    this.#handlers.set(type, handler);
+  }
+
+  async handle<P extends any[], R>(type: string, ...payload: P): Promise<R> {
+    if (this.#handlers.has(type)) {
+      const handler = this.#handlers.get(type)!;
+      // @ts-ignore Promise.try is not yet typed in VSCode
+      return await Promise.try(handler, ...payload);
+    }
+
+    if (this.#parent) {
+      return this.#parent.handle(type, ...payload);
+    }
+
+    throw new Error(`Unhandled effect "${type}"`);
+  }
+}
+
 export const runWith = async <T>(
-  fn: () => MaybePromise<T>,
+  fn: () => Promise<T>,
   options?: {
-    handlers?: Record<string, Function>;
+    handlers?: EffectHandlers;
   },
 ): Promise<T> => {
   const currentScope = effectScopes.at(-1);
@@ -59,68 +132,3 @@ export const runWith = async <T>(
     effectScopes.pop();
   }
 };
-
-const perform = <Result>(
-  type: string,
-  ...payload: unknown[]
-): Promise<Result> => {
-  const currentScope = effectScopes.at(-1);
-  const effect = new EffectPromise<Result>(type, payload);
-
-  assert(currentScope?.handle(effect), `Unhandled effect "${type}"`);
-
-  return effect.promise;
-};
-
-class EffectPromise<Result> {
-  readonly type: string;
-  readonly payload: unknown[];
-
-  constructor(type: string, payload: unknown[]) {
-    this.type = type;
-    this.payload = payload;
-
-    const { resolve, reject, promise } = Promise.withResolvers<Result>();
-
-    this.promise = promise;
-    this.resolve = resolve;
-    this.reject = reject;
-  }
-
-  promise: Promise<Result>;
-  resolve: (value: Result) => void;
-  reject: (reason?: any) => void;
-}
-
-// Handler-registry
-class EffectHandlerScope {
-  #parent: EffectHandlerScope | undefined;
-  #handlers = new Map<string, Function>();
-
-  constructor(parent?: EffectHandlerScope) {
-    this.#parent = parent;
-  }
-
-  register(type: string, handler: Function) {
-    this.#handlers.set(type, handler);
-  }
-
-  handle<Result>(effect: EffectPromise<Result>): boolean {
-    if (this.#handlers.has(effect.type)) {
-      const handler = this.#handlers.get(effect.type)!;
-
-      // @ts-ignore Promise.try is not typed in VSCode
-      Promise.try(handler, ...effect.payload)
-        .then((result: Result) => effect.resolve(result))
-        .catch((reason?: any) => effect.reject(reason));
-
-      return true;
-    }
-
-    if (this.#parent) {
-      return this.#parent.handle(effect);
-    }
-
-    return false;
-  }
-}
