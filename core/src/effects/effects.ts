@@ -7,11 +7,6 @@ const effects = new Set();
 
 export type EffectHandlers = Record<string, any>;
 
-type EffectMiddleware = <Result>(
-  effect: EffectPromise<Result>,
-  next: () => boolean,
-) => boolean;
-
 export type EffectDefinition<T> = {
   [K in keyof T]: T[K] extends (...args: infer Params) => infer Return
     ? (...args: Params) => Promise<Return>
