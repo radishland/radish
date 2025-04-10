@@ -114,7 +114,7 @@ class EffectHandlerScope {
 
 export const runWith = async <T>(
   fn: () => Promise<T>,
-  options?: {
+  options: {
     handlers?: EffectHandlers;
   },
 ): Promise<T> => {
