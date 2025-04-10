@@ -56,7 +56,7 @@ export function createEffect<Op extends (...payload: any[]) => any>(
   return effectRunner;
 }
 
-const perform = async <P extends any[], R>(
+const perform = <P extends any[], R>(
   type: string,
   ...payload: P
 ): Promise<R> => {
@@ -65,7 +65,7 @@ const perform = async <P extends any[], R>(
     currentScope,
     `Effect "${type}" should run inside a handler scope. Use runWith`,
   );
-  return await currentScope.handle<P, R>(type, ...payload);
+  return currentScope.handle<P, R>(type, ...payload);
 };
 
 export const handlerFor = <P extends any[], R>(
@@ -97,11 +97,11 @@ class EffectHandlerScope {
     this.#handlers.set(type, handler);
   }
 
-  async handle<P extends any[], R>(type: string, ...payload: P): Promise<R> {
+  handle<P extends any[], R>(type: string, ...payload: P): Promise<R> {
     if (this.#handlers.has(type)) {
       const handler = this.#handlers.get(type)!;
       // @ts-ignore Promise.try is not yet typed in VSCode
-      return await Promise.try(handler, ...payload);
+      return Promise.try(handler, ...payload);
     }
 
     if (this.#parent) {
