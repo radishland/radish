@@ -1,4 +1,5 @@
 import { assertEquals } from "@std/assert/equals";
+import { Option } from "../src/monads.ts";
 import { assertGreaterOrEqual } from "@std/assert/greater-or-equal";
 import { assertLessOrEqual } from "@std/assert/less-or-equal";
 import { createEffect, handlerFor, runWith } from "../src/effects/effects.ts";
@@ -8,8 +9,8 @@ import { createEffect, handlerFor, runWith } from "../src/effects/effects.ts";
  */
 
 interface IO {
-  readFile: (path: string) => Promise<string>;
-  writeFile: (path: string, data: string) => Promise<void>;
+  readFile: (path: string) => string;
+  writeFile: (path: string, data: string) => void;
 }
 
 interface ConsoleOps {
@@ -46,13 +47,15 @@ const createState = <S>(initialState: S) => {
     get,
     set,
     update,
-    handlers: {
-      ...handlerFor(get, () => state),
-      ...handlerFor(set, (newState) => (state = newState)),
-      ...handlerFor(update, (updater) => {
+    handlers: [
+      handlerFor(get, () => state),
+      handlerFor(set, (newState) => {
+        state = newState;
+      }),
+      handlerFor(update, (updater) => {
         state = updater(state);
       }),
-    },
+    ],
   };
 };
 
@@ -60,26 +63,39 @@ const createState = <S>(initialState: S) => {
  * Handlers
  */
 
-const ioHandlers = {
-  ...handlerFor(io.readFile, async (path: string) => {
-    await Console.log(`Reading from ${path}`);
-    await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate I/O
-    return `Content of ${path}`;
+const ioHandlers = [
+  handlerFor(io.readFile, async (path: string) => {
+    if (path.endsWith(".txt")) {
+      await Console.log(`TXT reader on ${path}`);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return Option.some(`Content of ${path}`);
+    }
+    return Option.none();
   }),
-  ...handlerFor(io.writeFile, async (path: string, content: string) => {
+  handlerFor(io.readFile, async (path: string) => {
+    if (path.endsWith(".css")) {
+      await Console.log(`CSS reader on ${path}`);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return Option.some(`Content of ${path}`);
+    }
+    return Option.none();
+  }),
+  handlerFor(io.writeFile, async (path: string, content: string) => {
     await Console.log(`Writing to ${path}: ${content}`);
     await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate I/O
   }),
-};
+];
 
 const logs: string[] = [];
 
-const consoleHandlers = handlerFor(
+const consoleHandler = handlerFor(
   Console.log,
-  (message: string) => logs.push(message),
+  (message: string) => {
+    logs.push(message);
+  },
 );
 
-const randomHandlers = handlerFor(random, () => Math.random());
+const randomHandler = handlerFor(random, () => Math.random());
 
 /**
  * Program
@@ -88,13 +104,15 @@ const randomHandlers = handlerFor(random, () => Math.random());
 const counter = createState(0);
 
 async function exampleProgram() {
-  const content = await io.readFile("example.txt");
+  const txt = await io.readFile("example.txt");
   const value = await random();
   await counter.set(3);
   await counter.update((n) => 2 * n);
   const count = await counter.get();
 
-  await io.writeFile("output.txt", content);
+  await io.writeFile("output.txt", txt);
+
+  await io.readFile("example.css");
 
   await runWith(
     async () => {
@@ -102,25 +120,26 @@ async function exampleProgram() {
     },
     {
       // Local override of the console effect
-      handlers: handlerFor(
-        Console.log,
-        (message) => logs.push(`[log]: ${message}`),
-      ),
+      handlers: [
+        handlerFor(Console.log, (message) => {
+          logs.push(`[log]: ${message}`);
+        }),
+      ],
     },
   );
 
-  return { content, value, count };
+  return { content: txt, value, count };
 }
 
 const result = await runWith(
   exampleProgram,
   {
-    handlers: {
-      ...consoleHandlers,
+    handlers: [
+      consoleHandler,
+      randomHandler,
       ...ioHandlers,
-      ...randomHandlers,
       ...counter.handlers,
-    },
+    ],
   },
 );
 
@@ -134,8 +153,9 @@ Deno.test("effect system", () => {
   assertLessOrEqual(result.value, 1);
   assertEquals(result.count, 6);
   assertEquals(logs, [
-    "Reading from example.txt",
+    "TXT reader on example.txt",
     "Writing to output.txt: Content of example.txt",
+    "CSS reader on example.css",
     "[log]: 6",
   ]);
 });

@@ -1,8 +1,11 @@
 import { assertExists } from "@std/assert";
 import type { MaybePromise } from "../types.d.ts";
+import { Option } from "../monads.ts";
 
-type EffectHandler<P extends any[], R> = (...payload: P) => MaybePromise<R>;
-type EffectHandlers = Record<string, EffectHandler<any, any>>;
+type EffectHandler<P extends any[], R> = (
+  ...payload: P
+) => MaybePromise<R | Option<R>>;
+type EffectHandlers = ReturnType<typeof handlerFor>[];
 
 const effectScopes: EffectHandlerScope[] = [];
 
@@ -70,13 +73,16 @@ const perform = <P extends any[], R>(
 
 export const handlerFor = <P extends any[], R>(
   effectRunner: (...payload: P) => Effect<R>,
-  handler: NoInfer<(...payload: P) => R>,
-): { [type: string]: EffectHandler<P, R> } => {
+  handler: NoInfer<EffectHandler<P, R>>,
+): {
+  type: string;
+  handler: EffectHandler<P, R>;
+} => {
   const type: string = Object.getOwnPropertyDescriptor(
     effectRunner,
     Symbol.toStringTag,
   )?.value;
-  return { [type]: handler };
+  return { type, handler };
 };
 
 /**
@@ -87,21 +93,39 @@ export const handlerFor = <P extends any[], R>(
  */
 class EffectHandlerScope {
   #parent: EffectHandlerScope | undefined;
-  #handlers = new Map<string, EffectHandler<any, any>>();
+  #handlers = new Map<string, EffectHandler<any, any>[]>();
 
   constructor(parent?: EffectHandlerScope) {
     this.#parent = parent;
   }
 
-  register<P extends [], R>(type: string, handler: EffectHandler<P, R>) {
-    this.#handlers.set(type, handler);
+  register(handlers: EffectHandlers) {
+    const handlersByType = Object.groupBy(handlers, ({ type }) => type);
+
+    const handlersEntries = Object.entries(handlersByType)
+      .filter(([_k, v]) => v !== undefined)
+      .map(([key, handlers]): [string, EffectHandler<any, unknown>[]] => {
+        return [key, handlers!.map(({ handler }) => handler)];
+      });
+
+    this.#handlers = new Map(handlersEntries);
   }
 
-  handle<P extends any[], R>(type: string, ...payload: P): Promise<R> {
+  async handle<P extends any[], R>(type: string, ...payload: P): Promise<R> {
     if (this.#handlers.has(type)) {
-      const handler = this.#handlers.get(type)!;
-      // @ts-ignore Promise.try is not yet typed in VSCode
-      return Promise.try(handler, ...payload);
+      const handlers: EffectHandler<P, R>[] = this.#handlers.get(
+        type,
+      )!;
+
+      for (const handler of handlers) {
+        // @ts-ignore Promise.try is not yet typed in VSCode
+        const result: R | Option<R> = await Promise.try(handler, ...payload);
+        if (result instanceof Option) {
+          if (result.isSome()) return result.value;
+          else continue;
+        }
+        return result;
+      }
     }
 
     if (this.#parent) {
@@ -121,10 +145,7 @@ export const runWith = async <T>(
   const currentScope = effectScopes.at(-1);
   const scope = new EffectHandlerScope(currentScope);
   effectScopes.push(scope);
-
-  for (const [type, handler] of Object.entries(options?.handlers ?? {})) {
-    scope.register(type, handler);
-  }
+  scope.register(options.handlers ?? []);
 
   try {
     return await fn();
