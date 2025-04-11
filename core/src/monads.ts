@@ -1,4 +1,4 @@
-abstract class Option<T> {
+export abstract class Option<T> {
   abstract map<U>(fn: (value: T) => U): Option<U>;
   abstract flatMap<U>(fn: (value: T) => Option<U>): Option<U>;
 
@@ -13,11 +13,11 @@ abstract class Option<T> {
     onSome: (value: T) => R,
   ): R;
 
-  static some<T>(value: T) {
+  static some<T>(value: T): Option<T> {
     return new Some(value);
   }
 
-  static none() {
+  static none<T>(): Option<T> {
     return new None();
   }
 }
