@@ -5,7 +5,13 @@ import { Option } from "../monads.ts";
 type EffectHandler<P extends any[], R> = (
   ...payload: P
 ) => MaybePromise<R | Option<R>>;
-type EffectHandlers = ReturnType<typeof handlerFor>[];
+
+type HandlerWithType<P extends any[], R> = {
+  type: string;
+  handler: EffectHandler<P, R>;
+};
+
+type EffectHandlers = HandlerWithType<any, any>[];
 
 const effectScopes: EffectHandlerScope[] = [];
 
@@ -74,10 +80,7 @@ const perform = <P extends any[], R>(
 export const handlerFor = <P extends any[], R>(
   effectRunner: (...payload: P) => Effect<R>,
   handler: NoInfer<EffectHandler<P, R>>,
-): {
-  type: string;
-  handler: EffectHandler<P, R>;
-} => {
+): HandlerWithType<P, R> => {
   const type: string = Object.getOwnPropertyDescriptor(
     effectRunner,
     Symbol.toStringTag,
