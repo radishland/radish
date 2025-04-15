@@ -105,6 +105,12 @@ const transformers = [
     }
     return Option.none();
   }),
+  transformerFor(io.transformFile, ({ path, data }) => {
+    if (path.endsWith(".txt")) {
+      return Option.some({ path, data: data + "..." });
+    }
+    return Option.none();
+  }),
   transformerFor(io.transformFile, async ({ path, data }) => {
     if (path.endsWith(".css")) {
       await Console.log(`transforming file ${path}`);
@@ -186,7 +192,7 @@ const result = await runWith(
  */
 
 Deno.test("effect system", () => {
-  assertEquals(result.content, "CONTENT OF EXAMPLE.TXT");
+  assertEquals(result.content, "CONTENT OF EXAMPLE.TXT...");
   assertGreaterOrEqual(result.value, 0);
   assertLessOrEqual(result.value, 1);
   assertEquals(result.count, 6);
