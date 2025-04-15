@@ -1,3 +1,5 @@
+export const id = <T>(value: T) => value;
+
 export abstract class Option<T> {
   abstract map<U>(fn: (value: T) => U): Option<U>;
   abstract flatMap<U>(fn: (value: T) => Option<U>): Option<U>;
