@@ -1,5 +1,5 @@
-import * as JSONC from "@std/jsonc";
 import { existsSync } from "@std/fs/exists";
+import * as JSONC from "@std/jsonc";
 
 /**
  * returns the JSON-parsed deno config and throws if it can't find it
