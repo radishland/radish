@@ -6,16 +6,23 @@ type EffectHandler<P extends any[], R> = (
   ...payload: P
 ) => MaybePromise<R | Option<R>>;
 
+type EffectTransformer<P> = (payload: P) => MaybePromise<P | Option<P>>;
+
 type HandlerWithType<P extends any[], R> = {
   type: string;
   handler: EffectHandler<P, R>;
 };
 
+type TransformerWithType<P> = {
+  type: string;
+  transformer: EffectTransformer<P>;
+};
+
 type EffectHandlers = HandlerWithType<any, any>[];
+type EffectTransformers = TransformerWithType<any>[];
 
 const effectScopes: EffectHandlerScope[] = [];
 
-// Effect monad
 export class Effect<A> implements PromiseLike<A> {
   perform: () => Promise<A>;
 
@@ -36,10 +43,6 @@ export class Effect<A> implements PromiseLike<A> {
     return this.perform().then(onfulfilled, onrejected);
   }
 
-  // Monadic operations
-  /**
-   * Pure/of
-   */
   static resolve<A>(a: A): Effect<A> {
     return new Effect(() => Promise.resolve(a));
   }
@@ -53,12 +56,25 @@ export class Effect<A> implements PromiseLike<A> {
   }
 }
 
+class TransformEffect<A> extends Effect<A> {}
+
 // Effect creator
 export function createEffect<Op extends (...payload: any[]) => any>(
   type: string,
 ): (...payload: Parameters<Op>) => Effect<ReturnType<Op>> {
   const effectRunner = (...payload: Parameters<Op>): Effect<ReturnType<Op>> => {
     return new Effect(() => perform(type, ...payload));
+  };
+
+  effectRunner[Symbol.toStringTag] = type;
+  return effectRunner;
+}
+
+export function createTransformEffect<Op extends (payload: any) => any>(
+  type: string,
+): (payload: Parameters<Op>[0]) => TransformEffect<Parameters<Op>[0]> {
+  const effectRunner = (payload: Parameters<Op>) => {
+    return new TransformEffect(() => transform(type, payload));
   };
 
   effectRunner[Symbol.toStringTag] = type;
@@ -77,6 +93,15 @@ const perform = <P extends any[], R>(
   return currentScope.handle<P, R>(type, ...payload);
 };
 
+const transform = <P>(type: string, payload: P): Promise<P> => {
+  const currentScope = effectScopes.at(-1);
+  assertExists(
+    currentScope,
+    `Transform "${type}" should run inside a handler scope. Use runWith`,
+  );
+  return currentScope.transform<P>(type, payload);
+};
+
 export const handlerFor = <P extends any[], R>(
   effectRunner: (...payload: P) => Effect<R>,
   handler: NoInfer<EffectHandler<P, R>>,
@@ -88,6 +113,17 @@ export const handlerFor = <P extends any[], R>(
   return { type, handler };
 };
 
+export const transformerFor = <P>(
+  effectRunner: (payload: P) => Effect<P>,
+  transformer: NoInfer<EffectTransformer<P>>,
+): TransformerWithType<P> => {
+  const type: string = Object.getOwnPropertyDescriptor(
+    effectRunner,
+    Symbol.toStringTag,
+  )?.value;
+  return { type, transformer };
+};
+
 /**
  * Handlers are dependent on scope, yielding a stratified structure
  *
@@ -97,12 +133,15 @@ export const handlerFor = <P extends any[], R>(
 class EffectHandlerScope {
   #parent: EffectHandlerScope | undefined;
   #handlers = new Map<string, EffectHandler<any, any>[]>();
+  #transformers = new Map<string, EffectTransformer<any>[]>();
 
   constructor(parent?: EffectHandlerScope) {
     this.#parent = parent;
   }
 
-  register(handlers: EffectHandlers) {
+  addHandlers(handlers: EffectHandlers = []) {
+    if (handlers.length === 0) return;
+
     const handlersByType = Object.groupBy(handlers, ({ type }) => type);
 
     const handlersEntries = Object.entries(handlersByType)
@@ -112,6 +151,20 @@ class EffectHandlerScope {
       });
 
     this.#handlers = new Map(handlersEntries);
+  }
+
+  addTransformers(transformers: EffectTransformers = []) {
+    if (transformers.length === 0) return;
+
+    const transformersByType = Object.groupBy(transformers, ({ type }) => type);
+
+    const transformersEntries = Object.entries(transformersByType)
+      .filter(([_k, v]) => v !== undefined)
+      .map(([key, transformers]): [string, EffectTransformer<unknown>[]] => {
+        return [key, transformers!.map(({ transformer }) => transformer)];
+      });
+
+    this.#transformers = new Map(transformersEntries);
   }
 
   async handle<P extends any[], R>(type: string, ...payload: P): Promise<R> {
@@ -137,18 +190,49 @@ class EffectHandlerScope {
 
     throw new Error(`Unhandled effect "${type}"`);
   }
+
+  transform<P>(type: string, payload: P): Promise<P> {
+    if (this.#transformers.has(type)) {
+      const transformers: EffectTransformer<P>[] = this.#transformers.get(
+        type,
+      )!;
+
+      return transformers.reduce(
+        async (transformed: Promise<P>, transformer) => {
+          const payload = await transformed;
+          // @ts-ignore Promise.try is not yet typed in VSCode
+          const result: P | Option<P> = await Promise.try(transformer, payload);
+          if (result instanceof Option) {
+            if (result.isSome()) return result.value;
+            return transformed;
+          }
+          return result;
+        },
+        Promise.resolve(payload),
+      );
+    }
+
+    if (this.#parent) {
+      return this.#parent.transform(type, payload);
+    }
+
+    throw new Error(`Unhandled transform "${type}"`);
+  }
 }
 
 export const runWith = async <T>(
   fn: () => Promise<T>,
   options: {
     handlers?: EffectHandlers;
+    transformers?: EffectTransformers;
   },
 ): Promise<T> => {
   const currentScope = effectScopes.at(-1);
   const scope = new EffectHandlerScope(currentScope);
   effectScopes.push(scope);
-  scope.register(options.handlers ?? []);
+
+  scope.addHandlers(options.handlers);
+  scope.addTransformers(options.transformers);
 
   try {
     return await fn();

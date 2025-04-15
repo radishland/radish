@@ -2,7 +2,13 @@ import { assertEquals } from "@std/assert/equals";
 import { Option } from "../src/monads.ts";
 import { assertGreaterOrEqual } from "@std/assert/greater-or-equal";
 import { assertLessOrEqual } from "@std/assert/less-or-equal";
-import { createEffect, handlerFor, runWith } from "../src/effects/effects.ts";
+import {
+  createEffect,
+  createTransformEffect,
+  handlerFor,
+  runWith,
+  transformerFor,
+} from "../src/effects/effects.ts";
 
 /**
  * Effect definitions
@@ -11,6 +17,9 @@ import { createEffect, handlerFor, runWith } from "../src/effects/effects.ts";
 interface IO {
   readFile: (path: string) => string;
   writeFile: (path: string, data: string) => void;
+  transformFile: (
+    options: { path: string; data: string },
+  ) => { path: string; data: string };
 }
 
 interface ConsoleOps {
@@ -30,6 +39,9 @@ interface StateOps<S> {
 const io = {
   readFile: createEffect<IO["readFile"]>("io/read"),
   writeFile: createEffect<IO["writeFile"]>("io/write"),
+  transformFile: createTransformEffect<
+    (options: { path: string; data: string }) => { path: string; data: string }
+  >("io/transform"),
 };
 
 const Console = { log: createEffect<ConsoleOps["log"]>("console/log") };
@@ -86,6 +98,22 @@ const ioHandlers = [
   }),
 ];
 
+const transformers = [
+  transformerFor(io.transformFile, ({ path, data }) => {
+    if (path.endsWith(".txt")) {
+      return Option.some({ path, data: data.toUpperCase() });
+    }
+    return Option.none();
+  }),
+  transformerFor(io.transformFile, async ({ path, data }) => {
+    if (path.endsWith(".css")) {
+      await Console.log(`transforming file ${path}`);
+      return Option.some({ path, data: data.toLowerCase() });
+    }
+    return Option.none();
+  }),
+];
+
 const logs: string[] = [];
 
 const consoleHandler = handlerFor(
@@ -104,15 +132,24 @@ const randomHandler = handlerFor(random, () => Math.random());
 const counter = createState(0);
 
 async function exampleProgram() {
-  const txt = await io.readFile("example.txt");
+  const path = "example.txt";
+  const content = await io.readFile(path);
+  const { data: transformed } = await io.transformFile({ path, data: content });
+
   const value = await random();
   await counter.set(3);
   await counter.update((n) => 2 * n);
   const count = await counter.get();
 
-  await io.writeFile("output.txt", txt);
+  await io.writeFile("output.txt", content);
 
-  await io.readFile("example.css");
+  const cssPath = "example.css";
+  const css = await io.readFile(cssPath);
+  const { data: transformedCSS } = await io.transformFile({
+    path: cssPath,
+    data: css,
+  });
+  await Console.log(transformedCSS);
 
   await runWith(
     async () => {
@@ -128,7 +165,7 @@ async function exampleProgram() {
     },
   );
 
-  return { content: txt, value, count };
+  return { content: transformed, value, count };
 }
 
 const result = await runWith(
@@ -140,6 +177,7 @@ const result = await runWith(
       ...ioHandlers,
       ...counter.handlers,
     ],
+    transformers,
   },
 );
 
@@ -148,7 +186,7 @@ const result = await runWith(
  */
 
 Deno.test("effect system", () => {
-  assertEquals(result.content, "Content of example.txt");
+  assertEquals(result.content, "CONTENT OF EXAMPLE.TXT");
   assertGreaterOrEqual(result.value, 0);
   assertLessOrEqual(result.value, 1);
   assertEquals(result.count, 6);
@@ -156,6 +194,8 @@ Deno.test("effect system", () => {
     "TXT reader on example.txt",
     "Writing to output.txt: Content of example.txt",
     "CSS reader on example.css",
+    "transforming file example.css",
+    "content of example.css",
     "[log]: 6",
   ]);
 });
