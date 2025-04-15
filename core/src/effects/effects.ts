@@ -71,6 +71,13 @@ export function createEffect<Op extends (...payload: any[]) => any>(
   return effectRunner;
 }
 
+/**
+ * Creates a transform effect.
+ *
+ * Since transformers (handlers of transform effects) are sequenced, make sure
+ * they are endomorphisms: their signature is like T -> T with inputs and outputs
+ * of the same type
+ */
 export function createTransformEffect<Op extends (payload: any) => any>(
   type: string,
 ): Equals<Parameters<Op>[0], ReturnType<Op>> extends true
