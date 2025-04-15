@@ -216,7 +216,7 @@ class EffectHandlerScope {
       return this.#parent.transform(type, payload);
     }
 
-    throw new Error(`Unhandled transform "${type}"`);
+    return Promise.resolve(payload);
   }
 }
 
