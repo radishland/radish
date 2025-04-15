@@ -1,4 +1,5 @@
 import { assertExists } from "@std/assert";
+import type { Equals } from "@fcrozatier/ts-helpers";
 import type { MaybePromise } from "../types.d.ts";
 import { Option } from "../algebraic-structures.ts";
 
@@ -72,12 +73,15 @@ export function createEffect<Op extends (...payload: any[]) => any>(
 
 export function createTransformEffect<Op extends (payload: any) => any>(
   type: string,
-): (payload: Parameters<Op>[0]) => TransformEffect<Parameters<Op>[0]> {
+): Equals<Parameters<Op>[0], ReturnType<Op>> extends true
+  ? (payload: Parameters<Op>[0]) => TransformEffect<ReturnType<Op>>
+  : never {
   const effectRunner = (payload: Parameters<Op>) => {
     return new TransformEffect(() => transform(type, payload));
   };
 
   effectRunner[Symbol.toStringTag] = type;
+  // @ts-ignore TS 5.8 conditional
   return effectRunner;
 }
 
