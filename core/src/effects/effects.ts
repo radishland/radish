@@ -1,6 +1,6 @@
 import { assertExists } from "@std/assert";
 import type { MaybePromise } from "../types.d.ts";
-import { Option } from "../monads.ts";
+import { Option } from "../algebraic-structures.ts";
 
 type EffectHandler<P extends any[], R> = (
   ...payload: P
@@ -18,8 +18,8 @@ type TransformerWithType<P> = {
   transformer: EffectTransformer<P>;
 };
 
-type EffectHandlers = HandlerWithType<any, any>[];
-type EffectTransformers = TransformerWithType<any>[];
+export type EffectHandlers = HandlerWithType<any, any>[];
+export type EffectTransformers = TransformerWithType<any>[];
 
 const effectScopes: EffectHandlerScope[] = [];
 
@@ -239,4 +239,22 @@ export const runWith = async <T>(
   } finally {
     effectScopes.pop();
   }
+};
+
+export const addHandlers = (handlers: EffectHandlers) => {
+  const currentScope = effectScopes.at(-1);
+  assertExists(
+    currentScope,
+    "'addHandlers' should run inside an EffectScope. Use 'runWith'",
+  );
+  currentScope.addHandlers(handlers);
+};
+
+export const addTransformers = (transformers: EffectTransformers) => {
+  const currentScope = effectScopes.at(-1);
+  assertExists(
+    currentScope,
+    "'addTransformers' should run inside an EffectScope. Use 'runWith'",
+  );
+  currentScope.addTransformers(transformers);
 };
