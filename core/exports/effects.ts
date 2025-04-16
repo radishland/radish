@@ -13,5 +13,6 @@ export {
   runWith,
   transformerFor,
 } from "../src/effects/effects.ts";
-export { pluginIO } from "../src/effects/io.ts";
-export { config, hotUpdate, io } from "../src/effects/operations.ts";
+export { io, pluginIO } from "../src/effects/io.ts";
+export { config, denoConfig, pluginConfig } from "../src/effects/config.ts";
+export { hotUpdate } from "../src/effects/operations.ts";
