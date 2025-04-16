@@ -1,19 +1,10 @@
-import type { Required } from "@fcrozatier/ts-helpers";
-import type { WalkEntry } from "@std/fs/walk";
-import type { ImportMapOptions } from "./generate/impormap.ts";
-import type { ManifestController } from "./generate/manifest.ts";
+import type { EffectHandlers, EffectTransformers } from "./effects/effects.ts";
+import type { ImportMapOptions } from "./effects/impormap.ts";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
-import type { App, FileCache } from "./server/app.ts";
 import type { DenoArgs } from "./start.ts";
 
 export type Maybe<T> = T | undefined;
 export type MaybePromise<T> = T | Promise<T>;
-
-interface SourceDescription {
-  code: string;
-  ast?: any;
-  meta?: { [plugin: string]: any } | null;
-}
 
 export type HmrEvent = {
   /**
@@ -24,10 +15,6 @@ export type HmrEvent = {
    * The path of the entry triggering the event
    */
   path: string;
-  /**
-   * The target path in the build folder
-   */
-  target: string;
   /**
    * The path of the original entry in the case of a rename event
    */
@@ -42,58 +29,20 @@ export type HmrEvent = {
   kind: Deno.FsEvent["kind"];
 };
 
-export type HmrContext = {
-  app: App;
+export interface ManifestBase extends Record<string, any> {
   /**
-   * The list of paths (files or folders) affected by the event which will be re-processed in the provided order during the incremental rebuild phase
+   * Maps module paths to their import specifiers
    */
-  paths: string[];
-};
-
-export type ManifestBase = Record<string, any> & {
   imports: Record<string, string[]>;
-};
-
-export type ManifestContext = {
-  manifest: ManifestBase;
-  fileCache: FileCache;
-};
+}
 
 export interface Plugin {
   /**
-   * The name of the plugin with a `radish-plugin-` prefix
+   * The name of the plugin
    */
   name: string;
-  install: () => void;
-  /**
-   * Handles the side effects of the hot update before the incremental rebuild phase. This hook has access to information about the fs event emitted and the context, allowing to update the manifest, do IO etc.
-   *
-   * The `event` and `context` objects are shared in a sequence of `handleHotUpdate` calls and can be modified directly to adjust the behavior of following plugins as well as the rebuild phase.
-   *
-   * Kind: sequential
-   */
-  handleHotUpdate?: (event: HmrEvent, context: HmrContext) => void;
-  /**
-   * Runs before the manifest generation. This hook is an initialization phase allowing to modify the manifest object by adding the required keys.
-   *
-   * Kind: chained
-   */
-  manifestStart?: (manifestController: ManifestController) => ManifestBase;
-  /**
-   * The main hook of the manifest generation, called on every entry
-   *
-   * Kind: sequential
-   */
-  manifest?: (
-    entry: WalkEntry,
-    context: ManifestContext,
-  ) => void;
-  /**
-   * Performs a transform before the manifest is written on disk. This allows to modify paths, imports etc.
-   *
-   * Kind: chained
-   */
-  manifestWrite?: (content: string) => string;
+  handlers?: EffectHandlers;
+  transformers?: EffectTransformers;
 }
 
 export interface Config {
@@ -117,7 +66,8 @@ export interface Config {
      */
     matchers?: Record<string, RegExp>;
     /**
-     * Specifies the location of the node_modules folder relative to the deno.json file to serve local dependencies from in dev mode, like `.` or `..` etc.
+     * Specifies the location of the node_modules folder relative to the deno.json file
+     * to serve local dependencies from in dev mode, like `.` or `..` etc.
      *
      * @default `.`
      */
@@ -133,7 +83,7 @@ export interface Config {
   speculationRules?: SpeculationRules;
 }
 
-export interface ResolvedConfig extends Required<Config, "plugins"> {
+export interface ResolvedConfig extends Config {
   /**
    * The arguments of the current running command
    */
