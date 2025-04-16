@@ -1,7 +1,7 @@
 import { assertExists } from "@std/assert";
 import type { Equals } from "@fcrozatier/ts-helpers";
 import type { MaybePromise } from "../types.d.ts";
-import { Option } from "../algebraic-structures.ts";
+import { Option } from "../utils/algebraic-structures.ts";
 
 type EffectHandler<P extends any[], R> = (
   ...payload: P

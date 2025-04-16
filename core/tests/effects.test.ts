@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert/equals";
-import { Option } from "../src/algebraic-structures.ts";
+import { Option } from "../src/utils/algebraic-structures.ts";
 import { assertGreaterOrEqual } from "@std/assert/greater-or-equal";
 import { assertLessOrEqual } from "@std/assert/less-or-equal";
 import {

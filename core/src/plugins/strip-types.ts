@@ -3,7 +3,7 @@ import { extname, join } from "@std/path";
 import { handlerFor, transformerFor } from "../effects/effects.ts";
 import { io } from "../effects/io.ts";
 import type { Plugin } from "../types.d.ts";
-import { Option } from "../algebraic-structures.ts";
+import { Option } from "../utils/algebraic-structures.ts";
 import { buildFolder, ts_extension_regex } from "../constants.ts";
 
 /**
