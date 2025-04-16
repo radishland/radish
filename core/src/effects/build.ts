@@ -30,14 +30,15 @@ export const processFile = async (path: string) => {
  * Starts the build pipeline, calls the `buildStart` hooks to sort the entries, the `transform` hooks and the `emit` hooks
  *
  * @param paths Array of globs
+ * @param {boolean} options.incremental Whether the build folder should be kept or emptied
  */
 export const build = async (
   paths = [`${libFolder}/**`, `${elementsFolder}/**`, `${routesFolder}/**`],
-  options = { emptyBuildFolder: true },
+  options = { incremental: false },
 ): Promise<void> => {
   console.log("Building...");
 
-  if (options.emptyBuildFolder) {
+  if (!options.incremental) {
     emptyDirSync(buildFolder);
   }
 
