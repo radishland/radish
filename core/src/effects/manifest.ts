@@ -145,7 +145,7 @@ export const updateManifest = async (
 /**
  * Stringifies the manifest object and saves it on disk
  *
- * Functions are stringified too, with their scope inlined from their `SCOPE` property
+ * Functions are stringified with their scope by {@linkcode stringifyObject}
  */
 const writeManifest = async () => {
   ensureDirSync(generatedFolder);
