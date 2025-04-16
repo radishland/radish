@@ -1,17 +1,25 @@
-import { type } from "@radish/runtime/utils";
 import { assertExists } from "@std/assert";
 import { ensureDirSync, expandGlob, type WalkEntry } from "@std/fs";
-import { join } from "@std/path";
+import { extname } from "@std/path";
 import {
   elementsFolder,
   generatedFolder,
+  import_regex,
   libFolder,
+  manifestPath,
   routesFolder,
 } from "../constants.ts";
-import { createEffect, createTransformEffect, handlerFor } from "./effects.ts";
-import { SCOPE } from "../plugins.ts";
-import type { ManifestBase } from "../types.d.ts";
+import type { ManifestBase, Plugin } from "../types.d.ts";
+import { Option } from "../utils/algebraic-structures.ts";
+import {
+  createEffect,
+  createTransformEffect,
+  handlerFor,
+  transformerFor,
+} from "./effects.ts";
+import { hotUpdate } from "./hot-update.ts";
 import { io } from "./io.ts";
+import { stringifyObject } from "../utils/stringify.ts";
 
 type UpdateManifestParam = { entry: WalkEntry; manifestObject: ManifestBase };
 
@@ -55,25 +63,63 @@ export const manifest = {
 
 let loader: (() => Promise<ManifestBase>) | undefined;
 
-export const manifestHandlers = [
-  handlerFor(manifest.setLoader, (manifestLoader) => {
-    loader = manifestLoader;
-  }),
-  handlerFor(manifest.load, async () => {
-    assertExists(
-      loader,
-      "Manifest loader used before it's defined. Use the manifest.setLoader effect",
-    );
-    manifestObject = await loader();
-  }),
-  handlerFor(manifest.get, () => manifestObject),
-  handlerFor(manifest.write, async () => await writeManifest()),
-];
+export const pluginManifest: Plugin = {
+  name: "plugin-manifest",
+  handlers: [
+    handlerFor(manifest.setLoader, (manifestLoader) => {
+      loader = manifestLoader;
+    }),
+    handlerFor(manifest.load, async () => {
+      assertExists(
+        loader,
+        "Manifest loader used before it's defined. Use the manifest.setLoader effect",
+      );
+      manifestObject = await loader();
+    }),
+    handlerFor(manifest.get, () => manifestObject),
+    handlerFor(manifest.write, async () => await writeManifest()),
+  ],
+  transformers: [
+    /**
+     * Extracts imports from .js & .ts files into the manifest for the importmap generation
+     */
+    transformerFor(manifest.update, async (
+      { entry, manifestObject },
+    ) => {
+      if (!entry.isFile || ![".js", ".ts"].includes(extname(entry.path))) {
+        return Option.none();
+      }
+
+      const content = await io.readFile(entry.path);
+      const imports = extractImports(content);
+      manifestObject.imports[entry.path] = imports;
+
+      return Option.some({ entry, manifestObject });
+    }),
+    transformerFor(hotUpdate, async ({ event }) => {
+      if (event.isFile) {
+        const manifestObject = await manifest.get();
+        const manifestImports = manifestObject.imports;
+
+        if (event.kind === "remove") {
+          delete manifestImports[event.path];
+        } else if (event.kind === "modify") {
+          await updateManifest([event.path]);
+        }
+      }
+      return Option.none();
+    }),
+  ],
+};
 
 /**
- * The path to the manifest file
+ * Returns the deduped array of import aliases
  */
-export const manifestPath: string = join(generatedFolder, "manifest.ts");
+const extractImports = (source: string) => {
+  return Array.from(
+    new Set(source.matchAll(import_regex).map((match) => match[1] || match[2])),
+  ).filter((str) => str !== undefined);
+};
 
 let manifestObject: ManifestBase = { imports: {} };
 
@@ -108,77 +154,4 @@ const writeManifest = async () => {
   file += stringifyObject(manifestObject);
 
   await io.writeFile(manifestPath, file);
-};
-
-const stringifyFunction = (fn: (...args: unknown[]) => unknown) => {
-  let serialized = fn.toString();
-
-  if (!Object.hasOwn(fn, SCOPE)) return serialized;
-
-  const scope = Object.getOwnPropertyDescriptor(fn, SCOPE)?.value;
-
-  for (const key of Object.keys(scope)) {
-    const value = JSON.stringify(scope[key]);
-    serialized = serialized.replaceAll(
-      new RegExp(`\\b${key}\\b`, "g"),
-      value,
-    );
-  }
-
-  return serialized;
-};
-
-const stringifyArray = (arr: Array<any>) => {
-  let str = "[";
-
-  for (const v of arr) {
-    if (["undefined", "boolean", "number"].includes(typeof v)) {
-      str += `${v},`;
-    } else if (typeof v === "string") {
-      str += `${JSON.stringify(v)},`;
-    } else if (v === null) {
-      str += `null,`;
-    } else if (typeof v === "object") {
-      if (Array.isArray(v)) {
-        str += `${stringifyArray(v)},`;
-      } else {
-        str += `${stringifyObject(v)},`;
-      }
-    } else if (typeof v === "function") {
-      str += `${stringifyFunction(v)},`;
-    }
-  }
-
-  str += "]";
-
-  return str;
-};
-
-const stringifyObject = (obj: Record<string, any>) => {
-  let str = "{";
-
-  for (const [k, v] of Object.entries(obj)) {
-    const key = /(^\d|\W)/.test(k) ? JSON.stringify(k) : k;
-    switch (type(v)) {
-      case "string":
-        str += `${key}: ${JSON.stringify(v)},`;
-        break;
-      case "array":
-        str += `${key}: ${stringifyArray(v)},`;
-        break;
-      case "function":
-      case "AsyncFunction":
-        str += `${key}: ${stringifyFunction(v)},`;
-        break;
-      case "object":
-        str += `${key}: ${stringifyObject(v)},`;
-        break;
-      default:
-        str += `${key}: ${v},`;
-    }
-  }
-
-  str += "}";
-
-  return str;
 };

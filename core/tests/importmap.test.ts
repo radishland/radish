@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert/equals";
-import { pureImportMap } from "../src/generate/impormap.ts";
+import { pureImportMap } from "../src/effects/impormap.ts";
 
 Deno.test("main import", () => {
   const importmap = pureImportMap(

@@ -1,7 +1,6 @@
 export {
   manifest,
-  manifestHandlers,
-  manifestPath,
+  pluginManifest,
   updateManifest,
 } from "../src/effects/manifest.ts";
 export {
