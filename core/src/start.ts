@@ -1,16 +1,14 @@
 import { dev } from "$env";
-import { UserAgent } from "@std/http/user-agent";
-import { App, FileCache, type Handle } from "./server/app.ts";
-import type { Config, ManifestBase, ResolvedConfig } from "./types.d.ts";
 import { parseArgs } from "@std/cli/parse-args";
-import { ManifestController } from "./generate/manifest.ts";
+import { UserAgent } from "@std/http/user-agent";
 import { globals } from "./constants.ts";
-import { ImportMapController } from "./generate/impormap.ts";
-import { pluginDefaultPlugins } from "./plugins.ts";
-import { build } from "./generate/build.ts";
-import { perform } from "./effects/registry.ts";
-import { modifyConfig, readConfig } from "./effects/operations.ts";
-import * as effects from "./effects/registry.ts";
+import { config as configEffect } from "./effects/config.ts";
+import * as effects from "./effects/effects.ts";
+import { generateImportmap, importmap } from "./effects/impormap.ts";
+import { manifest, updateManifest } from "./effects/manifest.ts";
+import { build } from "./effects/build.ts";
+import { App, type Handle } from "./server/app.ts";
+import type { Config, ResolvedConfig } from "./types.d.ts";
 
 const denoArgs = Object.freeze(parseArgs(Deno.args, {
   boolean: ["dev", "importmap", "manifest", "build"],
@@ -30,60 +28,45 @@ const handle: Handle = async ({ context, resolve }) => {
   return await resolve(context);
 };
 
-export async function startApp(
-  loadManifest: () => Promise<ManifestBase>,
-  config: Config = {},
-) {
+export async function startApp(config: Config = {}) {
   if (denoArgs.dev) {
     Deno.env.set("dev", "");
   }
 
-  config.plugins = [...(config.plugins ?? []), pluginDefaultPlugins];
+  for (const plugin of config.plugins ?? []) {
+    if (plugin.handlers) {
+      effects.addHandlers(plugin.handlers);
+    }
+    if (plugin.transformers) {
+      effects.addTransformers(plugin.transformers);
+    }
+  }
 
-  perform(modifyConfig, { config, args: denoArgs });
+  config = await configEffect.transform(config);
 
-  const resolvedConfig: ResolvedConfig = Object.assign(
-    { plugins: [], args: denoArgs },
-    config,
+  const resolvedConfig: ResolvedConfig = Object.freeze(
+    Object.assign({}, { args: denoArgs, ...config }),
   );
-  Object.freeze(resolvedConfig);
 
-  effects.addHandler(readConfig, () => {
-    return resolvedConfig;
-  });
+  effects.addHandlers([
+    effects.handlerFor(configEffect.read, () => resolvedConfig),
+  ]);
 
   globals();
 
-  const fileCache = new FileCache();
-  const manifestController = new ManifestController(
-    resolvedConfig.plugins,
-    loadManifest,
-    fileCache,
-  );
-
   if (denoArgs.manifest) {
-    manifestController.createManifest();
-    manifestController.write();
+    await updateManifest();
+    await manifest.write();
   } else {
-    const manifest = await manifestController.load();
-    const importmapController = new ImportMapController(
-      fileCache,
-      resolvedConfig.importmap,
-    );
+    await manifest.load();
 
     if (denoArgs.importmap) {
-      const importmap = await importmapController.generate(manifest);
-      await Deno.writeTextFile(importmapController.path, importmap);
+      await generateImportmap();
+      await importmap.write();
     } else if (denoArgs.build) {
       await build();
     } else {
-      new App({
-        config: resolvedConfig,
-        manifestController,
-        importmapController,
-        handle,
-        fileCache,
-      });
+      new App({ handle });
     }
   }
 }
