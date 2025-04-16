@@ -4,14 +4,25 @@ import { assertExists, assertObjectMatch } from "@std/assert";
 /**
  * The symbol used to attach a scope to a function in the `better-stringification` protocol
  */
-export const SCOPE = Symbol.for("scope");
+const SCOPE = Symbol.for("scope");
 
 /**
- * Stringifies a function by inlining its scope
+ * Attaches a scope object to a function {@linkcode SCOPE} property. This follows the
+ * `better-stringification` protocol for {@linkcode stringifyFunction}
+ */
+export const setScope = (
+  fn: (...args: any[]) => any,
+  value: Record<string, any>,
+) => {
+  Object.defineProperty(fn, SCOPE, { value });
+};
+
+/**
+ * Stringifies a function and its scope
  *
- * This relies on the following convention: if the function has a scope object as its
- * {@linkcode SCOPE} property, then in the stringified function code the scope keys are
- * replaced by their values
+ * This relies on the following protocol: if the function has a scope object on its
+ * {@linkcode SCOPE} property, then keys are replaced by their values in the stringified
+ * function code
  *
  * @example
  * const sayHi = () => console.log(`hi ${name}`);
