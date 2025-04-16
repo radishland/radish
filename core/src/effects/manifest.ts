@@ -1,12 +1,11 @@
 import { assertExists } from "@std/assert";
 import { ensureDirSync, expandGlob, type WalkEntry } from "@std/fs";
-import { extname } from "@std/path";
+import { extname, join } from "@std/path";
 import {
   elementsFolder,
   generatedFolder,
   import_regex,
   libFolder,
-  manifestPath,
   routesFolder,
 } from "../constants.ts";
 import type { ManifestBase, Plugin } from "../types.d.ts";
@@ -20,6 +19,11 @@ import {
 import { hotUpdate } from "./hot-update.ts";
 import { io } from "./io.ts";
 import { stringifyObject } from "../utils/stringify.ts";
+
+/**
+ * The path to the manifest file
+ */
+export const manifestPath: string = join(generatedFolder, "manifest.ts");
 
 type UpdateManifestParam = { entry: WalkEntry; manifestObject: ManifestBase };
 

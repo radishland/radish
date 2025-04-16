@@ -1,16 +1,9 @@
-import { join } from "@std/path";
-
 export const buildFolder = "build";
 export const elementsFolder = "elements";
 export const routesFolder = "routes";
 export const libFolder = "lib";
 export const staticFolder = "static";
 export const generatedFolder = "_generated";
-
-/**
- * The path to the manifest file
- */
-export const manifestPath: string = join(generatedFolder, "manifest.ts");
 
 /**
  * Extracts import specifiers from import declarations or dynamic imports
