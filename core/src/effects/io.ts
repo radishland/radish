@@ -8,7 +8,7 @@ import {
   handlerFor,
   transformerFor,
 } from "./effects.ts";
-import { hotUpdate } from "./operations.ts";
+import { hotUpdate } from "./hot-update.ts";
 import { Option } from "../algebraic-structures.ts";
 import { throwUnlessNotFound } from "../utils.ts";
 
