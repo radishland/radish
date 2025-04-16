@@ -3,11 +3,11 @@ import type { Equals } from "@fcrozatier/ts-helpers";
 import type { MaybePromise } from "../types.d.ts";
 import { Option } from "../utils/algebraic-structures.ts";
 
-type EffectHandler<P extends any[], R> = (
+export type EffectHandler<P extends any[], R> = (
   ...payload: P
 ) => MaybePromise<R | Option<R>>;
 
-type EffectTransformer<P> = (payload: P) => MaybePromise<P | Option<P>>;
+export type EffectTransformer<P> = (payload: P) => MaybePromise<P | Option<P>>;
 
 type HandlerWithType<P extends any[], R> = {
   type: string;
