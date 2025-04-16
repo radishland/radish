@@ -40,7 +40,7 @@ export const pluginConfig: Plugin = {
 
       const content = await io.readFile(fileName);
 
-      return fileName?.endsWith(".json")
+      return fileName.endsWith(".json")
         ? JSON.parse(content)
         : JSONC.parse(content);
     }),
