@@ -1,1 +1,2 @@
-export { pluginRadish, pluginStripTypes } from "../src/plugins.ts";
+export { pluginStripTypes } from "../src/plugins/strip-types.ts";
+export { pluginRadish } from "../src/plugins.ts";
