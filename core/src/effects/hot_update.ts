@@ -27,7 +27,7 @@ interface Hot {
 
 export const hot = {
   /**
-   * Triggers the hot update pipeline
+   * Triggers the hot update transform
    */
   update: createTransformEffect<Hot["update"]>("hot/update"),
 };
@@ -60,7 +60,7 @@ export const startHMR = async (): Promise<void> => {
           timestamp: Date.now(),
         };
         hmrEvensCache.set(key, hmrEvent);
-        await hotUpdate(hmrEvent);
+        await hotUpdatePipeline(hmrEvent);
       }
 
       // TODO: update router
@@ -77,7 +77,7 @@ export const startHMR = async (): Promise<void> => {
   }
 };
 
-const hotUpdate = async (event: HmrEvent) => {
+const hotUpdatePipeline = async (event: HmrEvent) => {
   const { paths } = await hot.update({
     event,
     paths: [event.path],
