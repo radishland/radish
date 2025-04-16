@@ -1,10 +1,12 @@
 import { dev } from "$env";
 import { assert, assertExists, unimplemented } from "@std/assert";
 import { extname, join } from "@std/path";
-import { readDenoConfig } from "../config.ts";
 import { generatedFolder, ts_extension_regex } from "../constants.ts";
-import type { FileCache } from "../server/app.ts";
 import type { ManifestBase } from "../types.d.ts";
+import { createEffect, handlerFor } from "./effects.ts";
+import { io } from "./io.ts";
+import { denoConfig } from "./config.ts";
+import { manifest } from "./manifest.ts";
 
 interface ImportMap {
   imports?: Record<string, string>;
@@ -54,91 +56,54 @@ export interface ImportMapOptions {
    * Array of packages to manually add to the importmap. Falsy values are skipped
    */
   install?: (Install | boolean)[];
-  /**
-   * Provides a transform hook giving you full control over the generated importmap
-   *
-   * @param importmap The generated importmap
-   * @return The JSON stringified importmap
-   */
-  transform?: (importmap: ImportMap) => string;
 }
 
-export class ImportMapController {
-  path: string = join(generatedFolder, "importmap.json");
-  fileCache: FileCache;
-  #importmap: string | undefined;
-  options?: ImportMapOptions | undefined;
+interface ImportmapOperations {
+  get: () => ImportMap;
+  write: () => void;
+}
 
-  constructor(fileCache: FileCache, options?: ImportMapOptions) {
-    this.fileCache = fileCache;
-    this.options = options;
-  }
+export const importmap = {
+  get: createEffect<ImportmapOperations["get"]>("importmap/get"),
+  write: createEffect<ImportmapOperations["write"]>("importmap/write"),
+};
 
-  get importmap(): string {
-    if (!this.#importmap) {
-      this.#importmap = Deno.readTextFileSync(this.path);
+export const importmapHandlers = [
+  handlerFor(importmap.get, async () => {
+    if (!importmapObject) {
+      importmapObject = JSON.parse(
+        await io.readFile(importmapPath),
+      ) as ImportMap;
     }
-    return this.#importmap;
-  }
 
-  invalidate = (): boolean => {
-    this.#importmap = undefined;
-    return this.fileCache.invalidate(this.path);
-  };
+    return importmapObject;
+  }),
 
-  /**
-   * Generates the importmap of your project based on the current manifest. The file is saved inside `_generated/importmap.json`
-   *
-   * @param manifest The project manifest file
-   * @param options
-   */
-  generate = (manifest: ManifestBase): string => {
-    console.log("Generating importmap...");
+  handlerFor(importmap.write, async () => {
+    await io.writeFile(importmapPath, JSON.stringify(importmapObject));
+  }),
+];
 
-    const denoConfig = readDenoConfig();
+export const importmapPath = join(generatedFolder, "importmap.json");
 
-    const importmap = pureImportMap(
-      manifest,
-      denoConfig.imports ?? {},
-      this.options,
-    );
-
-    this.#importmap = this.options?.transform
-      ? this.options.transform(importmap)
-      : JSON.stringify(importmap);
-
-    return this.importmap;
-  };
-}
+let importmapObject: ImportMap = {};
 
 /**
- * Finds the longest prefix of an import specifier against a list of prefixes
- *
- * Returns the (first) longest prefix of the list such that either the specifier is equal to the prefix or the specifier is a child path of it
+ * Generates the importmap of based on the manifest.
  */
-const findLongestSpecifierPrefix = (specifier: string, prefixes: string[]) => {
-  let bestMatch: string | undefined;
-  let path: string | undefined;
+export const generateImportmap = async (
+  options: ImportMapOptions = {},
+): Promise<void> => {
+  console.log("Generating importmap...");
 
-  for (const prefix of prefixes) {
-    if (!specifier.startsWith(prefix)) continue;
+  const config = await denoConfig.read();
+  const manifestObject = await manifest.get();
 
-    /**
-     * If the whole prefix does not match then either the prefix is a directory (/ suffix) or the specifier is a subpath (/ prefix on the remaining part)
-     */
-    const remaining = specifier.slice(prefix.length) || "";
-    if (
-      remaining.length > 0 &&
-      !remaining.startsWith("/") &&
-      !prefix.endsWith("/")
-    ) continue;
-
-    if (!bestMatch || bestMatch.length < prefix.length) {
-      bestMatch = prefix;
-      path = remaining;
-    }
-  }
-  return { prefix: bestMatch, path };
+  importmapObject = pureImportMap(
+    manifestObject,
+    config.imports ?? {},
+    options,
+  );
 };
 
 export const pureImportMap = (
@@ -147,25 +112,25 @@ export const pureImportMap = (
   options?: ImportMapOptions,
 ): ImportMap => {
   // Dedupes import specifiers
-  const projectImports = new Set(Object.values(manifest.imports).flat());
+  const importSpecifiers = new Set(Object.values(manifest.imports).flat());
   const aliases = Object.keys(denoImports);
 
   // Splits the deno importmap in groups of used aliases with their subpaths
   const pathsByAlias = new Map<string, string[]>();
 
-  for (const specifier of projectImports) {
-    const { prefix: alias, path } = findLongestSpecifierPrefix(
+  for (const specifier of importSpecifiers) {
+    const { prefix: alias, path } = findLongestMatchingPrefix(
       specifier,
       aliases,
     );
 
-    // Skips relative imports and https import as they can be resolved in browser natively without an importmap
-    if (alias !== undefined && path !== undefined) {
-      const paths = pathsByAlias.get(alias) ?? [];
+    // Skips relative imports and https import as they can be resolved the in browser directly
+    if (alias === undefined) continue;
 
-      if (!paths.includes(path)) {
-        pathsByAlias.set(alias, [...paths, path]);
-      }
+    const paths = pathsByAlias.get(alias) ?? [];
+
+    if (!paths.includes(path)) {
+      pathsByAlias.set(alias, [...paths, path]);
     }
   }
 
@@ -188,10 +153,9 @@ export const pureImportMap = (
         for (const path of paths) {
           importsMap.set(
             alias + path,
-            (target + path).replace(/^\.\//, "/").replace(
-              ts_extension_regex,
-              ".js",
-            ),
+            (target + path)
+              .replace(/^\.\//, "/")
+              .replace(ts_extension_regex, ".js"),
           );
         }
       }
@@ -227,8 +191,8 @@ export const pureImportMap = (
 
   for (const [alias, paths] of pathsByAlias.entries()) {
     const target = denoImports[alias];
-
     assertExists(target);
+
     addPackage(target, alias, paths);
   }
 
@@ -266,4 +230,39 @@ export const pureImportMap = (
       ...Object.fromEntries(importsMap.entries()),
     },
   };
+};
+
+/**
+ * Finds the longest matching prefix of an import specifier against a list of prefixes
+ *
+ * Returns the (first) longest prefix of the list such that either the specifier and the
+ * prefix are equal or the specifier is a subpath of its prefix (proper prefix)
+ *
+ * In the case of a proper prefix, the nonempty subpath is returned as well
+ *
+ * If the specifier doesn't match against the list, the best match is `undefined`
+ */
+const findLongestMatchingPrefix = (specifier: string, prefixes: string[]) => {
+  let bestMatch: string | undefined;
+  let path = "";
+
+  for (const prefix of prefixes) {
+    if (!specifier.startsWith(prefix)) continue;
+
+    /**
+     * If the whole prefix does not match then either the prefix is a directory ('/' suffix) or the specifier is a subpath ('/' prefix on the remaining part)
+     */
+    const remaining = specifier.slice(prefix.length);
+    if (
+      remaining.length > 0 &&
+      !remaining.startsWith("/") &&
+      !prefix.endsWith("/")
+    ) continue;
+
+    if (!bestMatch || bestMatch.length < prefix.length) {
+      bestMatch = prefix;
+      path = remaining;
+    }
+  }
+  return { prefix: bestMatch, path };
 };
