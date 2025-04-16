@@ -2,10 +2,34 @@ import { ensureDir } from "@std/fs";
 import { dirname, isAbsolute, join, relative } from "@std/path";
 import { buildFolder } from "../constants.ts";
 import type { Plugin } from "../types.d.ts";
-import { handlerFor, transformerFor } from "./effects.ts";
-import { hotUpdate, io } from "./operations.ts";
+import {
+  createEffect,
+  createTransformEffect,
+  handlerFor,
+  transformerFor,
+} from "./effects.ts";
+import { hotUpdate } from "./operations.ts";
 import { Option } from "../algebraic-structures.ts";
 import { throwUnlessNotFound } from "../utils.ts";
+
+type FileTransformParam = { path: string; content: string };
+
+interface IO {
+  readFile: (path: string) => string;
+  transformFile: (option: FileTransformParam) => FileTransformParam;
+  emitFile: (path: string) => string;
+  writeFile: (path: string, content: string) => void;
+}
+
+export const io = {
+  readFile: createEffect<IO["readFile"]>("io/read"),
+  transformFile: createTransformEffect<IO["transformFile"]>("io/transform"),
+  /**
+   * Returns the output path where a file or folder will be emitted
+   */
+  emitTo: createEffect<IO["emitFile"]>("io/emit"),
+  writeFile: createEffect<IO["writeFile"]>("io/write"),
+};
 
 /**
  * A file store caching `Deno.readTextFile` calls for efficient file access
