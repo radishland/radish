@@ -1,5 +1,1 @@
-export {
-  pluginDefaultEmit,
-  pluginRadish,
-  pluginStripTypes,
-} from "../src/plugins.ts";
+export { pluginRadish, pluginStripTypes } from "../src/plugins.ts";

@@ -9,9 +9,9 @@ import {
   routesFolder,
 } from "../constants.ts";
 import { createEffect, createTransformEffect, handlerFor } from "./effects.ts";
-import { io } from "./operations.ts";
 import { SCOPE } from "../plugins.ts";
 import type { ManifestBase } from "../types.d.ts";
+import { io } from "./io.ts";
 
 type UpdateManifestParam = { entry: WalkEntry; manifestObject: ManifestBase };
 
