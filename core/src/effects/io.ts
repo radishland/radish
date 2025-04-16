@@ -8,7 +8,7 @@ import {
   handlerFor,
   transformerFor,
 } from "./effects.ts";
-import { hotUpdate } from "./hot-update.ts";
+import { hot } from "./hot-update.ts";
 import { Option } from "../utils/algebraic-structures.ts";
 import { throwUnlessNotFound } from "../utils.ts";
 
@@ -81,7 +81,7 @@ export const pluginIO: Plugin = {
     /**
      * Invalidates the file cache when a file is modified or removed
      */
-    transformerFor(hotUpdate, ({ event, paths }) => {
+    transformerFor(hot.update, ({ event, paths }) => {
       if (
         event.isFile &&
         (event.kind === "modify" || event.kind === "remove")
@@ -99,7 +99,7 @@ export const pluginIO: Plugin = {
     /**
      * Updates files inside the build folder in a way that mirrors the source folder structure
      */
-    transformerFor(hotUpdate, async ({ event, paths }) => {
+    transformerFor(hot.update, async ({ event, paths }) => {
       if (event.kind === "remove") {
         try {
           const target = await io.emitTo(event.path);

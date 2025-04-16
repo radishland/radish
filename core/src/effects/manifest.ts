@@ -16,7 +16,7 @@ import {
   handlerFor,
   transformerFor,
 } from "./effects.ts";
-import { hotUpdate } from "./hot-update.ts";
+import { hot } from "./hot-update.ts";
 import { io } from "./io.ts";
 import { stringifyObject } from "../utils/stringify.ts";
 
@@ -100,7 +100,7 @@ export const pluginManifest: Plugin = {
 
       return Option.some({ entry, manifestObject });
     }),
-    transformerFor(hotUpdate, async ({ event }) => {
+    transformerFor(hot.update, async ({ event }) => {
       if (event.isFile) {
         const manifestObject = await manifest.get();
         const manifestImports = manifestObject.imports;
