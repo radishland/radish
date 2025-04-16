@@ -2,12 +2,9 @@ import { assertGreater } from "@std/assert";
 
 const defaultTTL = 200;
 
-/**
- * Normalizes fs events to prevent duplication
- */
 export class TtlCache<K, V> extends Map<K, V> {
   /**
-   * Throttle timeout in ms
+   * TTL in ms
    */
   #ttl = defaultTTL;
   #timeouts = new Map<K, number>();
