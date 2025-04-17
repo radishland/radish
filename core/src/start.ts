@@ -10,7 +10,7 @@ import { build } from "./effects/build.ts";
 import { createApp, type Handle } from "./server/app.ts";
 import type { CLIArgs, Config, ResolvedConfig } from "./types.d.ts";
 
-const denoArgs: CLIArgs = Object.freeze(parseArgs(Deno.args, {
+const cliArgs: CLIArgs = Object.freeze(parseArgs(Deno.args, {
   boolean: ["dev", "importmap", "manifest", "build"],
 }));
 
@@ -27,7 +27,7 @@ const handle: Handle = async ({ context, resolve }) => {
 };
 
 export async function startApp(config: Config = {}) {
-  if (denoArgs.dev) {
+  if (cliArgs.dev) {
     Deno.env.set("dev", "");
   }
 
@@ -43,7 +43,7 @@ export async function startApp(config: Config = {}) {
   config = await configEffect.transform(config);
 
   const resolvedConfig: ResolvedConfig = Object.freeze(
-    Object.assign({}, { args: denoArgs, ...config }),
+    Object.assign({}, { args: cliArgs, ...config }),
   );
 
   effects.addHandlers([
@@ -52,16 +52,16 @@ export async function startApp(config: Config = {}) {
 
   globals();
 
-  if (denoArgs.manifest) {
+  if (cliArgs.manifest) {
     await updateManifest();
     await manifest.write();
   } else {
     await manifest.load();
 
-    if (denoArgs.importmap) {
+    if (cliArgs.importmap) {
       await generateImportmap();
       await importmap.write();
-    } else if (denoArgs.build) {
+    } else if (cliArgs.build) {
       await build();
     } else {
       await createApp(handle);
