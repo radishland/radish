@@ -7,7 +7,7 @@ import * as effects from "./effects/effects.ts";
 import { generateImportmap, importmap } from "./effects/impormap.ts";
 import { manifest, updateManifest } from "./effects/manifest.ts";
 import { build } from "./effects/build.ts";
-import { App, type Handle } from "./server/app.ts";
+import { createApp, type Handle } from "./server/app.ts";
 import type { Config, ResolvedConfig } from "./types.d.ts";
 
 const denoArgs = Object.freeze(parseArgs(Deno.args, {
@@ -66,7 +66,7 @@ export async function startApp(config: Config = {}) {
     } else if (denoArgs.build) {
       await build();
     } else {
-      new App({ handle });
+      await createApp(handle);
     }
   }
 }
