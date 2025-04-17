@@ -161,7 +161,10 @@ class EffectHandlerScope {
         return [key, handlers!.map(({ handler }) => handler)];
       });
 
-    this.#handlers = new Map(handlersEntries);
+    for (const [type, handlers] of handlersEntries) {
+      const currentHandlers = this.#handlers.get(type) ?? [];
+      this.#handlers.set(type, currentHandlers.concat(handlers));
+    }
   }
 
   addTransformers(transformers: EffectTransformers = []): void {
@@ -175,7 +178,10 @@ class EffectHandlerScope {
         return [key, transformers!.map(({ transformer }) => transformer)];
       });
 
-    this.#transformers = new Map(transformersEntries);
+    for (const [type, transformers] of transformersEntries) {
+      const currentTransformers = this.#transformers.get(type) ?? [];
+      this.#transformers.set(type, currentTransformers.concat(transformers));
+    }
   }
 
   async handle<P extends any[], R>(type: string, ...payload: P): Promise<R> {
