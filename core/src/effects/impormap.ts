@@ -68,7 +68,7 @@ export const importmap = {
   write: createEffect<ImportmapOperations["write"]>("importmap/write"),
 };
 
-export const importmapHandlers = [
+export const importmapHandlers: ReturnType<typeof handlerFor>[] = [
   handlerFor(importmap.get, async () => {
     if (!importmapObject) {
       importmapObject = JSON.parse(
@@ -84,7 +84,7 @@ export const importmapHandlers = [
   }),
 ];
 
-export const importmapPath = join(generatedFolder, "importmap.json");
+export const importmapPath: string = join(generatedFolder, "importmap.json");
 
 let importmapObject: ImportMap = {};
 

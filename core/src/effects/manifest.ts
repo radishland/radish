@@ -133,7 +133,11 @@ let manifestObject: ManifestBase = { imports: {} };
  * @param paths A globs array
  */
 export const updateManifest = async (
-  paths = [`${libFolder}/**`, `${elementsFolder}/**`, `${routesFolder}/**`],
+  paths: string[] = [
+    `${libFolder}/**`,
+    `${elementsFolder}/**`,
+    `${routesFolder}/**`,
+  ],
 ): Promise<void> => {
   console.log("Generating manifest...");
 

@@ -27,7 +27,7 @@ export abstract class Option<T> {
 class Some<T> extends Option<T> {
   #value: T;
 
-  get value() {
+  get value(): T {
     return this.#value;
   }
 
@@ -36,7 +36,7 @@ class Some<T> extends Option<T> {
     this.#value = value;
   }
 
-  override map<U>(fn: (v: T) => U) {
+  override map<U>(fn: (v: T) => U): Some<U> {
     return new Some(fn(this.#value));
   }
 

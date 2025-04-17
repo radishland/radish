@@ -10,11 +10,16 @@ import { build } from "./effects/build.ts";
 import { createApp, type Handle } from "./server/app.ts";
 import type { Config, ResolvedConfig } from "./types.d.ts";
 
-const denoArgs = Object.freeze(parseArgs(Deno.args, {
+export type DenoArgs = {
+  readonly dev: boolean;
+  readonly importmap: boolean;
+  readonly manifest: boolean;
+  readonly build: boolean;
+};
+
+const denoArgs: DenoArgs = Object.freeze(parseArgs(Deno.args, {
   boolean: ["dev", "importmap", "manifest", "build"],
 }));
-
-export type DenoArgs = typeof denoArgs;
 
 const handle: Handle = async ({ context, resolve }) => {
   // Avoid mime type sniffing

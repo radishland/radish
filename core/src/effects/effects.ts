@@ -164,7 +164,7 @@ class EffectHandlerScope {
     this.#handlers = new Map(handlersEntries);
   }
 
-  addTransformers(transformers: EffectTransformers = []) {
+  addTransformers(transformers: EffectTransformers = []): void {
     if (transformers.length === 0) return;
 
     const transformersByType = Object.groupBy(transformers, ({ type }) => type);
@@ -252,7 +252,7 @@ export const runWith = async <T>(
   }
 };
 
-export const addHandlers = (handlers: EffectHandlers) => {
+export const addHandlers = (handlers: EffectHandlers): void => {
   const currentScope = effectScopes.at(-1);
   assertExists(
     currentScope,
@@ -261,7 +261,7 @@ export const addHandlers = (handlers: EffectHandlers) => {
   currentScope.addHandlers(handlers);
 };
 
-export const addTransformers = (transformers: EffectTransformers) => {
+export const addTransformers = (transformers: EffectTransformers): void => {
   const currentScope = effectScopes.at(-1);
   assertExists(
     currentScope,
