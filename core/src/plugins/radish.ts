@@ -18,7 +18,7 @@ import {
   assertExists,
   assertObjectMatch,
 } from "@std/assert";
-import type { WalkEntry } from "@std/fs/walk";
+import type { WalkEntry } from "@std/fs";
 import { basename, dirname, extname, join, relative } from "@std/path";
 import { toPascalCase } from "@std/text";
 import {
@@ -35,9 +35,9 @@ import { io } from "../effects/io.ts";
 import { manifest } from "../effects/manifest.ts";
 import type { ManifestBase, Plugin } from "../types.d.ts";
 import { Option } from "../utils/algebraic-structures.ts";
+import { fileName } from "../utils/path.ts";
 import { setScope } from "../utils/stringify.ts";
 import { dependencies } from "../walk.ts";
-import { fileName } from "../utils/path.ts";
 import { updateManifest } from "./manifest.ts";
 
 export type ElementManifest = {
