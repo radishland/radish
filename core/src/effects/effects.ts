@@ -3,34 +3,28 @@ import type { Equals } from "@fcrozatier/ts-helpers";
 import type { MaybePromise } from "../types.d.ts";
 import { Option } from "../utils/algebraic-structures.ts";
 
-export interface EffectHandler<P extends any[], R> {
-  (...payload: P): MaybePromise<R | Option<R>>;
-}
+type WithType<A> =
+  & A
+  & {
+    readonly type: string;
+  };
 
-interface EffectHandlerWithType<P extends any[], R>
-  extends EffectHandler<P, R> {
-  readonly type: string;
-}
+export type EffectHandler<P extends any[], R> = (
+  ...payload: P
+) => MaybePromise<R | Option<R>>;
+
+type EffectHandlerWithType<P extends any[], R> = WithType<EffectHandler<P, R>>;
 
 export type EffectHandlers = EffectHandlerWithType<any, any>[];
 
 export type EffectTransformer<P> = (payload: P) => MaybePromise<P | Option<P>>;
 
-interface EffectTransformerWithType<P> extends EffectTransformer<P> {
-  readonly type: string;
-}
+type EffectTransformerWithType<P> = WithType<EffectTransformer<P>>;
 
 export type EffectTransformers = EffectTransformerWithType<any>[];
 
-interface EffectRunner<P extends any[], R> {
-  (...payload: P): Effect<R>;
-  readonly type: string;
-}
-
-interface TransformEffectRunner<P> {
-  (payload: P): TransformEffect<P>;
-  readonly type: string;
-}
+type EffectRunner<P extends any[], R> = WithType<(...payload: P) => Effect<R>>;
+type TransformEffectRunner<P> = WithType<(payload: P) => TransformEffect<P>>;
 
 const effectScopes: EffectHandlerScope[] = [];
 
