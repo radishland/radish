@@ -1,7 +1,6 @@
 import type { EffectHandlers, EffectTransformers } from "./effects/effects.ts";
 import type { ImportMapOptions } from "./effects/impormap.ts";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
-import type { DenoArgs } from "./start.ts";
 
 export type Maybe<T> = T | undefined;
 export type MaybePromise<T> = T | Promise<T>;
@@ -83,9 +82,16 @@ export interface Config {
   speculationRules?: SpeculationRules;
 }
 
+export type CLIArgs = Readonly<{
+  dev: boolean;
+  importmap: boolean;
+  manifest: boolean;
+  build: boolean;
+}>;
+
 export interface ResolvedConfig extends Config {
   /**
    * The arguments of the current running command
    */
-  args: DenoArgs;
+  args: CLIArgs;
 }
