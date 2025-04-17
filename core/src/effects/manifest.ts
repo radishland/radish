@@ -16,7 +16,7 @@ import {
   handlerFor,
   transformerFor,
 } from "./effects.ts";
-import { hot } from "./hot_update.ts";
+import { hot } from "./hot-update.ts";
 import { io } from "./io.ts";
 import { stringifyObject } from "../utils/stringify.ts";
 
