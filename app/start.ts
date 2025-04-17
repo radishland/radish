@@ -4,7 +4,6 @@ import {
   importmap,
   io,
   manifest,
-  pluginIO,
   runWith,
 } from "@radish/core/effects";
 import { Option } from "@radish/core/utils";
@@ -12,6 +11,7 @@ import { resolve } from "@std/path";
 import {
   pluginConfig,
   pluginImportmap,
+  pluginIO,
   pluginManifest,
   pluginRadish,
   pluginStripTypes,
