@@ -6,12 +6,12 @@ import {
   staticFolder,
 } from "../constants.ts";
 import { build } from "./build.ts";
-import { generateImportmap } from "./impormap.ts";
 import { manifest } from "./manifest.ts";
 import type { HmrEvent } from "../types.d.ts";
 import { TtlCache } from "../utils/cache.ts";
 import { createTransformEffect } from "./effects.ts";
 import { ws } from "../server/ws.ts";
+import { generateImportmap } from "../plugins/importmap.ts";
 
 type HotUpdateParam = {
   event: HmrEvent;
