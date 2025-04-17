@@ -11,6 +11,7 @@ import { Option } from "@radish/core/utils";
 import { resolve } from "@std/path";
 import {
   pluginConfig,
+  pluginImportmap,
   pluginManifest,
   pluginRadish,
   pluginStripTypes,
@@ -41,6 +42,7 @@ const config: Config = {
   router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
   plugins: [
     pluginRadish(),
+    pluginImportmap,
     pluginManifest,
     pluginStripTypes,
     pluginConfig,

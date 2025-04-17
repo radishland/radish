@@ -3,12 +3,9 @@ import { assert, assertExists, unimplemented } from "@std/assert";
 import { extname, join } from "@std/path";
 import { generatedFolder, ts_extension_regex } from "../constants.ts";
 import type { ManifestBase } from "../types.d.ts";
-import { createEffect, handlerFor } from "./effects.ts";
-import { io } from "./io.ts";
-import { denoConfig } from "./config.ts";
-import { manifest } from "./manifest.ts";
+import { createEffect } from "./effects.ts";
 
-interface ImportMap {
+export interface ImportMap {
   imports?: Record<string, string>;
   scopes?: {
     [scope: string]: Record<string, string>;
@@ -68,43 +65,7 @@ export const importmap = {
   write: createEffect<ImportmapOperations["write"]>("importmap/write"),
 };
 
-export const importmapHandlers: ReturnType<typeof handlerFor>[] = [
-  handlerFor(importmap.get, async () => {
-    if (!importmapObject) {
-      importmapObject = JSON.parse(
-        await io.readFile(importmapPath),
-      ) as ImportMap;
-    }
-
-    return importmapObject;
-  }),
-
-  handlerFor(importmap.write, async () => {
-    await io.writeFile(importmapPath, JSON.stringify(importmapObject));
-  }),
-];
-
 export const importmapPath: string = join(generatedFolder, "importmap.json");
-
-let importmapObject: ImportMap = {};
-
-/**
- * Generates the importmap of based on the manifest.
- */
-export const generateImportmap = async (
-  options: ImportMapOptions = {},
-): Promise<void> => {
-  console.log("Generating importmap...");
-
-  const config = await denoConfig.read();
-  const manifestObject = await manifest.get();
-
-  importmapObject = pureImportMap(
-    manifestObject,
-    config.imports ?? {},
-    options,
-  );
-};
 
 export const pureImportMap = (
   manifest: ManifestBase,
