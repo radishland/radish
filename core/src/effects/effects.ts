@@ -3,24 +3,34 @@ import type { Equals } from "@fcrozatier/ts-helpers";
 import type { MaybePromise } from "../types.d.ts";
 import { Option } from "../utils/algebraic-structures.ts";
 
-export type EffectHandler<P extends any[], R> = (
-  ...payload: P
-) => MaybePromise<R | Option<R>>;
+export interface EffectHandler<P extends any[], R> {
+  (...payload: P): MaybePromise<R | Option<R>>;
+}
+
+interface EffectHandlerWithType<P extends any[], R>
+  extends EffectHandler<P, R> {
+  readonly type: string;
+}
+
+export type EffectHandlers = EffectHandlerWithType<any, any>[];
 
 export type EffectTransformer<P> = (payload: P) => MaybePromise<P | Option<P>>;
 
-type HandlerWithType<P extends any[], R> = {
-  type: string;
-  handler: EffectHandler<P, R>;
-};
+interface EffectTransformerWithType<P> extends EffectTransformer<P> {
+  readonly type: string;
+}
 
-type TransformerWithType<P> = {
-  type: string;
-  transformer: EffectTransformer<P>;
-};
+export type EffectTransformers = EffectTransformerWithType<any>[];
 
-export type EffectHandlers = HandlerWithType<any, any>[];
-export type EffectTransformers = TransformerWithType<any>[];
+interface EffectRunner<P extends any[], R> {
+  (...payload: P): Effect<R>;
+  readonly type: string;
+}
+
+interface TransformEffectRunner<P> {
+  (payload: P): TransformEffect<P>;
+  readonly type: string;
+}
 
 const effectScopes: EffectHandlerScope[] = [];
 
@@ -62,13 +72,14 @@ class TransformEffect<A> extends Effect<A> {}
 // Effect creator
 export function createEffect<Op extends (...payload: any[]) => any>(
   type: string,
-): (...payload: Parameters<Op>) => Effect<ReturnType<Op>> {
+): EffectRunner<Parameters<Op>, ReturnType<Op>> {
   const effectRunner = (...payload: Parameters<Op>): Effect<ReturnType<Op>> => {
     return new Effect(() => perform(type, ...payload));
   };
 
-  effectRunner[Symbol.toStringTag] = type;
-  return effectRunner;
+  Object.defineProperty(effectRunner, "type", { value: type, writable: false });
+
+  return effectRunner as EffectRunner<Parameters<Op>, ReturnType<Op>>;
 }
 
 /**
@@ -81,15 +92,16 @@ export function createEffect<Op extends (...payload: any[]) => any>(
 export function createTransformEffect<Op extends (payload: any) => any>(
   type: string,
 ): Equals<Parameters<Op>[0], ReturnType<Op>> extends true
-  ? (payload: Parameters<Op>[0]) => TransformEffect<ReturnType<Op>>
+  ? TransformEffectRunner<ReturnType<Op>>
   : never {
   const effectRunner = (payload: Parameters<Op>) => {
     return new TransformEffect(() => transform(type, payload));
   };
 
-  effectRunner[Symbol.toStringTag] = type;
+  Object.defineProperty(effectRunner, "type", { value: type, writable: false });
+
   // @ts-ignore TS 5.8 conditional
-  return effectRunner;
+  return effectRunner as TransformEffectRunner<ReturnType<Op>>;
 }
 
 const perform = <P extends any[], R>(
@@ -114,25 +126,21 @@ const transform = <P>(type: string, payload: P): Promise<P> => {
 };
 
 export const handlerFor = <P extends any[], R>(
-  effectRunner: (...payload: P) => Effect<R>,
+  effectRunner: EffectRunner<P, R>,
   handler: NoInfer<EffectHandler<P, R>>,
-): HandlerWithType<P, R> => {
-  const type: string = Object.getOwnPropertyDescriptor(
-    effectRunner,
-    Symbol.toStringTag,
-  )?.value;
-  return { type, handler };
+): EffectHandlerWithType<P, R> => {
+  const { type } = effectRunner;
+  Object.defineProperty(handler, "type", { value: type, writable: false });
+  return handler as EffectHandlerWithType<P, R>;
 };
 
 export const transformerFor = <P>(
-  effectRunner: (payload: P) => Effect<P>,
+  effectRunner: TransformEffectRunner<P>,
   transformer: NoInfer<EffectTransformer<P>>,
-): TransformerWithType<P> => {
-  const type: string = Object.getOwnPropertyDescriptor(
-    effectRunner,
-    Symbol.toStringTag,
-  )?.value;
-  return { type, transformer };
+): EffectTransformerWithType<P> => {
+  const { type } = effectRunner;
+  Object.defineProperty(transformer, "type", { value: type, writable: false });
+  return transformer as EffectTransformerWithType<P>;
 };
 
 /**
@@ -154,12 +162,12 @@ class EffectHandlerScope {
     if (handlers.length === 0) return;
 
     const handlersByType = Object.groupBy(handlers, ({ type }) => type);
-
     const handlersEntries = Object.entries(handlersByType)
-      .filter(([_k, v]) => v !== undefined)
-      .map(([key, handlers]): [string, EffectHandler<any, unknown>[]] => {
-        return [key, handlers!.map(({ handler }) => handler)];
-      });
+      .filter(([_k, v]) => v !== undefined).map(
+        ([key, transformers]): [string, EffectHandler<any, any>[]] => {
+          return [key, transformers!];
+        },
+      );
 
     for (const [type, handlers] of handlersEntries) {
       const currentHandlers = this.#handlers.get(type) ?? [];
@@ -175,7 +183,7 @@ class EffectHandlerScope {
     const transformersEntries = Object.entries(transformersByType)
       .filter(([_k, v]) => v !== undefined)
       .map(([key, transformers]): [string, EffectTransformer<unknown>[]] => {
-        return [key, transformers!.map(({ transformer }) => transformer)];
+        return [key, transformers!];
       });
 
     for (const [type, transformers] of transformersEntries) {
