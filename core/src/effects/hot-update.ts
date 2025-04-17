@@ -8,9 +8,10 @@ import {
 import { build } from "./build.ts";
 import { generateImportmap } from "./impormap.ts";
 import { manifest } from "./manifest.ts";
-import type { HmrEvent } from "../types.js";
+import type { HmrEvent } from "../types.d.ts";
 import { TtlCache } from "../utils/ttl-cache.ts";
 import { createTransformEffect } from "./effects.ts";
+import { ws } from "../server/ws.ts";
 
 type HotUpdateParam = {
   event: HmrEvent;
@@ -89,5 +90,5 @@ const hotUpdatePipeline = async (event: HmrEvent) => {
   await build(paths, { incremental: true });
 
   console.log("Hot-Reloading...");
-  // this.#app.ws.send("reload");
+  ws.send("reload");
 };
