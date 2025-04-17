@@ -10,7 +10,7 @@ import {
 } from "./effects.ts";
 import { hot } from "./hot-update.ts";
 import { Option } from "../utils/algebraic-structures.ts";
-import { throwUnlessNotFound } from "../utils.ts";
+import { throwUnlessNotFound } from "../utils/io.ts";
 
 type FileTransformParam = { path: string; content: string };
 

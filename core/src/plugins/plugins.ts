@@ -34,10 +34,10 @@ import { importmap } from "../effects/impormap.ts";
 import { io } from "../effects/io.ts";
 import { manifest, updateManifest } from "../effects/manifest.ts";
 import type { ManifestBase, Plugin } from "../types.d.ts";
-import { fileName } from "../utils.ts";
 import { Option } from "../utils/algebraic-structures.ts";
 import { setScope } from "../utils/stringify.ts";
 import { dependencies } from "../walk.ts";
+import { fileName } from "../utils/path.ts";
 
 export type ElementManifest = {
   kind: "element";

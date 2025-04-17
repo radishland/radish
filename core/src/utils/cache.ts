@@ -1,18 +1,16 @@
 import { assertGreater } from "@std/assert";
 
-const defaultTTL = 200;
-
 export class TtlCache<K, V> extends Map<K, V> {
   /**
    * TTL in ms
    */
-  #ttl = defaultTTL;
+  #ttl: number;
   #timeouts = new Map<K, number>();
 
   /**
    * @param ttl The time-to-live in milliseconds. Must be greater than 0
    */
-  constructor(ttl = defaultTTL) {
+  constructor(ttl: number) {
     super();
     assertGreater(ttl, 0);
     this.#ttl = ttl;
@@ -44,3 +42,19 @@ export class TtlCache<K, V> extends Map<K, V> {
     this.clear();
   }
 }
+
+/**
+ * Generic memoize decorator for a function with no arguments
+ */
+export const memoize = <T>(fn: () => T): () => T => {
+  let computed = false;
+  let result: T;
+
+  return () => {
+    if (!computed) {
+      computed = true;
+      result = fn();
+    }
+    return result;
+  };
+};

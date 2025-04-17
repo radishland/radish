@@ -9,7 +9,7 @@ import { build } from "./build.ts";
 import { generateImportmap } from "./impormap.ts";
 import { manifest } from "./manifest.ts";
 import type { HmrEvent } from "../types.d.ts";
-import { TtlCache } from "../utils/ttl-cache.ts";
+import { TtlCache } from "../utils/cache.ts";
 import { createTransformEffect } from "./effects.ts";
 import { ws } from "../server/ws.ts";
 
@@ -33,7 +33,7 @@ export const hot = {
   update: createTransformEffect<Hot["update"]>("hot/update"),
 };
 
-const hmrEvensCache = new TtlCache<string, HmrEvent>();
+const hmrEvensCache = new TtlCache<string, HmrEvent>(200);
 let watcher: Deno.FsWatcher | undefined;
 
 export const startHMR = async (): Promise<void> => {
