@@ -3,6 +3,8 @@ import type { Equals } from "@fcrozatier/ts-helpers";
 import type { MaybePromise } from "../types.d.ts";
 import { Option } from "../utils/algebraic-structures.ts";
 
+// [Implementation note]: effects and handlers are parametrized by the 'type' property
+
 type WithType<A> =
   & A
   & {
