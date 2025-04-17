@@ -1,8 +1,4 @@
-export {
-  manifest,
-  pluginManifest,
-  updateManifest,
-} from "../src/effects/manifest.ts";
+export { manifest } from "../src/effects/manifest.ts";
 export {
   addHandlers,
   addTransformers,

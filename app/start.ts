@@ -6,12 +6,15 @@ import {
   manifest,
   pluginConfig,
   pluginIO,
-  pluginManifest,
   runWith,
 } from "@radish/core/effects";
 import { Option } from "@radish/core/utils";
 import { resolve } from "@std/path";
-import { pluginRadish, pluginStripTypes } from "@radish/core/plugins";
+import {
+  pluginManifest,
+  pluginRadish,
+  pluginStripTypes,
+} from "@radish/core/plugins";
 import type { Config } from "@radish/core/types";
 
 const config: Config = {

@@ -79,10 +79,7 @@ export const startHMR = async (): Promise<void> => {
 };
 
 const hotUpdatePipeline = async (event: HmrEvent) => {
-  const { paths } = await hot.update({
-    event,
-    paths: [event.path],
-  });
+  const { paths } = await hot.update({ event, paths: [event.path] });
 
   await manifest.write();
   await manifest.load();

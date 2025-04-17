@@ -32,12 +32,13 @@ import { transformerFor } from "../effects/effects.ts";
 import { hot } from "../effects/hot-update.ts";
 import { importmap } from "../effects/impormap.ts";
 import { io } from "../effects/io.ts";
-import { manifest, updateManifest } from "../effects/manifest.ts";
+import { manifest } from "../effects/manifest.ts";
 import type { ManifestBase, Plugin } from "../types.d.ts";
 import { Option } from "../utils/algebraic-structures.ts";
 import { setScope } from "../utils/stringify.ts";
 import { dependencies } from "../walk.ts";
 import { fileName } from "../utils/path.ts";
+import { updateManifest } from "./manifest.ts";
 
 export type ElementManifest = {
   kind: "element";
@@ -359,9 +360,7 @@ export const pluginRadish: () => Plugin = () => {
   };
 
   return {
-    name: "radish-plugin-kit",
-    handlers: [],
-
+    name: "plugin-radish",
     // manifestStart: (controller) => {
     //   controller.manifestImports
     //     .add('import { fragments, shadowRoot } from "$core/parser";');

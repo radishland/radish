@@ -5,10 +5,11 @@ import { globals } from "./constants.ts";
 import { config as configEffect } from "./effects/config.ts";
 import * as effects from "./effects/effects.ts";
 import { generateImportmap, importmap } from "./effects/impormap.ts";
-import { manifest, updateManifest } from "./effects/manifest.ts";
+import { manifest } from "./effects/manifest.ts";
 import { build } from "./effects/build.ts";
 import { createApp, type Handle } from "./server/app.ts";
 import type { CLIArgs, Config, ResolvedConfig } from "./types.d.ts";
+import { updateManifest } from "./plugins/manifest.ts";
 
 const cliArgs: CLIArgs = Object.freeze(parseArgs(Deno.args, {
   boolean: ["dev", "importmap", "manifest", "build"],
