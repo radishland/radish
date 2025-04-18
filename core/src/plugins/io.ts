@@ -1,13 +1,13 @@
 import { ensureDir } from "@std/fs";
-import { dirname, isAbsolute, join, relative } from "@std/path";
+import { dirname, join, relative } from "@std/path";
 import { buildFolder } from "../constants.ts";
 import type { Plugin } from "../types.d.ts";
-
+import { handlerFor, transformerFor } from "../effects/effects.ts";
+import { hot } from "../effects/hot-update.ts";
+import { io } from "../effects/io.ts";
 import { Option } from "../utils/algebraic-structures.ts";
 import { throwUnlessNotFound } from "../utils/io.ts";
-import { handlerFor, transformerFor } from "../effects/effects.ts";
-import { io } from "../effects/io.ts";
-import { hot } from "../effects/hot-update.ts";
+import { workspaceRelative } from "../utils/path.ts";
 
 /**
  * A file store caching `Deno.readTextFile` calls for efficient file access
@@ -15,20 +15,10 @@ import { hot } from "../effects/hot-update.ts";
 const fileCache = new Map<string, string>();
 
 /**
- * Normalizes to relative paths to ensure unique keys
- */
-const normalizePath = (path: string) => {
-  if (isAbsolute(path)) {
-    path = relative(Deno.cwd(), path);
-  }
-  return path;
-};
-
-/**
  * Removes a file from the cache
  */
 const invalidateFileCache = (path: string): boolean => {
-  path = normalizePath(path);
+  path = workspaceRelative(path);
   return fileCache.delete(path);
 };
 
@@ -39,7 +29,7 @@ export const pluginIO: Plugin = {
   name: "io-handlers",
   handlers: [
     handlerFor(io.readFile, async (path) => {
-      path = normalizePath(path);
+      path = workspaceRelative(path);
 
       if (fileCache.has(path)) return fileCache.get(path)!;
 
@@ -47,9 +37,9 @@ export const pluginIO: Plugin = {
       fileCache.set(path, content);
       return content;
     }),
-    handlerFor(io.emitTo, (path) => join(buildFolder, normalizePath(path))),
+    handlerFor(io.emitTo, (path) => join(buildFolder, workspaceRelative(path))),
     handlerFor(io.writeFile, async (path, data) => {
-      path = normalizePath(path);
+      path = workspaceRelative(path);
       await ensureDir(dirname(path));
       await Deno.writeTextFile(path, data);
       invalidateFileCache(path);
