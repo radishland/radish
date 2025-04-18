@@ -5,11 +5,6 @@ export const libFolder = "lib";
 export const staticFolder = "static";
 export const generatedFolder = "_generated";
 
-/**
- * Extracts import specifiers from import declarations or dynamic imports
- */
-export const import_regex =
-  /from\s["']([^'"]+)["']|import\(["']([^"']+)["']\)/g;
 export const ts_extension_regex = /\.ts$/;
 
 /**

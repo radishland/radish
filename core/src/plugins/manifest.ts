@@ -1,7 +1,7 @@
 import { assertExists } from "@std/assert";
 import { ensureDirSync, type ExpandGlobOptions } from "@std/fs";
 import { extname } from "@std/path";
-import { generatedFolder, import_regex } from "../constants.ts";
+import { generatedFolder } from "../constants.ts";
 import { handlerFor, transformerFor } from "../effects/effects.ts";
 import { hot } from "../effects/hot-update.ts";
 import { io } from "../effects/io.ts";
@@ -10,17 +10,9 @@ import type { ManifestBase, Plugin } from "../types.d.ts";
 import { Option } from "../utils/algebraic-structures.ts";
 import { expandGlobWorkspaceRelative } from "../utils/fs.ts";
 import { stringifyObject } from "../utils/stringify.ts";
+import { extractImports } from "../utils/parse.ts";
 
 let loader: (() => Promise<ManifestBase>) | undefined;
-
-/**
- * Returns the deduped array of import aliases
- */
-const extractImports = (source: string) => {
-  return Array.from(
-    new Set(source.matchAll(import_regex).map((match) => match[1] || match[2])),
-  ).filter((str) => str !== undefined);
-};
 
 let manifestObject: ManifestBase = { imports: {} };
 
