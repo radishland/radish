@@ -36,7 +36,7 @@ import { io } from "../effects/io.ts";
 import { manifest } from "../effects/manifest.ts";
 import type { ManifestBase, Plugin } from "../types.d.ts";
 import { Option } from "../utils/algebraic-structures.ts";
-import { filename } from "../utils/path.ts";
+import { filename, isParent } from "../utils/path.ts";
 import { setScope } from "../utils/stringify.ts";
 import { dependencies } from "../walk.ts";
 import { updateManifest } from "./manifest.ts";
@@ -376,7 +376,7 @@ export const pluginRadish: () => Plugin = () => {
 
         for (const entry of entries) {
           if (entry.isFile && extname(entry.name) === ".html") {
-            if (!relative(elementsFolder, entry.path).startsWith("..")) {
+            if (isParent(elementsFolder, entry.path)) {
               const tagName = filename(entry.name);
               const elementOrRoute = manifestObject.elements[tagName];
 
@@ -395,7 +395,7 @@ export const pluginRadish: () => Plugin = () => {
                   manifestObject.routes,
                 ).filter((element) => element.dependencies?.includes(tagName)),
               );
-            } else if (!relative(routesFolder, entry.path).startsWith("..")) {
+            } else if (isParent(routesFolder, entry.path)) {
               const route = manifestObject.routes[entry.path];
               if (route) {
                 elementsOrRoutes.push(route);
@@ -437,7 +437,7 @@ export const pluginRadish: () => Plugin = () => {
           return Option.none();
         }
 
-        if (!relative(elementsFolder, entry.path).startsWith("..")) {
+        if (isParent(elementsFolder, entry.path)) {
           /**
            * Elements
            */
@@ -517,7 +517,7 @@ export const pluginRadish: () => Plugin = () => {
           }
 
           manifestObject.elements[elementName] = elementMetaData;
-        } else if (!relative(routesFolder, entry.path).startsWith("..")) {
+        } else if (isParent(routesFolder, entry.path)) {
           /**
            * Routes
            */
@@ -592,7 +592,7 @@ export const pluginRadish: () => Plugin = () => {
 
         handlerStack = [];
 
-        if (!relative(elementsFolder, path).startsWith("..")) {
+        if (isParent(elementsFolder, path)) {
           const element = manifestObject.elements[filename(path)];
 
           if (!element?.templateLoader) return Option.none();
@@ -729,9 +729,7 @@ export const pluginRadish: () => Plugin = () => {
         }
 
         if (event.kind === "remove") {
-          if (
-            !relative(elementsFolder, event.path).startsWith("..")
-          ) {
+          if (isParent(elementsFolder, event.path)) {
             const tagName = filename(event.path);
             const element = manifestObject.elements[tagName];
 
@@ -754,7 +752,7 @@ export const pluginRadish: () => Plugin = () => {
                 }
               }
             }
-          } else if (!relative(routesFolder, event.path).startsWith("..")) {
+          } else if (isParent(routesFolder, event.path)) {
             const route = manifestObject.routes[event.path];
 
             if (route) {

@@ -1,13 +1,13 @@
 import { ensureDir } from "@std/fs";
-import { dirname, join, relative } from "@std/path";
+import { dirname, join } from "@std/path";
 import { buildFolder } from "../constants.ts";
-import type { Plugin } from "../types.d.ts";
 import { handlerFor, transformerFor } from "../effects/effects.ts";
 import { hot } from "../effects/hot-update.ts";
 import { io } from "../effects/io.ts";
+import type { Plugin } from "../types.d.ts";
 import { Option } from "../utils/algebraic-structures.ts";
 import { throwUnlessNotFound } from "../utils/io.ts";
-import { workspaceRelative } from "../utils/path.ts";
+import { isParent, workspaceRelative } from "../utils/path.ts";
 
 /**
  * A file store caching `Deno.readTextFile` calls for efficient file access
@@ -75,7 +75,7 @@ export const pluginIO: Plugin = {
           console.log(`removed`, event.path);
 
           // don't process files under the removed path
-          paths = paths.filter((f) => relative(event.path, f).startsWith(".."));
+          paths = paths.filter((f) => isParent(event.path, f));
 
           return Option.some({ event, paths });
         } catch (error) {

@@ -1,5 +1,13 @@
 import { assert } from "@std/assert";
-import { basename, extname, isAbsolute, normalize, relative } from "@std/path";
+import {
+  basename,
+  common,
+  extname,
+  isAbsolute,
+  normalize,
+  relative,
+  resolve,
+} from "@std/path";
 
 /**
  * Returns the file name without the extension
@@ -19,4 +27,21 @@ export const workspaceRelative = (path: string) => {
     return relative(Deno.cwd(), normalized);
   }
   return normalized;
+};
+
+/**
+ * Checks whether two paths are in a parent - child relation
+ *
+ * @param parent The parent path. Must be a directory
+ * @param child The child path
+ *
+ * @throws {AssertionError} if the parent path is not a directory
+ */
+export const isParent = (parent: string, child: string): boolean => {
+  const parentInfo = Deno.statSync(parent);
+  assert(parentInfo.isDirectory);
+
+  const resolvedParent = resolve(parent);
+  const resolvedChild = resolve(child);
+  return common([resolvedParent, resolvedChild]) === resolvedParent;
 };
