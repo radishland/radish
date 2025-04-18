@@ -35,7 +35,7 @@ import { io } from "../effects/io.ts";
 import { manifest } from "../effects/manifest.ts";
 import type { ManifestBase, Plugin } from "../types.d.ts";
 import { Option } from "../utils/algebraic-structures.ts";
-import { fileName } from "../utils/path.ts";
+import { filename } from "../utils/path.ts";
 import { setScope } from "../utils/stringify.ts";
 import { dependencies } from "../walk.ts";
 import { updateManifest } from "./manifest.ts";
@@ -376,7 +376,7 @@ export const pluginRadish: () => Plugin = () => {
         for (const entry of entries) {
           if (entry.isFile && extname(entry.name) === ".html") {
             if (!relative(elementsFolder, entry.path).startsWith("..")) {
-              const tagName = fileName(entry.name);
+              const tagName = filename(entry.name);
               const elementOrRoute = manifestObject.elements[tagName];
 
               if (elementOrRoute) {
@@ -442,7 +442,7 @@ export const pluginRadish: () => Plugin = () => {
            */
 
           const parentFolder = basename(dirname(entry.path));
-          const elementName = fileName(entry.name);
+          const elementName = filename(entry.name);
 
           if (parentFolder !== elementName) {
             console.warn(
@@ -562,7 +562,7 @@ export const pluginRadish: () => Plugin = () => {
             // The extension is .js or .ts
 
             if (entry.name.includes("-")) {
-              const tagName = fileName(entry.path);
+              const tagName = filename(entry.path);
               const className = toPascalCase(tagName);
               const importPath = join("..", entry.path);
 
@@ -592,7 +592,7 @@ export const pluginRadish: () => Plugin = () => {
         handlerStack = [];
 
         if (!relative(elementsFolder, path).startsWith("..")) {
-          const element = manifestObject.elements[fileName(path)];
+          const element = manifestObject.elements[filename(path)];
 
           if (!element?.templateLoader) return Option.none();
 
@@ -731,7 +731,7 @@ export const pluginRadish: () => Plugin = () => {
           if (
             !relative(elementsFolder, event.path).startsWith("..")
           ) {
-            const tagName = fileName(event.path);
+            const tagName = filename(event.path);
             const element = manifestObject.elements[tagName];
 
             if (element) {

@@ -1,14 +1,13 @@
 import { assert } from "@std/assert";
-import { basename, isAbsolute, normalize, relative } from "@std/path";
+import { basename, extname, isAbsolute, normalize, relative } from "@std/path";
 
 /**
  * Returns the file name without the extension
  */
-export function fileName(path: string): string {
-  const name = basename(path).split(".")[0];
-  assert(!!name, `Expected ${path} filename to not be falsy`);
-
-  return name;
+export function filename(path: string): string {
+  const extension = extname(path);
+  assert(extension, `Expected "${path}" to be a file path`);
+  return basename(path, extension);
 }
 
 /**
