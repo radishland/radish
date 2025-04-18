@@ -23,6 +23,7 @@ import { basename, dirname, extname, join, relative } from "@std/path";
 import { toPascalCase } from "@std/text";
 import {
   elementsFolder,
+  generatedFolder,
   routesFolder,
   ts_extension_regex,
 } from "../constants.ts";
@@ -498,7 +499,7 @@ export const pluginRadish: () => Plugin = () => {
             case ".ts":
               {
                 const className = toPascalCase(elementName);
-                const importPath = join("..", entry.path);
+                const importPath = relative(generatedFolder, entry.path);
 
                 elementMetaData.classLoader = async () => {
                   return (await import(importPath))[className];
@@ -564,7 +565,7 @@ export const pluginRadish: () => Plugin = () => {
             if (entry.name.includes("-")) {
               const tagName = filename(entry.path);
               const className = toPascalCase(tagName);
-              const importPath = join("..", entry.path);
+              const importPath = relative(generatedFolder, entry.path);
 
               const classLoader = async () => {
                 return (await import(importPath))[className];
@@ -581,7 +582,7 @@ export const pluginRadish: () => Plugin = () => {
             }
           }
         }
-        return Option.none();
+        return Option.some({ entry, manifestObject });
       }),
       transformerFor(io.transformFile, async ({ path }) => {
         if (extname(path) !== ".html") return Option.none();
