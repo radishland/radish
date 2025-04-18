@@ -30,7 +30,7 @@ export const pluginManifest: Plugin = {
       manifestObject = await loader();
     }),
     handlerFor(manifest.get, () => manifestObject),
-    handlerFor(manifest.write, async () => await writeManifest()),
+    handlerFor(manifest.write, writeManifest),
   ],
   transformers: [
     /**
@@ -73,7 +73,8 @@ export const updateManifest = async (
   options?: ExpandGlobOptions,
 ): Promise<void> => {
   for await (const entry of expandGlobWorkspaceRelative(glob, options)) {
-    await manifest.update({ entry, manifestObject });
+    const result = await manifest.update({ entry, manifestObject });
+    manifestObject = result.manifestObject;
   }
 };
 
@@ -82,11 +83,11 @@ export const updateManifest = async (
  *
  * Functions are stringified with their scope by {@linkcode stringifyObject}
  */
-const writeManifest = async () => {
+async function writeManifest() {
   ensureDirSync(generatedFolder);
 
   let file = "export const manifest = ";
   file += stringifyObject(manifestObject);
 
   await io.writeFile(manifestPath, file);
-};
+}
