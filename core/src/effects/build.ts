@@ -1,15 +1,12 @@
-import {
-  emptyDirSync,
-  ensureDirSync,
-  expandGlob,
-  type WalkEntry,
-} from "@std/fs";
+import { emptyDirSync, ensureDirSync, type WalkEntry } from "@std/fs";
+import { distinctBy } from "@std/collections";
 import {
   buildFolder,
   elementsFolder,
   libFolder,
   routesFolder,
 } from "../constants.ts";
+import { expandGlobWorkspaceRelative } from "../utils/fs.ts";
 import { createTransformEffect } from "./effects.ts";
 import { io } from "./io.ts";
 
@@ -43,10 +40,12 @@ export const build = async (
   }
 
   const entries: WalkEntry[] = (await Promise.all(
-    paths.map(async (p) => await Array.fromAsync(expandGlob(p))),
+    paths.map(async (p) =>
+      await Array.fromAsync(expandGlobWorkspaceRelative(p))
+    ),
   )).flat();
-
-  const sortedEntries = await buildPipeline.sortFiles(entries);
+  const uniqueEntries = distinctBy(entries, (entry) => entry.path);
+  const sortedEntries = await buildPipeline.sortFiles(uniqueEntries);
 
   for (const entry of sortedEntries) {
     if (entry.isFile) {
