@@ -23,27 +23,49 @@ const invalidateFileCache = (path: string): boolean => {
 };
 
 /**
+ * Handles {@linkcode io.readFile} effects
+ *
  * Caches the result of read operations for efficient file access
  */
+export const IOReadFileHandler = handlerFor(io.readFile, async (path) => {
+  path = workspaceRelative(path);
+
+  if (fileCache.has(path)) return fileCache.get(path)!;
+
+  const content = await Deno.readTextFile(path);
+  fileCache.set(path, content);
+  return content;
+});
+
+/**
+ * Handles {@linkcode io.emitTo} effects
+ */
+export const IOEmitToHandler = handlerFor(
+  io.emitTo,
+  (path) => join(buildFolder, workspaceRelative(path)),
+);
+
+/**
+ * Handles {@linkcode io.writeFile} effects
+ *
+ * Invalidates the file cache after a file write
+ */
+export const IOWriteFileHandler = handlerFor(
+  io.writeFile,
+  async (path, data) => {
+    path = workspaceRelative(path);
+    await ensureDir(dirname(path));
+    await Deno.writeTextFile(path, data);
+    invalidateFileCache(path);
+  },
+);
+
 export const pluginIO: Plugin = {
   name: "io-handlers",
   handlers: [
-    handlerFor(io.readFile, async (path) => {
-      path = workspaceRelative(path);
-
-      if (fileCache.has(path)) return fileCache.get(path)!;
-
-      const content = await Deno.readTextFile(path);
-      fileCache.set(path, content);
-      return content;
-    }),
-    handlerFor(io.emitTo, (path) => join(buildFolder, workspaceRelative(path))),
-    handlerFor(io.writeFile, async (path, data) => {
-      path = workspaceRelative(path);
-      await ensureDir(dirname(path));
-      await Deno.writeTextFile(path, data);
-      invalidateFileCache(path);
-    }),
+    IOReadFileHandler,
+    IOEmitToHandler,
+    IOWriteFileHandler,
   ],
   transformers: [
     /**
