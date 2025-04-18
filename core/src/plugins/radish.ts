@@ -761,7 +761,7 @@ export const pluginRadish: () => Plugin = () => {
             }
           }
         } else if (event.kind === "create" || event.kind === "modify") {
-          await updateManifest([event.path]);
+          await updateManifest(event.path);
         }
         return Option.none();
       }),

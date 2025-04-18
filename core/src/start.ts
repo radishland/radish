@@ -1,7 +1,12 @@
 import { dev } from "$env";
 import { parseArgs } from "@std/cli/parse-args";
 import { UserAgent } from "@std/http/user-agent";
-import { globals } from "./constants.ts";
+import {
+  elementsFolder,
+  globals,
+  libFolder,
+  routesFolder,
+} from "./constants.ts";
 import { config as configEffect } from "./effects/config.ts";
 import * as effects from "./effects/effects.ts";
 import { manifest } from "./effects/manifest.ts";
@@ -55,7 +60,10 @@ export async function startApp(config: Config = {}) {
   globals();
 
   if (cliArgs.manifest) {
-    await updateManifest();
+    console.log("Generating manifest...");
+    await updateManifest("**", { root: libFolder });
+    await updateManifest("**", { root: elementsFolder });
+    await updateManifest("**", { root: routesFolder });
     await manifest.write();
   } else {
     await manifest.load();

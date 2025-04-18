@@ -1,20 +1,15 @@
 import { assertExists } from "@std/assert";
-import { ensureDirSync, expandGlob, type WalkEntry } from "@std/fs";
+import { ensureDirSync, type ExpandGlobOptions } from "@std/fs";
 import { extname } from "@std/path";
-import {
-  elementsFolder,
-  generatedFolder,
-  import_regex,
-  libFolder,
-  routesFolder,
-} from "../constants.ts";
+import { generatedFolder, import_regex } from "../constants.ts";
+import { handlerFor, transformerFor } from "../effects/effects.ts";
+import { hot } from "../effects/hot-update.ts";
+import { io } from "../effects/io.ts";
+import { manifest, manifestPath } from "../effects/manifest.ts";
 import type { ManifestBase, Plugin } from "../types.d.ts";
 import { Option } from "../utils/algebraic-structures.ts";
+import { expandGlobWorkspaceRelative } from "../utils/fs.ts";
 import { stringifyObject } from "../utils/stringify.ts";
-import { handlerFor, transformerFor } from "../effects/effects.ts";
-import { manifest, manifestPath } from "../effects/manifest.ts";
-import { io } from "../effects/io.ts";
-import { hot } from "../effects/hot-update.ts";
 
 let loader: (() => Promise<ManifestBase>) | undefined;
 
@@ -70,7 +65,7 @@ export const pluginManifest: Plugin = {
         if (event.kind === "remove") {
           delete manifestImports[event.path];
         } else if (event.kind === "modify") {
-          await updateManifest([event.path]);
+          await updateManifest(event.path);
         }
       }
       return Option.none();
@@ -79,24 +74,13 @@ export const pluginManifest: Plugin = {
 };
 
 /**
- * Performs the manifest/update effect on all entries of the path list
- *
- * @param paths A globs array
+ * Performs the manifest/update effect on all entries matching the glob
  */
 export const updateManifest = async (
-  paths: string[] = [
-    `${libFolder}/**`,
-    `${elementsFolder}/**`,
-    `${routesFolder}/**`,
-  ],
+  glob: string | URL,
+  options?: ExpandGlobOptions,
 ): Promise<void> => {
-  console.log("Generating manifest...");
-
-  const entries: WalkEntry[] =
-    (await Promise.all(paths.map((p) => Array.fromAsync(expandGlob(p)))))
-      .flat();
-
-  for (const entry of entries) {
+  for await (const entry of expandGlobWorkspaceRelative(glob, options)) {
     await manifest.update({ entry, manifestObject });
   }
 };
