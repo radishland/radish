@@ -225,7 +225,7 @@ class EffectHandlerScope {
           if (result.isSome()) {
             payload = result.value;
           }
-        }
+        } else payload = result;
       }
       return payload;
     }
