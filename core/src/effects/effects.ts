@@ -212,32 +212,29 @@ class EffectHandlerScope {
     throw new Error(`Unhandled effect "${type}"`);
   }
 
-  transform<P>(type: string, payload: P): Promise<P> {
+  async transform<P>(type: string, payload: P): Promise<P> {
     if (this.#transformers.has(type)) {
       const transformers: EffectTransformer<P>[] = this.#transformers.get(
         type,
       )!;
 
-      return transformers.reduce(
-        async (transformed: Promise<P>, transformer) => {
-          const payload = await transformed;
-          // @ts-ignore Promise.try is not yet typed in VSCode
-          const result: P | Option<P> = await Promise.try(transformer, payload);
-          if (result instanceof Option) {
-            if (result.isSome()) return result.value;
-            return transformed;
+      for (const transformer of transformers) {
+        // @ts-ignore Promise.try is not yet typed in VSCode
+        const result: P | Option<P> = await Promise.try(transformer, payload);
+        if (result instanceof Option) {
+          if (result.isSome()) {
+            payload = result.value;
           }
-          return result;
-        },
-        Promise.resolve(payload),
-      );
+        }
+      }
+      return payload;
     }
 
     if (this.#parent) {
       return this.#parent.transform(type, payload);
     }
 
-    return Promise.resolve(payload);
+    return payload;
   }
 }
 
