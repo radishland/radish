@@ -8,10 +8,8 @@ export const generatedFolder = "_generated";
 export const ts_extension_regex = /\.ts$/;
 
 /**
- * Sets the following browser globals `window`, `customElements`, `document`, `HTMLElement` for better behavior on the server out of the box.
- *
- * - `window`, and `customElements` are set to `undefined`
- * - methods of `HTMLElement` are no-op on the server
+ * Sets the following browser globals to no-op on the server: `window`, `customElements`,
+ * `document`, `HTMLElement`
  */
 export function globals() {
   // @ts-ignore mock HTMLElement methods on the server to be noop

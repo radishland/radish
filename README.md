@@ -128,7 +128,7 @@ The manifest holds information about the files of the project, their imports, de
 
 ### Build phase
 
-- The `buildStart: (entries: WalkEntry[],manifest: ManifestBase) => WalkEntry[]` hook runs at the beginning of a build or re-build, and allows plugins to modify the order in which the entries are built
+- The `buildOrder: (entries: WalkEntry[],manifest: ManifestBase) => WalkEntry[]` hook runs at the beginning of a build or re-build, and allows plugins to modify the order in which the entries are built
 - The `transform: (code: string, path: string, context: TransformContext) => MaybePromise<TransformResult>` hook lets you modify the content of a file
 - The `emit: (path: string) => string | null` hook runs just before the content is written on disk and allows a plugin to modify the default destination
 
