@@ -6,8 +6,6 @@ import {
   manifest,
   runWith,
 } from "@radish/core/effects";
-import { Option } from "@radish/core/utils";
-import { resolve } from "@std/path";
 import {
   pluginConfig,
   pluginImportmap,
@@ -17,6 +15,7 @@ import {
   pluginStripTypes,
 } from "@radish/core/plugins";
 import type { Config } from "@radish/core/types";
+import { Handler } from "../core/src/utils/algebraic-structures.ts";
 
 const config: Config = {
   importmap: {
@@ -41,9 +40,24 @@ const config: Config = {
   },
   router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
   plugins: [
-    pluginRadish(),
+    pluginRadish,
     pluginImportmap,
     pluginManifest,
+    {
+      // rewrites the manifest imports
+      name: "plugin-replace-manifest-imports",
+      handlers: [
+        handlerFor(
+          io.writeFile,
+          (path, content) => {
+            if (path === manifestPath) {
+              content = content.replace("$core/parser", "@radish/core/parser");
+            }
+            return Handler.continue(path, content);
+          },
+        ),
+      ],
+    },
     pluginStripTypes,
     pluginConfig,
     pluginIO,
@@ -69,40 +83,26 @@ const config: Config = {
 
 runWith(async () => {
   await startApp(config);
-}, {
-  handlers: [
-    handlerFor(
-      manifest.setLoader,
-      async () => (await import(manifestPath))["manifest"],
-    ),
-    // rewrites the importmap when using the development runtime version
-    handlerFor(importmap.write, async () => {
-      const importmapObject = await importmap.get();
+}, [
+  handlerFor(
+    manifest.setLoader,
+    async () => (await import(manifestPath))["manifest"],
+  ),
+  // rewrites the importmap when using the development runtime version
+  handlerFor(importmap.write, async () => {
+    const importmapObject = await importmap.get();
 
-      const imports = {
-        "radish": "/_radish/runtime/index.js",
-        "radish/boot": "/_radish/runtime/boot.js",
-      };
+    const imports = {
+      "radish": "/_radish/runtime/index.js",
+      "radish/boot": "/_radish/runtime/boot.js",
+    };
 
-      await io.writeFile(
-        importmapPath,
-        JSON.stringify({
-          imports: { ...importmapObject.imports, ...imports },
-          scopes: { ...importmapObject.scopes },
-        }),
-      );
-    }),
-    // rewrites the manifest imports
-    handlerFor(
-      io.writeFile,
-      async (path, content) => {
-        if (resolve(path) === resolve(manifestPath)) {
-          content = content.replace("$core", "@radish/core");
-          await Deno.writeTextFile(path, content);
-          return Option.some(undefined);
-        }
-        return Option.none();
-      },
-    ),
-  ],
-});
+    await io.writeFile(
+      importmapPath,
+      JSON.stringify({
+        imports: { ...importmapObject.imports, ...imports },
+        scopes: { ...importmapObject.scopes },
+      }),
+    );
+  }),
+]);
