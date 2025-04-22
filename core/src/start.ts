@@ -42,9 +42,6 @@ export async function startApp(config: Config = {}) {
     if (plugin.handlers) {
       effects.addHandlers(plugin.handlers);
     }
-    if (plugin.transformers) {
-      effects.addTransformers(plugin.transformers);
-    }
   }
 
   config = await configEffect.transform(config);

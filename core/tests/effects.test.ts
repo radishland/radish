@@ -1,14 +1,8 @@
 import { assertEquals } from "@std/assert/equals";
-import { Option } from "../src/utils/algebraic-structures.ts";
 import { assertGreaterOrEqual } from "@std/assert/greater-or-equal";
 import { assertLessOrEqual } from "@std/assert/less-or-equal";
-import {
-  createEffect,
-  createTransformEffect,
-  handlerFor,
-  runWith,
-  transformerFor,
-} from "../src/effects/effects.ts";
+import { createEffect, handlerFor, runWith } from "../src/effects/effects.ts";
+import { Handler, id } from "../src/utils/algebraic-structures.ts";
 
 /**
  * Effect definitions
@@ -39,7 +33,7 @@ interface StateOps<S> {
 const io = {
   readFile: createEffect<IO["readFile"]>("io/read"),
   writeFile: createEffect<IO["writeFile"]>("io/write"),
-  transformFile: createTransformEffect<
+  transformFile: createEffect<
     (options: { path: string; data: string }) => { path: string; data: string }
   >("io/transform"),
 };
@@ -80,44 +74,44 @@ const ioHandlers = [
     if (path.endsWith(".txt")) {
       await Console.log(`TXT reader on ${path}`);
       await new Promise((resolve) => setTimeout(resolve, 100));
-      return Option.some(`Content of ${path}`);
+      return (`Content of ${path}`);
     }
-    return Option.none();
+
+    return Handler.continue(path);
   }),
   handlerFor(io.readFile, async (path: string) => {
     if (path.endsWith(".css")) {
       await Console.log(`CSS reader on ${path}`);
       await new Promise((resolve) => setTimeout(resolve, 100));
-      return Option.some(`Content of ${path}`);
+      return (`Content of ${path}`);
     }
-    return Option.none();
+
+    return Handler.continue(path);
   }),
   handlerFor(io.writeFile, async (path: string, content: string) => {
     await Console.log(`Writing to ${path}: ${content}`);
     await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate I/O
   }),
-];
-
-const transformers = [
-  transformerFor(io.transformFile, ({ path, data }) => {
+  handlerFor(io.transformFile, ({ path, data }) => {
     if (path.endsWith(".txt")) {
-      return Option.some({ path, data: data.toUpperCase() });
+      return Handler.continue({ path, data: data.toUpperCase() });
     }
-    return Option.none();
+    return Handler.continue({ path, data });
   }),
-  transformerFor(io.transformFile, ({ path, data }) => {
+  handlerFor(io.transformFile, ({ path, data }) => {
     if (path.endsWith(".txt")) {
-      return Option.some({ path, data: data + "..." });
+      return Handler.continue({ path, data: data + "..." });
     }
-    return Option.none();
+    return Handler.continue({ path, data });
   }),
-  transformerFor(io.transformFile, async ({ path, data }) => {
+  handlerFor(io.transformFile, async ({ path, data }) => {
     if (path.endsWith(".css")) {
       await Console.log(`transforming file ${path}`);
-      return Option.some({ path, data: data.toLowerCase() });
+      return Handler.continue({ path, data: data.toLowerCase() });
     }
-    return Option.none();
+    return Handler.continue({ path, data });
   }),
+  handlerFor(io.transformFile, id),
 ];
 
 const logs: string[] = [];
@@ -161,14 +155,12 @@ async function exampleProgram() {
     async () => {
       await Console.log(`${count}`);
     },
-    {
+    [
       // Local override of the console effect
-      handlers: [
-        handlerFor(Console.log, (message) => {
-          logs.push(`[log]: ${message}`);
-        }),
-      ],
-    },
+      handlerFor(Console.log, (message) => {
+        logs.push(`[log]: ${message}`);
+      }),
+    ],
   );
 
   return { content: transformed, value, count };
@@ -176,15 +168,12 @@ async function exampleProgram() {
 
 const result = await runWith(
   exampleProgram,
-  {
-    handlers: [
-      consoleHandler,
-      randomHandler,
-      ...ioHandlers,
-      ...counter.handlers,
-    ],
-    transformers,
-  },
+  [
+    consoleHandler,
+    randomHandler,
+    ...ioHandlers,
+    ...counter.handlers,
+  ],
 );
 
 /**

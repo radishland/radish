@@ -2,15 +2,15 @@ import { assertExists } from "@std/assert";
 import { ensureDirSync, type ExpandGlobOptions } from "@std/fs";
 import { extname } from "@std/path";
 import { generatedFolder } from "../constants.ts";
-import { handlerFor, transformerFor } from "../effects/effects.ts";
+import { handlerFor } from "../effects/effects.ts";
 import { hot } from "../effects/hot-update.ts";
 import { io } from "../effects/io.ts";
 import { manifest, manifestPath } from "../effects/manifest.ts";
 import type { ManifestBase, Plugin } from "../types.d.ts";
-import { Option } from "../utils/algebraic-structures.ts";
+import { Handler } from "../utils/algebraic-structures.ts";
 import { expandGlobWorkspaceRelative } from "../utils/fs.ts";
-import { stringifyObject } from "../utils/stringify.ts";
 import { extractImports } from "../utils/parse.ts";
+import { stringifyObject } from "../utils/stringify.ts";
 
 let loader: (() => Promise<ManifestBase>) | undefined;
 
@@ -31,25 +31,21 @@ export const pluginManifest: Plugin = {
     }),
     handlerFor(manifest.get, () => manifestObject),
     handlerFor(manifest.write, writeManifest),
-  ],
-  transformers: [
     /**
      * Extracts imports from .js & .ts files into the manifest for the importmap generation
      */
-    transformerFor(manifest.update, async (
+    handlerFor(manifest.update, async (
       { entry, manifestObject },
     ) => {
-      if (!entry.isFile || ![".js", ".ts"].includes(extname(entry.path))) {
-        return Option.none();
+      if (entry.isFile && [".js", ".ts"].includes(extname(entry.path))) {
+        const content = await io.readFile(entry.path);
+        const imports = extractImports(content);
+        manifestObject.imports[entry.path] = imports;
       }
 
-      const content = await io.readFile(entry.path);
-      const imports = extractImports(content);
-      manifestObject.imports[entry.path] = imports;
-
-      return Option.some({ entry, manifestObject });
+      return { entry, manifestObject };
     }),
-    transformerFor(hot.update, async ({ event }) => {
+    handlerFor(hot.update, async ({ event, paths }) => {
       if (event.isFile) {
         const manifestObject = await manifest.get();
         const manifestImports = manifestObject.imports;
@@ -60,7 +56,7 @@ export const pluginManifest: Plugin = {
           await updateManifest(event.path);
         }
       }
-      return Option.none();
+      return Handler.continue({ event, paths });
     }),
   ],
 };

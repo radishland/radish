@@ -2,7 +2,7 @@ import type { WalkEntry } from "@std/fs";
 import { join } from "@std/path";
 import { generatedFolder } from "../constants.ts";
 import type { ManifestBase } from "../types.d.ts";
-import { createEffect, createTransformEffect } from "./effects.ts";
+import { createEffect } from "./effects.ts";
 
 /**
  * The path to the manifest file
@@ -40,7 +40,7 @@ export const manifest = {
   /**
    * Updates the manifest object in memory
    */
-  update: createTransformEffect<ManifestOperations["update"]>(
+  update: createEffect<ManifestOperations["update"]>(
     "manifest/update",
   ),
   /**

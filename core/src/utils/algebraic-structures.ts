@@ -18,21 +18,6 @@ export type BaseHandler<P extends any[], R> = (...payload: P) => MaybePromise<
   R | Continue<P>
 >;
 
-export const sequenceHandlers = <P extends any[], R>(
-  ...handlers: Handler<P, R>[]
-): (...payload: P) => Promise<Done<R> | Continue<P>> => {
-  return async (...payload: P): Promise<Done<R> | Continue<P>> => {
-    let handler = handlers[0];
-    if (!handler) return new Continue(...payload);
-
-    for (const next of handlers.slice(1)) {
-      handler = handler.flatMap((...args) => next.run(...args));
-    }
-
-    return await handler.run(...payload);
-  };
-};
-
 export class Handler<P extends any[], R> {
   #handle;
 
@@ -56,6 +41,15 @@ export class Handler<P extends any[], R> {
     });
   }
 
+  static fold<P extends any[], R>(handlers: Handler<P, R>[]) {
+    return handlers.reduce((acc, curr) =>
+      acc.flatMap((...args) => curr.run(...args))
+    );
+  }
+
+  /**
+   * Lifts a BaseHandler into the Handler class, allowing pattern matching on its result
+   */
   static of<P extends any[], R>(handle: BaseHandler<P, R>): Handler<P, R> {
     return new Handler(async (...args: P) => {
       // @ts-ignore Promise.try

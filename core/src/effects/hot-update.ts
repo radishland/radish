@@ -9,9 +9,9 @@ import { build } from "./build.ts";
 import { manifest } from "./manifest.ts";
 import type { HmrEvent } from "../types.d.ts";
 import { TtlCache } from "../utils/cache.ts";
-import { createTransformEffect } from "./effects.ts";
 import { ws } from "../server/ws.ts";
 import { generateImportmap } from "../plugins/importmap.ts";
+import { createEffect } from "./effects.ts";
 
 type HotUpdateParam = {
   event: HmrEvent;
@@ -30,7 +30,7 @@ export const hot = {
   /**
    * Triggers the hot update transform
    */
-  update: createTransformEffect<Hot["update"]>("hot/update"),
+  update: createEffect<Hot["update"]>("hot/update"),
 };
 
 const hmrEvensCache = new TtlCache<string, HmrEvent>(200);

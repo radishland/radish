@@ -29,17 +29,16 @@ import {
 } from "../constants.ts";
 import { buildPipeline } from "../effects/build.ts";
 import { config } from "../effects/config.ts";
-import { handlerFor, transformerFor } from "../effects/effects.ts";
+import { handlerFor } from "../effects/effects.ts";
 import { hot } from "../effects/hot-update.ts";
 import { importmap } from "../effects/impormap.ts";
 import { io } from "../effects/io.ts";
 import { manifest, manifestPath } from "../effects/manifest.ts";
 import type { ManifestBase, Plugin } from "../types.d.ts";
-import { Option } from "../utils/algebraic-structures.ts";
+import { Handler } from "../utils/algebraic-structures.ts";
 import { filename, isParent } from "../utils/path.ts";
 import { setScope } from "../utils/stringify.ts";
 import { dependencies } from "../walk.ts";
-import { IOWriteFileHandler } from "./io.ts";
 import { updateManifest } from "./manifest.ts";
 
 export type ElementManifest = {
@@ -364,21 +363,19 @@ export const pluginRadish: Plugin = {
   name: "plugin-radish",
   handlers: [
     /**
-     * Partial decorator of the io/write handler
+     * Decorator for the io/write handler
      *
      * Adds needed imports to the generated extended manifest
      */
     handlerFor(io.writeFile, (path, content) => {
-      if (path !== manifestPath) return Option.none();
+      if (path !== manifestPath) return Handler.continue(path, content);
 
       content =
         `import { fragments, shadowRoot } from "$core/parser";\n\n${content}`;
 
-      return IOWriteFileHandler(path, content);
+      return Handler.continue(path, content);
     }),
-  ],
-  transformers: [
-    transformerFor(buildPipeline.sortFiles, async (entries) => {
+    handlerFor(buildPipeline.sortFiles, async (entries) => {
       const manifestObject = await manifest.get() as Manifest;
       assertObjectMatch(manifestObject, manifestShape);
 
@@ -435,7 +432,7 @@ export const pluginRadish: Plugin = {
 
       return [...otherEntries, ...sorted];
     }),
-    transformerFor(manifest.update, async ({ entry, manifestObject }) => {
+    handlerFor(manifest.update, async ({ entry, manifestObject }) => {
       manifestObject = Object.assign(
         manifestShape,
         manifestObject,
@@ -444,7 +441,7 @@ export const pluginRadish: Plugin = {
       const extension = extname(entry.name);
 
       if (!entry.isFile || ![".html", ".js", ".ts"].includes(extension)) {
-        return Option.none();
+        return Handler.continue({ entry, manifestObject });
       }
 
       if (isParent(elementsFolder, entry.path)) {
@@ -459,7 +456,7 @@ export const pluginRadish: Plugin = {
           console.warn(
             `By convention an element file has the same name as its parent folder. Skipping file ${entry.path}`,
           );
-          return Option.none();
+          return Handler.continue({ entry, manifestObject });
         }
 
         assert(
@@ -592,10 +589,10 @@ export const pluginRadish: Plugin = {
           }
         }
       }
-      return Option.some({ entry, manifestObject });
+      return Handler.continue({ entry, manifestObject });
     }),
-    transformerFor(io.transformFile, async ({ path }) => {
-      if (extname(path) !== ".html") return Option.none();
+    handlerFor(io.transformFile, async ({ path, content }) => {
+      if (extname(path) !== ".html") return Handler.continue({ path, content });
 
       const manifestObject = await manifest.get() as Manifest;
       assertObjectMatch(manifestObject, manifestShape);
@@ -605,9 +602,11 @@ export const pluginRadish: Plugin = {
       if (isParent(elementsFolder, path)) {
         const element = manifestObject.elements[filename(path)];
 
-        if (!element?.templateLoader) return Option.none();
+        if (!element?.templateLoader) {
+          return Handler.continue({ path, content });
+        }
 
-        return Option.some({
+        return {
           path,
           content: serializeFragments(
             await Promise.all(
@@ -616,12 +615,12 @@ export const pluginRadish: Plugin = {
               ),
             ),
           ),
-        });
+        };
       }
 
       const route = manifestObject.routes[path];
 
-      if (!route) return Option.none();
+      if (!route) return Handler.continue({ path, content });
 
       let pageHeadContent = `
       <script type="importmap">
@@ -728,14 +727,13 @@ export const pluginRadish: Plugin = {
           .replace("%radish.body%", pageBodyContent),
       };
     }),
-
-    transformerFor(hot.update, async ({ event }) => {
+    handlerFor(hot.update, async ({ event, paths }) => {
       const extension = extname(event.path);
       const manifestObject = await manifest.get() as Manifest;
       assertObjectMatch(manifestObject, manifestShape);
 
       if (!event.isFile || ![".html", ".js", ".ts"].includes(extension)) {
-        return Option.none();
+        return Handler.continue({ event, paths });
       }
 
       if (event.kind === "remove") {
@@ -772,7 +770,7 @@ export const pluginRadish: Plugin = {
       } else if (event.kind === "create" || event.kind === "modify") {
         await updateManifest(event.path);
       }
-      return Option.none();
+      return Handler.continue({ event, paths });
     }),
   ],
 };

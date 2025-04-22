@@ -1,12 +1,12 @@
 import { assertEquals, assertExists } from "@std/assert";
 import type { WalkEntry } from "@std/fs";
 import { basename, extname, relative } from "@std/path";
-import { io } from "../exports/effects.ts";
-import { runWith, transformerFor } from "../src/effects/effects.ts";
+import { handlerFor, io } from "../exports/effects.ts";
+import { runWith } from "../src/effects/effects.ts";
 import { manifest } from "../src/effects/manifest.ts";
 import type { ElementManifest } from "../src/plugins/radish.ts";
 import type { ManifestBase } from "../src/types.d.ts";
-import { Option } from "../src/utils/algebraic-structures.ts";
+import { Handler, id } from "../src/utils/algebraic-structures.ts";
 import { extractImports } from "../src/utils/parse.ts";
 
 const files: Record<string, string> = {
@@ -17,7 +17,8 @@ const files: Record<string, string> = {
   "elements/my-carousel.ts": ``,
   "elements/folder": ``,
 };
-const manifestObject: ManifestBase = { imports: {}, elements: {} };
+
+let manifestObject: ManifestBase = { imports: {} };
 
 const createWalkEntry = (path: string): WalkEntry => {
   return {
@@ -31,44 +32,42 @@ const createWalkEntry = (path: string): WalkEntry => {
 
 runWith(async () => {
   for (const path of Object.keys(files)) {
-    await manifest.update({ entry: createWalkEntry(path), manifestObject });
+    const { manifestObject: newManifest } = await manifest.update({
+      entry: createWalkEntry(path),
+      manifestObject,
+    });
+    manifestObject = newManifest;
   }
-}, {
-  handlers: [
-    transformerFor(io.readFile, (path) => {
-      const content = files[path];
-      assertExists(content);
-      return content;
-    }),
-  ],
-  transformers: [
-    transformerFor(manifest.update, async (
-      { entry, manifestObject },
-    ) => {
-      if (!entry.isFile || ![".ts"].includes(extname(entry.path))) {
-        return Option.none();
-      }
-
+}, [
+  handlerFor(io.readFile, (path) => {
+    const content = files[path];
+    assertExists(content);
+    return content;
+  }),
+  handlerFor(manifest.update, async (
+    { entry, manifestObject },
+  ) => {
+    if (entry.isFile && [".ts"].includes(extname(entry.path))) {
       const content = await io.readFile(entry.path);
       const imports = extractImports(content);
       manifestObject.imports[entry.path] = imports;
+    }
 
-      return Option.some({ entry, manifestObject });
-    }),
-    transformerFor(manifest.update, (
-      { entry, manifestObject },
-    ) => {
-      manifestObject = Object.assign({
-        elements: {},
-        routes: {},
-        layouts: {},
-      }, manifestObject);
+    return Handler.continue({ entry, manifestObject });
+  }),
+  handlerFor(manifest.update, (
+    { entry, manifestObject },
+  ) => {
+    manifestObject = Object.assign({
+      elements: {},
+      routes: {},
+      layouts: {},
+    }, manifestObject);
 
-      if (!entry.path.includes("-")) return Option.none();
-      if (relative("elements", entry.path).startsWith("..")) {
-        return Option.none();
-      }
-
+    if (
+      entry.path.includes("-") &&
+      !relative("elements", entry.path).startsWith("..")
+    ) {
       const name = basename(entry.path);
       const elementMetaData: ElementManifest = {
         kind: "element",
@@ -78,11 +77,12 @@ runWith(async () => {
       };
 
       manifestObject.elements[name] = elementMetaData;
+    }
 
-      return Option.some({ entry, manifestObject });
-    }),
-  ],
-});
+    return Handler.continue({ entry, manifestObject });
+  }),
+  handlerFor(manifest.update, id),
+]);
 
 Deno.test("manifest", () => {
   assertEquals(manifestObject, {
@@ -112,5 +112,7 @@ Deno.test("manifest", () => {
         tagName: "my-carousel.ts",
       },
     },
+    routes: {},
+    layouts: {},
   });
 });

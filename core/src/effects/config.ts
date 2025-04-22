@@ -1,5 +1,5 @@
 import type { Config, ResolvedConfig } from "../types.d.ts";
-import { createEffect, createTransformEffect } from "./effects.ts";
+import { createEffect } from "./effects.ts";
 
 interface ConfigEffect {
   read: () => ResolvedConfig;
@@ -14,7 +14,7 @@ export const config = {
   /**
    * Transforms the config object before it's resolved.
    */
-  transform: createTransformEffect<ConfigEffect["transform"]>(
+  transform: createEffect<ConfigEffect["transform"]>(
     "config/transform",
   ),
 };

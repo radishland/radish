@@ -7,11 +7,11 @@ import {
   routesFolder,
 } from "../constants.ts";
 import { expandGlobWorkspaceRelative } from "../utils/fs.ts";
-import { createTransformEffect } from "./effects.ts";
 import { io } from "./io.ts";
+import { createEffect } from "./effects.ts";
 
 export const buildPipeline = {
-  sortFiles: createTransformEffect<(entries: WalkEntry[]) => WalkEntry[]>(
+  sortFiles: createEffect<(entries: WalkEntry[]) => WalkEntry[]>(
     "build/sort",
   ),
 };

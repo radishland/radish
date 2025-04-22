@@ -1,4 +1,4 @@
-import type { EffectHandlers, EffectTransformers } from "./effects/effects.ts";
+import type { Handlers } from "./effects/effects.ts";
 import type { ImportMapOptions } from "./effects/impormap.ts";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
 
@@ -40,8 +40,7 @@ export interface Plugin {
    * The name of the plugin
    */
   name: string;
-  handlers?: EffectHandlers;
-  transformers?: EffectTransformers;
+  handlers?: Handlers;
 }
 
 export interface Config {

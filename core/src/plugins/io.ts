@@ -1,11 +1,11 @@
 import { ensureDir } from "@std/fs";
 import { dirname, join } from "@std/path";
 import { buildFolder } from "../constants.ts";
-import { handlerFor, transformerFor } from "../effects/effects.ts";
+import { handlerFor } from "../effects/effects.ts";
 import { hot } from "../effects/hot-update.ts";
 import { io } from "../effects/io.ts";
 import type { Plugin } from "../types.d.ts";
-import { Option } from "../utils/algebraic-structures.ts";
+import { Handler } from "../utils/algebraic-structures.ts";
 import { throwUnlessNotFound } from "../utils/io.ts";
 import { isParent, workspaceRelative } from "../utils/path.ts";
 
@@ -66,12 +66,10 @@ export const pluginIO: Plugin = {
     IOReadFileHandler,
     IOEmitToHandler,
     IOWriteFileHandler,
-  ],
-  transformers: [
     /**
      * Invalidates the file cache when a file is modified or removed
      */
-    transformerFor(hot.update, ({ event, paths }) => {
+    handlerFor(hot.update, ({ event, paths }) => {
       if (
         event.isFile &&
         (event.kind === "modify" || event.kind === "remove")
@@ -82,14 +80,15 @@ export const pluginIO: Plugin = {
           paths.push(event.path);
         }
 
-        return Option.some({ event, paths });
+        return Handler.continue({ event, paths });
       }
-      return Option.none();
+
+      return Handler.continue({ event, paths });
     }),
     /**
      * Updates files inside the build folder in a way that mirrors the source folder structure
      */
-    transformerFor(hot.update, async ({ event, paths }) => {
+    handlerFor(hot.update, async ({ event, paths }) => {
       if (event.kind === "remove") {
         try {
           const target = await io.emitTo(event.path);
@@ -99,12 +98,12 @@ export const pluginIO: Plugin = {
           // don't process files under the removed path
           paths = paths.filter((f) => isParent(event.path, f));
 
-          return Option.some({ event, paths });
+          return Handler.continue({ event, paths });
         } catch (error) {
           throwUnlessNotFound(error);
         }
       }
-      return Option.none();
+      return Handler.continue({ event, paths });
     }),
   ],
 };
