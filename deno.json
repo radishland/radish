@@ -2,6 +2,7 @@
   "workspace": ["./core", "./init", "./runtime", "./app", "./htmlcrunch"],
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts",
+    "test": "deno test -A --no-check",
     "load-env": "deno run -A scripts/load-env.ts",
     "css": "deno run -A scripts/css.ts",
     "create": "deno run -A scripts/create.ts",
