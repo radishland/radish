@@ -41,8 +41,6 @@ const config: Config = {
   router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
   plugins: [
     pluginRadish,
-    pluginImportmap,
-    pluginManifest,
     {
       // rewrites the manifest imports
       name: "plugin-replace-manifest-imports",
@@ -58,6 +56,8 @@ const config: Config = {
         ),
       ],
     },
+    pluginImportmap,
+    pluginManifest,
     pluginStripTypes,
     pluginConfig,
     pluginIO,
