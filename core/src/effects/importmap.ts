@@ -80,8 +80,8 @@ export const pureImportMap = (
   const pathsByAlias = new Map<string, string[]>();
 
   for (const specifier of importSpecifiers) {
-    // Skips https import as they can be resolved the in the browser directly
-    if (specifier.startsWith("https")) continue;
+    // Skips relative and https import as they can be resolved the in the browser directly
+    if (specifier.startsWith("./") || specifier.startsWith("https")) continue;
 
     const { prefix: alias, path } = findLongestMatchingPrefix(
       specifier,
@@ -104,7 +104,7 @@ export const pureImportMap = (
     if (target?.startsWith("./")) {
       if (extname(target)) {
         assert(
-          paths.some((p) => p !== ""),
+          paths.every((p) => p === ""),
           "Can't target a subpath of a module",
         );
 
