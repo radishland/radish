@@ -31,7 +31,14 @@
 
   <p>
     The @attr directive toggles the <code>id</code> attribute between #red and
-    #green when the button is clicked. It also sets the non-reflected boolean
-    <code>checked</code> attribute on the checkbox
+    #green when the button is clicked.
+  </p>
+  <p>
+    It's also used here to set the non-reflected boolean <code>checked</code>
+    attribute on the checkbox with @attr|server.
+  </p>
+  <p>
+    Since <code>checked</code> is non-reflected the @prop directive is used to
+    display the up to date value of the checked state
   </p>
 </handle-attr>
