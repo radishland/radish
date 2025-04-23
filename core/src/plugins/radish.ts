@@ -35,7 +35,7 @@ import { importmap } from "../effects/impormap.ts";
 import { io } from "../effects/io.ts";
 import { manifest, manifestPath } from "../effects/manifest.ts";
 import type { ManifestBase, Plugin } from "../types.d.ts";
-import { Handler } from "../utils/algebraic-structures.ts";
+import { Handler } from "../effects/handlers.ts";
 import { filename, isParent } from "../utils/path.ts";
 import { setScope } from "../utils/stringify.ts";
 import { dependencies } from "../walk.ts";

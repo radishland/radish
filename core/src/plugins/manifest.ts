@@ -7,10 +7,10 @@ import { hot } from "../effects/hot-update.ts";
 import { io } from "../effects/io.ts";
 import { manifest, manifestPath } from "../effects/manifest.ts";
 import type { ManifestBase, Plugin } from "../types.d.ts";
-import { Handler } from "../utils/algebraic-structures.ts";
 import { expandGlobWorkspaceRelative } from "../utils/fs.ts";
 import { extractImports } from "../utils/parse.ts";
 import { stringifyObject } from "../utils/stringify.ts";
+import { Handler } from "../effects/handlers.ts";
 
 let loader: (() => Promise<ManifestBase>) | undefined;
 

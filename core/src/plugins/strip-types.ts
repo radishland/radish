@@ -4,7 +4,7 @@ import { buildFolder, ts_extension_regex } from "../constants.ts";
 import { handlerFor } from "../effects/effects.ts";
 import { io } from "../effects/io.ts";
 import type { Plugin } from "../types.d.ts";
-import { Handler } from "../utils/algebraic-structures.ts";
+import { Handler } from "../effects/handlers.ts";
 
 /**
  * Strips Types
