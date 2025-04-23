@@ -23,5 +23,5 @@ export const denoConfig = {
   /**
    * Returns the parsed deno config and throws if it can't find it
    */
-  read: createEffect<() => Record<string, any>>("config/read"),
+  read: createEffect<() => Record<string, any>>("deno.config/read"),
 };
