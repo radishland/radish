@@ -1,11 +1,5 @@
 import { importmapPath, manifestPath, startApp } from "@radish/core";
-import {
-  Handler,
-  handlerFor,
-  importmap,
-  io,
-  runWith,
-} from "@radish/core/effects";
+import { Handler, handlerFor, importmap, io } from "@radish/core/effects";
 import {
   pluginConfig,
   pluginImportmap,
@@ -42,7 +36,7 @@ const config: Config = {
     pluginRadish,
     {
       // rewrites the manifest imports
-      name: "plugin-replace-manifest-imports",
+      name: "plugin-rewrite-manifest-imports",
       handlers: [
         handlerFor(
           io.writeFile,
@@ -53,6 +47,28 @@ const config: Config = {
             return Handler.continue(path, content);
           },
         ),
+      ],
+    },
+    {
+      name: "plugin-rewrite-importmap-imports",
+      handlers: [
+        // rewrites the importmap when using the development runtime version
+        handlerFor(importmap.write, async () => {
+          const importmapObject = await importmap.get();
+
+          const imports = {
+            "radish": "/_radish/runtime/index.js",
+            "radish/boot": "/_radish/runtime/boot.js",
+          };
+
+          await io.writeFile(
+            importmapPath,
+            JSON.stringify({
+              imports: { ...importmapObject.imports, ...imports },
+              scopes: { ...importmapObject.scopes },
+            }),
+          );
+        }),
       ],
     },
     pluginImportmap,
@@ -80,27 +96,7 @@ const config: Config = {
   // },
 };
 
-runWith(async () => {
-  await startApp(
-    config,
-    async () => (await import("./" + manifestPath))["manifest"],
-  );
-}, [
-  // rewrites the importmap when using the development runtime version
-  handlerFor(importmap.write, async () => {
-    const importmapObject = await importmap.get();
-
-    const imports = {
-      "radish": "/_radish/runtime/index.js",
-      "radish/boot": "/_radish/runtime/boot.js",
-    };
-
-    await io.writeFile(
-      importmapPath,
-      JSON.stringify({
-        imports: { ...importmapObject.imports, ...imports },
-        scopes: { ...importmapObject.scopes },
-      }),
-    );
-  }),
-]);
+await startApp(
+  config,
+  async () => (await import("./" + manifestPath))["manifest"],
+);

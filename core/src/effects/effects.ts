@@ -171,10 +171,11 @@ export const runWith = async <T>(
  * Adds a list of handlers to the current scope
  */
 export const addHandlers = (handlers: Handlers): void => {
-  const currentScope = effectScopes.at(-1);
-  assertExists(
-    currentScope,
-    "'addHandlers' should run inside an EffectScope. Use 'runWith'",
-  );
+  let currentScope = effectScopes.at(-1);
+  if (!currentScope) {
+    currentScope = new EffectHandlerScope();
+    effectScopes.push(currentScope);
+  }
+
   currentScope.addHandlers(handlers);
 };
