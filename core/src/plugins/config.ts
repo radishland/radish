@@ -8,7 +8,7 @@ import { config, denoConfig } from "../effects/config.ts";
 import { id } from "../utils/algebraic-structures.ts";
 
 export const pluginConfig: Plugin = {
-  name: "config-plugin",
+  name: "plugin-config",
   handlers: [
     handlerFor(config.transform, id),
     handlerFor(denoConfig.read, async () => {

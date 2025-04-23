@@ -67,7 +67,7 @@ export const IOWriteFileHandler = handlerFor(
 export const IOTransformHandler = handlerFor(io.transformFile, id);
 
 export const pluginIO: Plugin = {
-  name: "io-handlers",
+  name: "plugin-io",
   handlers: [
     IOReadFileHandler,
     IOEmitToHandler,

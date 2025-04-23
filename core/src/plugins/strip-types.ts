@@ -12,7 +12,7 @@ import { Handler } from "../effects/handlers.ts";
  * Removes type annotations and comments and handles path rewriting
  */
 export const pluginStripTypes: Plugin = {
-  name: "radish-plugin-strip-types",
+  name: "plugin-strip-types",
   handlers: [
     handlerFor(io.emitTo, (path) => {
       if (extname(path) === ".ts" && !path.endsWith(".d.ts")) {
