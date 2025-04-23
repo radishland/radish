@@ -4,6 +4,7 @@ import { extname, join } from "@std/path";
 import { generatedFolder, ts_extension_regex } from "../constants.ts";
 import type { ManifestBase } from "../types.d.ts";
 import { createEffect } from "./effects.ts";
+import { findLongestMatchingPrefix } from "../plugins/resolve.ts";
 
 export interface ImportMap {
   imports?: Record<string, string>;
@@ -88,7 +89,9 @@ export const pureImportMap = (
       aliases,
     );
 
-    assertExists(alias, `Unresolved module specifier ${specifier}`);
+    // assertExists(alias, `Unresolved module specifier ${specifier}`);
+    // TODO we should throw if the specifier couldn't be resolved
+    if (!alias) continue;
 
     const paths = pathsByAlias.get(alias) ?? [];
 
@@ -193,42 +196,4 @@ export const pureImportMap = (
       ...Object.fromEntries(importsMap.entries()),
     },
   };
-};
-
-/**
- * Finds the longest matching prefix of an import specifier against a list of prefixes
- *
- * Returns the (first) longest prefix of the list such that either the specifier and the
- * prefix are equal or the specifier is a subpath of its prefix (proper prefix)
- *
- * In the case of a proper prefix, the nonempty subpath is returned as well
- *
- * If the specifier doesn't match against the list, the best match is `undefined`
- */
-export const findLongestMatchingPrefix = (
-  specifier: string,
-  prefixes: string[],
-) => {
-  let bestMatch: string | undefined;
-  let path = "";
-
-  for (const prefix of prefixes) {
-    if (!specifier.startsWith(prefix)) continue;
-
-    /**
-     * If the whole prefix does not match then either the prefix is a directory ('/' suffix) or the specifier is a subpath ('/' prefix on the remaining part)
-     */
-    const remaining = specifier.slice(prefix.length);
-    if (
-      remaining.length > 0 &&
-      !remaining.startsWith("/") &&
-      !prefix.endsWith("/")
-    ) continue;
-
-    if (!bestMatch || bestMatch.length < prefix.length) {
-      bestMatch = prefix;
-      path = remaining;
-    }
-  }
-  return { prefix: bestMatch, path };
 };
