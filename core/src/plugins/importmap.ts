@@ -1,5 +1,5 @@
 import { extname } from "@std/path";
-import { denoConfig } from "../effects/config.ts";
+import { config, denoConfig } from "../effects/config.ts";
 import { handlerFor } from "../effects/effects.ts";
 import {
   type ImportMap,
@@ -41,18 +41,17 @@ export const pluginImportmap: Plugin = {
 /**
  * Generates the importmap of based on the manifest.
  */
-export const generateImportmap = async (
-  options: ImportMapOptions = {},
-): Promise<void> => {
+export const generateImportmap = async (): Promise<void> => {
   console.log("Generating importmap...");
 
-  const config = await denoConfig.read();
+  const deno = await denoConfig.read();
   const manifestObject = await manifest.get();
+  const options = await config.read();
 
   importmapObject = pureImportMap(
     manifestObject,
-    config.imports ?? {},
-    options,
+    deno.imports ?? {},
+    options.importmap,
   );
 };
 
