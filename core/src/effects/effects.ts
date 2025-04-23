@@ -1,7 +1,7 @@
 import { assertExists } from "@std/assert";
-import { type BaseHandler, Handler } from "../utils/algebraic-structures.ts";
+import { type BaseHandler, Handler } from "./handlers.ts";
 
-// [Implementation note]: effects and handlers are parametrized by the 'type' property
+// Effects and handlers are parametrized by the 'type' property
 
 interface HandlerWithType<P extends any[], R> extends Handler<P, R> {
   readonly type: string;
@@ -9,7 +9,7 @@ interface HandlerWithType<P extends any[], R> extends Handler<P, R> {
 
 export type Handlers = HandlerWithType<any, any>[];
 
-interface EffectRunner<P extends any[], R> {
+interface EffectWithType<P extends any[], R> {
   (...payload: P): Effect<R>;
   readonly type: string;
 }
@@ -52,14 +52,14 @@ export class Effect<A> implements PromiseLike<A> {
 // Effect creator
 export function createEffect<Op extends (...payload: any[]) => any>(
   type: string,
-): EffectRunner<Parameters<Op>, ReturnType<Op>> {
+): EffectWithType<Parameters<Op>, ReturnType<Op>> {
   const effectRunner = (...payload: Parameters<Op>): Effect<ReturnType<Op>> => {
     return new Effect(() => perform(type, ...payload));
   };
 
   Object.defineProperty(effectRunner, "type", { value: type, writable: false });
 
-  return effectRunner as EffectRunner<Parameters<Op>, ReturnType<Op>>;
+  return effectRunner as EffectWithType<Parameters<Op>, ReturnType<Op>>;
 }
 
 const perform = <P extends any[], R>(
@@ -75,7 +75,7 @@ const perform = <P extends any[], R>(
 };
 
 export const handlerFor = <P extends any[], R>(
-  effectRunner: EffectRunner<P, R>,
+  effectRunner: EffectWithType<P, R>,
   handler: NoInfer<BaseHandler<P, R>>,
 ): HandlerWithType<P, R> => {
   const { type } = effectRunner;
