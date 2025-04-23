@@ -6,7 +6,7 @@ import {
   type ImportMapOptions,
   importmapPath,
   pureImportMap,
-} from "../effects/impormap.ts";
+} from "../effects/importmap.ts";
 import { io } from "../effects/io.ts";
 import { manifest } from "../effects/manifest.ts";
 import type { Plugin } from "../types.d.ts";

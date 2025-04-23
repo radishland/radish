@@ -15,7 +15,7 @@ import { createApp, type Handle } from "./server/app.ts";
 import type { CLIArgs, Config, ResolvedConfig } from "./types.d.ts";
 import { updateManifest } from "./plugins/manifest.ts";
 import { generateImportmap } from "./plugins/importmap.ts";
-import { importmap } from "./effects/impormap.ts";
+import { importmap } from "./effects/importmap.ts";
 
 const cliArgs: CLIArgs = Object.freeze(parseArgs(Deno.args, {
   boolean: ["dev", "importmap", "manifest", "build"],

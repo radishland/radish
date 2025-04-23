@@ -31,7 +31,7 @@ import { buildPipeline } from "../effects/build.ts";
 import { config } from "../effects/config.ts";
 import { handlerFor } from "../effects/effects.ts";
 import { hot } from "../effects/hot-update.ts";
-import { importmap } from "../effects/impormap.ts";
+import { importmap } from "../effects/importmap.ts";
 import { io } from "../effects/io.ts";
 import { manifest, manifestPath } from "../effects/manifest.ts";
 import type { ManifestBase, Plugin } from "../types.d.ts";

@@ -1,5 +1,5 @@
 import type { Handlers } from "./effects/effects.ts";
-import type { ImportMapOptions } from "./effects/impormap.ts";
+import type { ImportMapOptions } from "./effects/importmap.ts";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
 
 export type Maybe<T> = T | undefined;
