@@ -10,6 +10,7 @@ import {
 import { io } from "../effects/io.ts";
 import { manifest } from "../effects/manifest.ts";
 import type { Plugin } from "../types.d.ts";
+import { throwUnlessNotFound } from "../utils/io.ts";
 
 let importmapObject: ImportMap = {};
 
@@ -17,10 +18,12 @@ export const pluginImportmap: Plugin = {
   name: "plugin-importmap",
   handlers: [
     handlerFor(importmap.get, async () => {
-      if (!importmapObject) {
-        importmapObject = JSON.parse(
-          await io.readFile(importmapPath),
-        ) as ImportMap;
+      if (!importmapObject.imports) {
+        try {
+          importmapObject = JSON.parse(await io.readFile(importmapPath));
+        } catch (error) {
+          throwUnlessNotFound(error);
+        }
       }
 
       return importmapObject;

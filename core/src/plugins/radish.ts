@@ -365,7 +365,7 @@ export const pluginRadish: Plugin = {
     /**
      * Decorator for the io/write handler
      *
-     * Adds needed imports to the generated extended manifest
+     * Adds parser imports to the generated `manifest.ts` module
      */
     handlerFor(io.writeFile, (path, content) => {
       if (path !== manifestPath) return Handler.continue(path, content);

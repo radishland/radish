@@ -15,6 +15,18 @@ export interface ImportMap {
   };
 }
 
+interface ImportmapOperations {
+  get: () => ImportMap;
+  write: () => void;
+}
+
+export const importmap = {
+  get: createEffect<ImportmapOperations["get"]>("importmap/get"),
+  write: createEffect<ImportmapOperations["write"]>("importmap/write"),
+};
+
+export const importmapPath: string = join(generatedFolder, "importmap.json");
+
 interface Include {
   /**
    * The alias of the package in `deno.json`
@@ -54,18 +66,6 @@ export interface ImportMapOptions {
    */
   install?: (Install | boolean)[];
 }
-
-interface ImportmapOperations {
-  get: () => ImportMap;
-  write: () => void;
-}
-
-export const importmap = {
-  get: createEffect<ImportmapOperations["get"]>("importmap/get"),
-  write: createEffect<ImportmapOperations["write"]>("importmap/write"),
-};
-
-export const importmapPath: string = join(generatedFolder, "importmap.json");
 
 export const pureImportMap = (
   manifest: ManifestBase,
