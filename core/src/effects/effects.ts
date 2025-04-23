@@ -53,13 +53,13 @@ export class Effect<A> implements PromiseLike<A> {
 export function createEffect<Op extends (...payload: any[]) => any>(
   type: string,
 ): EffectWithType<Parameters<Op>, ReturnType<Op>> {
-  const effectRunner = (...payload: Parameters<Op>): Effect<ReturnType<Op>> => {
+  const effect = (...payload: Parameters<Op>): Effect<ReturnType<Op>> => {
     return new Effect(() => perform(type, ...payload));
   };
 
-  Object.defineProperty(effectRunner, "type", { value: type, writable: false });
+  Object.defineProperty(effect, "type", { value: type, writable: false });
 
-  return effectRunner as EffectWithType<Parameters<Op>, ReturnType<Op>>;
+  return effect as EffectWithType<Parameters<Op>, ReturnType<Op>>;
 }
 
 const perform = <P extends any[], R>(
@@ -74,11 +74,14 @@ const perform = <P extends any[], R>(
   return currentScope.handle<P, R>(type, ...payload);
 };
 
+/**
+ * Creates a handler for a given effect
+ */
 export const handlerFor = <P extends any[], R>(
-  effectRunner: EffectWithType<P, R>,
+  effect: EffectWithType<P, R>,
   handler: NoInfer<BaseHandler<P, R>>,
 ): HandlerWithType<P, R> => {
-  const { type } = effectRunner;
+  const { type } = effect;
   const lifted = Handler.of(handler);
   Object.defineProperty(lifted, "type", { value: type, writable: false });
   return lifted as HandlerWithType<P, R>;
@@ -144,6 +147,9 @@ class EffectHandlerScope {
   }
 }
 
+/**
+ * Attaches a list of handlers to the current scope before running the provided function
+ */
 export const runWith = async <T>(
   fn: () => Promise<T>,
   handlers: Handlers = [],
@@ -161,6 +167,9 @@ export const runWith = async <T>(
   }
 };
 
+/**
+ * Adds a list of handlers to the current scope
+ */
 export const addHandlers = (handlers: Handlers): void => {
   const currentScope = effectScopes.at(-1);
   assertExists(
