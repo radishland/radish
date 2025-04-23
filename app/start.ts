@@ -4,7 +4,6 @@ import {
   handlerFor,
   importmap,
   io,
-  manifest,
   runWith,
 } from "@radish/core/effects";
 import {
@@ -82,12 +81,11 @@ const config: Config = {
 };
 
 runWith(async () => {
-  await startApp(config);
+  await startApp(
+    config,
+    async () => (await import("./" + manifestPath))["manifest"],
+  );
 }, [
-  handlerFor(
-    manifest.setLoader,
-    async () => (await import(manifestPath))["manifest"],
-  ),
   // rewrites the importmap when using the development runtime version
   handlerFor(importmap.write, async () => {
     const importmapObject = await importmap.get();
