@@ -7,7 +7,10 @@ interface HandlerWithType<P extends any[], R> extends Handler<P, R> {
   readonly type: string;
 }
 
-export type Handlers = HandlerWithType<any, any>[];
+/**
+ * An array of handlers
+ */
+export type Handlers = (HandlerWithType<any, any>)[];
 
 interface EffectWithType<P extends any[], R> {
   (...payload: P): Effect<R>;
@@ -106,11 +109,10 @@ class EffectHandlerScope {
 
     const handlersByType = Object.groupBy(handlers, ({ type }) => type);
     const handlersEntries = Object.entries(handlersByType)
-      .filter(([_k, v]) => v !== undefined).map(
-        ([key, handler]): [string, Handler<any, any>[]] => {
-          return [key, handler!];
-        },
-      );
+      .filter(([_k, v]) => v !== undefined)
+      .map(([key, handler]): [string, Handler<any, any>[]] => {
+        return [key, handler!];
+      });
 
     for (const [type, handlers] of handlersEntries) {
       const currentHandlers = this.#handlers.get(type) ?? [];
