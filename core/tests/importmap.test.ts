@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert/equals";
 import { describe, test } from "@std/testing/bdd";
-import { pureImportMap } from "../src/effects/importmap.ts";
+import { pureImportMap } from "../src/plugins/importmap.ts";
 
 describe("Importmap", () => {
   test("main import", () => {
