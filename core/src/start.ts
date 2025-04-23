@@ -35,7 +35,7 @@ const handle: Handle = async ({ context, resolve }) => {
 
 export async function startApp(
   config: Config,
-  loader: () => Promise<any>,
+  getManifest: () => Promise<any>,
 ) {
   if (cliArgs.dev) {
     Deno.env.set("dev", "");
@@ -66,7 +66,7 @@ export async function startApp(
     await updateManifest("**", { root: routesFolder });
     await manifest.write();
   } else {
-    await manifest.setLoader(loader);
+    await manifest.setLoader(getManifest);
     await manifest.load();
 
     if (cliArgs.importmap) {
