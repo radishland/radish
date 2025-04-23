@@ -80,13 +80,15 @@ export const pureImportMap = (
   const pathsByAlias = new Map<string, string[]>();
 
   for (const specifier of importSpecifiers) {
+    // Skips https import as they can be resolved the in the browser directly
+    if (specifier.startsWith("https")) continue;
+
     const { prefix: alias, path } = findLongestMatchingPrefix(
       specifier,
       aliases,
     );
 
-    // Skips relative imports and https import as they can be resolved the in browser directly
-    if (alias === undefined) continue;
+    assertExists(alias, `Unresolved module specifier ${specifier}`);
 
     const paths = pathsByAlias.get(alias) ?? [];
 
@@ -203,7 +205,10 @@ export const pureImportMap = (
  *
  * If the specifier doesn't match against the list, the best match is `undefined`
  */
-const findLongestMatchingPrefix = (specifier: string, prefixes: string[]) => {
+export const findLongestMatchingPrefix = (
+  specifier: string,
+  prefixes: string[],
+) => {
   let bestMatch: string | undefined;
   let path = "";
 
