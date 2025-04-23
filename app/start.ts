@@ -1,5 +1,6 @@
 import { importmapPath, manifestPath, startApp } from "@radish/core";
 import {
+  Handler,
   handlerFor,
   importmap,
   io,
@@ -15,7 +16,6 @@ import {
   pluginStripTypes,
 } from "@radish/core/plugins";
 import type { Config } from "@radish/core/types";
-import { Handler } from "../core/src/utils/algebraic-structures.ts";
 
 const config: Config = {
   importmap: {
