@@ -8,6 +8,7 @@ import type { Plugin } from "../types.d.ts";
 import { Handler } from "../effects/handlers.ts";
 import { throwUnlessNotFound } from "../utils/io.ts";
 import { isParent, workspaceRelative } from "../utils/path.ts";
+import { id } from "../utils/algebraic-structures.ts";
 
 /**
  * A file store caching `Deno.readTextFile` calls for efficient file access
@@ -60,12 +61,18 @@ export const IOWriteFileHandler = handlerFor(
   },
 );
 
+/**
+ * Canonically handles {@linkcode io.transformFile} effects as an identity transform
+ */
+export const IOTransformHandler = handlerFor(io.transformFile, id);
+
 export const pluginIO: Plugin = {
   name: "io-handlers",
   handlers: [
     IOReadFileHandler,
     IOEmitToHandler,
     IOWriteFileHandler,
+    IOTransformHandler,
     /**
      * Invalidates the file cache when a file is modified or removed
      */
