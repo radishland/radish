@@ -1,6 +1,6 @@
 import { dev } from "$env";
 import { parseArgs } from "@std/cli/parse-args";
-import { UserAgent } from "@std/http/user-agent";
+import { UserAgent } from "@std/http";
 import {
   elementsFolder,
   globals,

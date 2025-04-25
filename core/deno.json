@@ -33,9 +33,6 @@
   "imports": {
     "$env": "./src/env.ts",
 
-    "@fcrozatier/type-strip": "jsr:@fcrozatier/type-strip@^1.2.0",
-
-    "@jspm/generator": "npm:@jspm/generator@^2.5.1",
-    "@jspm/import-map": "npm:@jspm/import-map@^1.1.0"
+    "@fcrozatier/type-strip": "jsr:@fcrozatier/type-strip@^1.2.0"
   }
 }
