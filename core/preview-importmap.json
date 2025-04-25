@@ -1,27 +1,38 @@
 {
   "imports": {
-    "$core": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/exports/mod.ts",
-    "$core/utils": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/src/utils.ts",
-    "$core/parser": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/exports/parser.ts",
-    "$runtime": "./lib/index.js",
+    "@radish/core": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/exports/mod.ts",
+    "@radish/core/effects": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/exports/effects.ts",
+    "@radish/core/plugins": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/exports/plugins.ts",
+    "@radish/core/types": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/exports/types.ts",
+    "@radish/core/utils": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/exports/utils.ts",
+    "@radish/core/parser": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/exports/parser.ts",
+    "@radish/runtime": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/runtime/src/index.ts",
     "@preact/signals-core": "npm:@preact/signals-core"
   },
   "scopes": {
-    "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/": {
+    "https://raw.githubusercontent.com/radishland/radish/": {
       "$env": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/src/env.ts",
 
-      "@std/path": "jsr:@std/path",
-      "@std/fs": "jsr:@std/fs",
-      "@std/jsonc": "jsr:@std/jsonc",
-      "@std/http": "jsr:@std/http",
+      "@std/assert": "jsr:@std/assert@^1.0.13",
+      "@std/cli": "jsr:@std/cli@^1.0.17",
+      "@std/cli/parse-args": "jsr:@std/cli@^1.0.17",
+      "@std/collections": "jsr:@std/collections@^1.0.11",
+      "@std/fs": "jsr:@std/fs@^1.0.17",
+      "@std/http": "jsr:@std/http@^1.0.15",
+      "@std/http/cookie": "jsr:@std/http@^1.0.15",
+      "@std/http/user-agent": "jsr:@std/http@^1.0.15",
+      "@std/jsonc": "jsr:@std/jsonc@^1.0.2",
+      "@std/path": "jsr:@std/path@^1.0.9",
+      "@std/text": "jsr:@std/text@^1.0.13",
 
       "@radish/htmlcrunch": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/htmlcrunch/index.ts",
+
       "@fcrozatier/type-strip": "jsr:@fcrozatier/type-strip",
-      "@radish/runtime": "./lib/index.js",
+      "@fcrozatier/ts-helpers": "npm:@fcrozatier/ts-helpers",
+      "@fcrozatier/monarch": "jsr:@fcrozatier/monarch",
+      "@fcrozatier/monarch/common": "jsr:@fcrozatier/monarch/common",
+
       "@radish/runtime/utils": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/runtime/src/utils.ts"
-    },
-    "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/htmlcrunch/": {
-      "@fcrozatier/monarch": "jsr:@fcrozatier/monarch"
     }
   }
 }
