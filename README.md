@@ -1,28 +1,104 @@
 # Radish!
 
-A fullstack framework built around Web Components and Web Standards:
-- No custom DSL, just vanilla Web Components
-- Simple, type-safe authoring
-- Server-Side rendered templates with declarative shadow root
-- Minimal, declarative API with signals and reactive directives
-- Ship readable, debuggable code with a near-zero build step and no bundle
-- Escape the js toolchain entropy
-- Less migration hell: platform API change slowly
-- Powered by Deno, secure by default
-- A disappearing framework that fades away as the platform evolves
+Radish is a standards-first framework with a unified approach to writing fullstack web apps.
 
-> Web Components are here to stay, get on board now!
+- Simple, [unified approach](#overview) to web dev
+- Embraces Web Standards with its component model built around Web Components
+- Server-Side rendered templates with declarative shadow root
+- Minimal, declarative API with [signals](#reactivity) and reactive [directives](#directives)
+- Readable, debuggable code with a near-zero [build](#build) step and [no bundle](#no-bundle)
+- [Type-safe](#type-safety) authoring
+- Powerful [effect system](#effect-system)
+- Extendable [plugin API](#plugin-api)
+- Disappearing framework that fades away as the platform evolves
+- Powered by Deno, secure by default
+
+## Introduction
+
+The platform is more and more mature, with features around the corner and landing at an unheard pace: HTML declarative shadow root, CSS functions, JS Signals, Navigation API etc. Relying more on the platform means less migration hell as platform API change slowly.
+
+In particular we now have means to manage dependencies on the frontend with importmaps and to create modular code with native ES modules. So the future of web is moving beyond traditional bundlers, freeing us from js toolchain entropy.
+
+Radish seeks the best possible outcome in terms of features, DX, future-proofing and maintainability while enforcing the lowest possible cost in terms of abstraction, bundling, and deviation from web standards.
+
+Try it and you'll see how refreshing it is to have readable and debuggable your code in the browser at every stage - we're just stripping your types - while deepening your understanding of platform technologies and making your apps more robust and future-proof. The clear and coherent [mental model](#overview) will make everything click.
+
+## Try-out the alpha
+
+**Create a new project:**
+
+```sh
+deno run -A jsr:@radish/init@1.0.0-alpha-20 my-rad-project
+```
+
+**Build your project:**
+
+```sh
+deno task build
+```
+
+**Start your project:**
+
+```sh
+deno task start --dev
+```
+
+### Examples
+
+Have a look at the [`/app`](https://github.com/radishland/radish/tree/main/app) folder of the repo for some syntax examples
+
+Here's how simple it is to declaratively bind a checkbox to an element property:
+
+```ts
+import { signal, HandlerRegistry } from 'radish';
+
+// demo-bind.ts
+class DemoBind extends HandlerRegistry {
+  isChecked = signal(true);
+}
+
+customElements.define("handle-input-demo", HandleInputDemo);
+```
+
+```html
+<demo-bind>
+  <input type="checkbox" @bind:checked="isChecked" />
+</demo-bind>
+```
+
+### Project structure
+
+A Radish project looks like this:
+
+```
+my-rad-project/
+├ elements/ <-- your custom elements, web components and unknown elements
+├ lib/      <-- reusable ts modules
+├ routes/   <-- routes and one-off colocated custom elements
+├ static/   <-- static assets that should be served as-is
+├ start.ts  <-- start script and project config
+└ deno.json
+```
 
 - [Radish!](#radish)
-  - [Motivation \& philosophy](#motivation--philosophy)
+  - [Introduction](#introduction)
   - [Try-out the alpha](#try-out-the-alpha)
     - [Examples](#examples)
-  - [Project structure](#project-structure)
+    - [Project structure](#project-structure)
+  - [Overview](#overview)
+    - [Effects as in algebraic effects](#effects-as-in-algebraic-effects)
+    - [A unified approach](#a-unified-approach)
+    - [Modeling effects for the web](#modeling-effects-for-the-web)
+      - [Effects on the server](#effects-on-the-server)
+      - [Effects in the browser](#effects-in-the-browser)
+      - [Effects \& CSS](#effects--css)
+  - [Effect system](#effect-system)
+    - [Effects](#effects)
+    - [Handlers](#handlers)
+      - [Sync / Async handlers](#sync--async-handlers)
+      - [Partial / Total handlers](#partial--total-handlers)
+    - [Using handlers](#using-handlers)
   - [Plugin API](#plugin-api)
-    - [Config phase](#config-phase)
-    - [Manifest phase](#manifest-phase)
-    - [Build phase](#build-phase)
-    - [Hot reloading phase](#hot-reloading-phase)
   - [Routing](#routing)
     - [Dynamic routes](#dynamic-routes)
     - [Non-capturing groups](#non-capturing-groups)
@@ -53,88 +129,372 @@ A fullstack framework built around Web Components and Web Standards:
     - [No bundle](#no-bundle)
   - [Resources](#resources)
 
-## Motivation & philosophy
+## Overview
 
-Have you ever wondered what it would be like to build a modern website without a pile of  dependencies and an overly complex build step?
+The design of Radish is heavily inspired by algebraic effects[^alg-effects]. You've probably heard of effects before, but the word is overloaded with different meanings so let's clarify a bit first
 
-Radish is like a framework for writing apps that are as close as possible to the Vanilla platform capabilities, while smoothing out rough edges. It embraces Web Standards and evolves alongside the platform rather than against it.
+### Effects as in algebraic effects
 
-It promotes a **minimax** philosophy: seeking the best possible outcome (great DX, future-proofing, and maintainability) while enforcing the lowest possible cost in terms of abstraction, bundling, and deviation from web standards.
+In modern JS we're used to manipulating effects in the context of a reactivity system like signals. That's not the kind of effects we're talking about here, but signals do play a role in Radish as the [reactivity primitive](#reactivity).
 
-Try it and you'll see how refreshing it is to be able to read and debug your code in the browser at every stage, while deepening your understanding of platform technologies and making your apps more robust and future-proof.
+Algebraic effects[^alg-effects] are a more general concept from functional programming allowing to structure a program in a very composable way.
 
-## Try-out the alpha
+A good mental model is the handling of exceptions in JS: we can *perform* a `throw` operation to create an exception which then bubbles up the stack until it finds a handler. And in JS we can add an exception handler with the try-catch construct.
 
-**Create a new project:**
-
-```sh
-deno run -A jsr:@radish/init@1.0.0-alpha-20 my-rad-project
+```ts
+try {
+  f(() => {
+    ...
+    // You can throw several layers deep in the call stack...
+    throw new Error("Oops");
+  })
+} catch (error) {
+  // ... as long as there is a handler (the try-catch construct), we're good
+  console.log(error);
+}
 ```
 
-**Build your project:**
+Similarly, an effect consists of an operation that we can perform and handlers to interpret this operation. HTML events and listeners give another good analogy with the bubbling of events in the DOM.
 
-```sh
-deno task build
+<details>
+  <summary>Advanced note</summary>
+  <hr>
+  <p>
+    In algebraic effects systems like those in OCaml and Koka when an effect is performed, the current continuation (the rest of the computation) is captured and passed as a first-class value to the handler, who can store it for later, discard it, resume it once or multiple times.
+  </p>
+  <p>
+    In contrast in JavaScript we don't have first-class continuations, and we can't cleanly model the multi-shot capability. The intuition given above with the try-catch construct and event and listeners is accurate when we limit ourselves to one-shot delimited continuations. It turns out that this approach is easier to reason about and model in JavaScript, and that's the approach Radish uses to model (constrained) effects.
+  </p>
+  <hr>
+</details>
+
+### A unified approach
+
+We traditionally describe the UI as a function of the state. This functional approach was promoted by frameworks like Elm or React 10 years ago[^ui-react] and can be captured in the following formula[^ui-overreacted]:
+
+$$\mathrm{UI} = f(\mathrm{state}, \mathrm{data})$$
+
+The problem is that it misses all the interactions and side effects. What happens when we click a button that logs a message to the console? Side-effects are not idiomatically described in this paradigm, and in general UI is not a pure function of state and data.
+
+A user interaction is an effect, and a side-effect is an interaction with the context. Effects actually play a major role in apps, and we propose a different approach where we describe fullstack applications by the handling of various effects:
+
+$$\mathrm{Fullstack} = \mathrm{handle\ effects}$$
+
+This formula generalizes the previous one since $\mathrm{state}$ is an effect with get and set operations and data loading also is an effect, with a load operation. So this approach is at least as expressive as the traditional approach. But it also captures server operations like validation, request handling, db queries etc. as well as build operations, io handling etc; all of which are effects.
+
+Radish is designed around this vision and provides a model for it both on the backend with a complete [effect system](#effect-system), as well as on the frontend, with [scoped handler registries](#scoped-handler-registry).
+
+### Modeling effects for the web
+
+The formula $\mathrm{Fullstack} = \mathrm{handle\ effects}$ can be modelled idiomatically in the different environments where our applications run
+
+#### Effects on the server
+
+Event bubbling is a concept specific to the DOM. So the event / listeners model is not helpful on the server as there is no bubbling of events in JS backend runtimes like Deno.
+
+Instead Radish implements a complete [effect system](#effect-system) on the backend. This has many advantages for our apps in particular in terms of extendability which, as a bonus, yields us a powerful [plugin API](#plugin-api). In fact, all built-in effect handlers are plugins.
+
+#### Effects in the browser
+
+In the browser we can leverage the DOM event model with its bubbling behavior to model effects. Radish introduces the concept of [scoped handler registries](#scoped-handler-registry) which are custom elements in charge of handling effects like declarative directives.
+
+In HTML, the handling of effects with scoped handler registries is isomorphic to the try-catch construct we are familiar with in JS: we apply a handler by *wrapping* it around a subtree
+
+```ts
+import { signal, HandlerRegistry } from "radish";
+
+// We extend the `HandlerRegistry` class to give our component the ability to interpret declarative directives...
+class HandleInputDemo extends HandlerRegistry {
+  content = signal("I'm a reactive value");
+}
+
+customElements.define("handle-input-demo", HandleInputDemo);
 ```
 
-**Start your project:**
-
-```sh
-deno task start
+```html
+<!-- ...The handler can handle effects in the subtree of elements it wraps -->
+<handle-input-demo>
+  <input type="text" @bind:value="content">
+  <span @text="content"></span> <!-- This span contains our (SSRd) reactive input content -->
+</handle-input-demo>
 ```
 
-### Examples
+We can also stack handlers, and the closer one handles the effects it can interpret.
 
-You can have a look at the [`/app`](https://github.com/radishland/radish/tree/main/app) folder of the repo for some syntax examples
+```ts
+import { signal, HandlerRegistry } from "radish";
 
-## Project structure
+class OtherHandler extends HandlerRegistry {
+  content = signal("I'm shadowed");
 
-A Radish project structure looks like this:
+  log = ()=> {
+    console.log('hi')
+  }
+}
 
-```
-my-rad-project/
-├ elements/
-├ lib/
-├ routes/
-├ static/
-├ start.ts
-└ deno.json
+customElements.define("other-handler", OtherHandler);
 ```
 
-Where:
-- `elements` contains your reusable custom elements, web components and unknown elements
-- `routes` contains your routes and one-off colocated custom elements
-- `static` contains the static assets that should be served as-is
-- `start.ts` starts the app and contains your project config.
+```html
+<!-- the `content` property of `other-handler` is shadowed by the one provided by  `handle-input-demo`. This offers patterns like having common hooks, or overridable defaults -->
+<other-handler>
+  ...
+  <!-- `handle-input-demo` doesn't handle the declarative click  -->
+  <handle-input-demo>
+    ...
+    <input type="text" @bind:value="content" @on="click:log">
+  </handle-input-demo>
+</other-handler>
+```
+
+Notice there is no props drilling here, we have something akin to automatic context.
+
+#### Effects & CSS
+
+Let's zoom in on how our $\mathrm{Fullstack} = \mathrm{handle\ effects}$ formula can be interpreted in the CSS realm, expanding our mental model.
+
+Styling in CSS exhibits all the key characteristics of an effect:
+- **External impact**: Styling changes the visual presentation of elements
+- **Contextual application**: The same CSS can result in different appearances depending on the environment (browser, device, viewport size)
+- **Declarative separation**: CSS declares what should happen rather than how, separating the *effect* from its *handling* by the browser rendering engine
+- **Composition behavior**: CSS effects can be combined, overridden, and inherited in similar ways to effect handling hierarchies.
+
+Thinking of styling as an effect gives us an insightful perspective on our designs, and by analogy with other effects we looked at, it invites us to embrace the cascade and think in terms of style delegation.
+
+## Effect system
+
+Having an effect system provides many advantages:
+
+- **testability**: swapping handlers in a testing environment makes it easy to test scenarios where there is a deep effect to mock
+- **simplicity**: not having to pass around context objects or callbacks just for the testability of a function that's many layers deep makes your code simpler and more focused (single responsibility) with a thinner API.
+- **modularity**: thinner APIs like above also implies that functions can be reused more easily, which means more generic and composable code
+- **extendability**: plugins can extend the base behavior by adding their own handlers and creating their own effects.
+- **flexibility**: plugin handlers can also re-interpret core effects in new ways, giving a level of control and customizability that's unheard of.
+
+The Radish effect system consists of [effects](#effects) that you can create or perform (effects and their operations are commonly identified), as well as [handlers](#handlers) you can create and use in [plugins](#plugin-api).
+
+### Effects
+
+To define a new effect we use `createEffect` and pass it the signature of the operation and the name of the effect:
+
+```ts
+import { createEffect } from "radish/effects";
+
+// Signatures could also be inlined directly with the `createEffect` calls
+interface IO {
+  // We define the signatures of the operations
+  read: (path: string) => string;
+  write: (path: string, content: string) => void;
+}
+
+// To keep things organized we can group related operations in an object, which also prevents conflicting operation names like with io.read and config.read
+const io = {
+  // We pass the signature as the type argument of `createEffect`
+  read: createEffect<IO['read']>("io/read");
+  write: createEffect<IO['write']>("io/write");
+}
+```
+
+Notice that we didn't implement any handlers yet. This allows for a clean separation between definition and implementation.
+
+We can already use our effects in a type-safe way:
+
+```ts
+// `content` is of type string
+const content = await io.read("path/to/file"); // await to perform an effect
+await io.write(content); // we can sequence effects in direct style
+```
+
+We perform an effect operation by awaiting it. Using our `io` effect directly as above would result in an "Unhandled effect" error, similarly to unhandled exceptions, as we haven't defined a handler yet.
+
+<details>
+  <summary>Advanced note</summary>
+  <hr>
+  <p>
+   Effects are often sequenced in pipelines like read -> transform -> write, which is a hint at their monadic[^monads] nature.
+  </p>
+  <p>
+   In Radish, handlers interpret the `Effect&ltT&gt` monad into the `Promise&ltT&gt` monad allowing us to sequence effects in simple direct style with <code>await</code> instead of having to <code>.then</code> or <code>.bind</code> them.
+  </p>
+  <p>
+    So <code>await</code> here is just the syntax sugar for sequencing offered by the `PromiseLike` interface. It's the JS equivalent of Haskell's [do-notation](https://en.wikibooks.org/wiki/Haskell/do_notation)
+  </p>
+  <hr>
+</details>
+
+### Handlers
+#### Sync / Async handlers
+
+To create a handler we can use `handlerFor` and pass it the effect and an implementation.
+
+```ts
+import { handlerFor } from "radish/effects";
+
+// Let's log every time we read a file
+const IOReadHandler = handlerFor(io.read, async (path: string) => {
+  console.log(`reading ${path}`);
+  return await Deno.readTextFile(path);
+})
+
+// This handler is synchronous
+const IOWriteHandler = handlerFor(io.write, (path: string, content: string) => {
+  console.log(`writing ${path}`);
+  return Deno.writeTextFileSync(content);
+})
+
+// In a testing context we could swap our `IOReadHandler` for a `IOReadHandlerMock` instead:
+const files = new Map([['notes.txt', 'TODO']]);
+
+const IOReadHandlerMock = handlerFor(io.read, (path: string) => {
+  return files.get(path) ?? ''
+})
+```
+
+Notice that one handler is asynchronous while the others are synchronous. We're free to implement our handlers synchronously or asynchronously, this is an implementation detail.
+
+The signature `A -> B` of an operation is in fact the minimal, effect-free contract for its handlers. This gives us great flexibility when implementing handlers since, asynchrony being an effect, async handlers `A -> Promise<B>` are allowed, as well as handlers performing any other effects.
+
+<details>
+  <summary>Note</summary>
+  <hr>
+  <p>
+    One of the quirks of JavaScript/TypeScript is that asynchrony is the only effect we have markers for, with the `async` keyword and the `Promise` return type.
+  </p>
+  <p>
+    All other effects have no marker. For example, there is no keyword or type for a function that can throw an exception, log, or do io, as is the case in strongly typed languages built around effects like <a href="https://koka-lang.github.io/koka/doc/index.html">Koka</a>
+  </p>
+  <p>
+    One approach would be to try to include TypeScript types in all function signatures for every effect they can perform. This is the approach taken by the <a href="https://effect.website/">Effect framework</a>. But at this point we'd rather use a different language.
+  </p>
+  <p>
+    Instead Radish is a more lightweight approach that embraces the JavaScript/TypeScript languages, with no need to wrap all your libraries and with no interop concerns as it's all standard JavaScript.
+  </p>
+  <p>
+    So this is why we don't mark asynchrony in an effect operation signature, and instead think of it as any other JavaScript effect. This provides a uniform treatment of effects in operation signatures. This also gives us more flexibility in how we implement handlers as an operation signature is in fact an effect-free signature.
+  </p>
+  <hr>
+</details>
+
+#### Partial / Total handlers
+
+An effect handler doesn't even need to be a total function. It can be a partial function that handles its effect only on certain conditions, and relies on other handlers the rest of the time
+
+```ts
+import { Handler } from "radish/effects";
+
+// This handler relies on delegation
+const IOReadTXTOnly = handlerFor(io.read, (path: string) => {
+  if(path.endsWith(".txt")) {
+    return "I can only handle .txt files"
+  }
+  return Handler.continue(path) // relies on other handlers
+})
+
+// This handler actually is a decorator
+const IODecorateTXT = handlerFor(io.write, (path: string, content: string)=>{
+  if(path.endsWith(".txt")) {
+    content = "/** Copyright notice **/" + content
+  }
+  return Handler.continue(path, content)
+})
+
+let count = 0;
+// This handler is a listener that does something orthogonal
+const IOCountTXTReads = handlerFor(io.read, (path: string)=>{
+  if(path.endsWith(".txt")) {
+    count += 1
+  }
+  return Handler.continue(path)
+})
+
+```
+To delegate the handling we use `Handler.continue` as above to forward the effect with the potentially modified params.
+
+This allows many patterns like handlers cooperation, delegation and decoration. Handlers can also be used as event listeners to do something orthogonal like logging while forwarding the effect.
+
+Summing-up, different handlers for the same effect can be:
+- synchronous / asynchronous
+- total function / partial function
+
+all mixed and matched as needed.
+
+A handler can also perform another effect while handling its own operation, as long as there is a handler in scope for this other effect.
+
+### Using handlers
+
+To run our code with the handlers we have two options:
+
+1. Often we'll just group related handlers in a [plugin](#plugin-api)
+1. If more control is needed, we can also use `runWith` directly in our code, which creates a new handlers scope with our handlers attached:
+
+```ts
+import { runWith } from 'radish/effects';
+
+runWith(async () => {
+  const txtFile = await io.read("hello.txt"); // "I can only handle .txt files"
+  const jsonFile = await io.read("hello.json"); // ...
+}, [IOHandleTXTOnly, IOReadHandler])
+```
+The order of the handlers matters here because `IOHandleTXTOnly` relies on delegation.
+
+Many effects are provided by Radish out of the box, see the [`core/src/effects`](https://github.com/radishland/radish/tree/main/core/src/effects) folder. They can be imported from `radish/effects`
 
 ## Plugin API
 
-The Radish core is a plugin runner modelled after the [Vite](https://vite.dev/guide/api-plugin.html)/[Rollup](https://rollupjs.org/plugin-development/) plugin system, with compatible signatures. The framework features themselves come in the form of built-in plugins which can be extended. For example declarative shadow root inlining, server effects, type stripping etc. are all plugins.
+A plugin is just an object with a name and an array of handlers
 
-The pipeline is articulated around the following hooks and phases:
+```ts
+import type { Plugin } from 'radish/types';
 
-### Config phase
+export const myIOPlugin: Plugin = {
+  name: 'my-io-plugin',
+  handlers: [IOCountTXTReads, IODecorateTXT, IOHandleTXTOnly, IOReadHandler, IOWriteHandler]
+}
+```
+When handlers rely on delegation, the order matters, and the first handler of the list is executed first. All built-in plugin handlers are total, so you can safely build specialized handlers decorating or delegating to these handlers.
 
-- The `config: (userConfig: Config, args: Args) => Config` hook can read and modify the user config and receives the arguments of the currently running command
-- The `configResolved: (config: ResolvedConfig) => void` hooks runs at the end of the config phase and allows plugins to read the resolved config.
+Once your plugin is done, you're ready to extend the behavior of Radish by prepending your plugin to the `plugins` field of your config file.
 
-### Manifest phase
+All the framework features themselves come in the form of built-in plugins which can be extended. For example declarative shadow root inlining, server directives, type stripping etc. are all plugins.
 
-The manifest holds information about the files of the project, their imports, dependencies etc. and can be extended with information about the elements, routes, layouts etc.
+The provided plugins can be imported from `radish/plugins`, see the [core/src/plugins](https://github.com/radishland/radish/tree/main/core/src/plugins) folder. Here's an overview
 
-- The `manifestStart: (manifestController: ManifestController) => ManifestBase` hook runs before the manifest generation, and allows to give it the proper shape by adding required fields
-- The `manifest: (entry: WalkEntry, context: ManifestContext) => void` hook is the main hook of this phase, is called on each visited entry, allowing to populate the manifest object
-- The `manifestWrite: (content: string) => string` hook is a transform which runs when the manifest is cached on disk, and allows to modify imports etc.
+**config**
 
-### Build phase
+Manages operations around the user config
 
-- The `buildOrder: (entries: WalkEntry[],manifest: ManifestBase) => WalkEntry[]` hook runs at the beginning of a build or re-build, and allows plugins to modify the order in which the entries are built
-- The `transform: (code: string, path: string, context: TransformContext) => MaybePromise<TransformResult>` hook lets you modify the content of a file
-- The `emit: (path: string) => string | null` hook runs just before the content is written on disk and allows a plugin to modify the default destination
+- `config.transform: (config: Config) => Config` modifies the user config
+- `config.read: () => ResolvedConfig` returns the resolved config.
 
-### Hot reloading phase
+**hot-update**
 
-The dev server handles hot reloading and plugins can hook into this phase too with the `handleHotUpdate: (event: HmrEvent, context: HmrContext) => void` hook. It receives the event, holding information about what happened (creation, modification, path etc.) and the context, allowing to re-run plugins, update the manifest etc.
+- `hot.update: (param: HotUpdateParam) => HotUpdateParam` triggered in dev mode when a file is created, modified or deleted. Handlers of this effect help keep the internal representation of the project in sync with the code
+
+**importmap**
+
+This plugin is in charge of generating the [importmap](#importmap)
+
+- `importmap.get: () => ImportMap` returns the importmap object
+- `importmap.write: () => void` writes the generate importmap to disk
+
+**io**
+
+A wrapper for io operations that manages its own cache to speed-up read operations
+
+- `io.readFile: (path: string) => string` reads a file and returns its content
+- `io.transformFile: (option: FileTransformParam) => FileTransformParam` transforms a file
+- `io.emitFile: (path: string) => string` returns the destination path of a given file
+- `io.writeFile: (path: string, content: string) => void` writes a file to disk
+
+**manifest**
+
+In charge of building a representation of the app imports, routes, elements etc.
+
+- `setLoader: (loader: () => Promise<ManifestBase>) => void` sets the manifest loader
+- `load: () => void` loads the manifest file in memory
+- `get: () => ManifestBase` returns the manifest object
+- `update: (param: UpdateManifestParam) => UpdateManifestParam` update the manifest object
+- `write: () => void` writes the manifest on disk
 
 ## Routing
 
@@ -208,8 +568,8 @@ The `elements` folder contains all three sorts of elements:
 
 The convention is that an element's folder and files are named after the element's tag name:
 
-- `app/elements/my-element/my-element.html` contains the declarative shadow root template for the `<my-element>` element.
-- `app/elements/my-element/my-element.ts` contains the `MyElement` class defining the `<my-element>` custom element.
+- `app/elements/my-element/my-element.html` contains the declarative shadow root template for `my-element`.
+- `app/elements/my-element/my-element.ts` contains the `MyElement` class defining the custom element `my-element`.
 
 Declarative shadowroot templates are inlined at build time
 
@@ -301,15 +661,15 @@ console.log(a) // 2
 ## Directives
 
 The following directives are available:
-- @attr
-- @bind
-- @bool
-- @class
-- @html
-- @on
-- @prop
-- @text
-- @use
+- [@attr](#attr-directive)
+- [@bind](#bind-directive-declarative-two-way-bindings)
+- [@bool](#bool-directive)
+- [@class](#class-directive)
+- [@html](#html-directive)
+- [@on](#on-directive-declarative-event-handlers)
+- [@prop](#prop-directive)
+- [@text](#text-directive)
+- [@use](#use-directive-declarative-hooks)
 
 @on, @prop and @use only have client semantics while the other directives are universal: they have both server and client semantics and can be restricted with `|server` and `|client`.
 
@@ -507,6 +867,8 @@ It must appear at the top-level of your component
 
 ## Build
 
+Building your projects mainly consists of stripping types, generating an importmap and applying server effects like declarative shadow root inlining.
+
 ### Importmap
 
 When building your project, an [importmap](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) of your runtime dependencies is automatically generated and inserted in the `<head>`.
@@ -515,15 +877,15 @@ When building your project, an [importmap](https://developer.mozilla.org/en-US/d
 
 The importmap resolves modules from the [esm.sh](https://esm.sh/) CDN:
 - both [npm](https://www.npmjs.com/) and [jsr](https://jsr.io/) modules are handled,
-- the build target is automatically determined by checking the `User-Agent` header. So users of your site get precisely what they need, not more, not less.
+- the build target is automatically determined by checking the `User-Agent` header. So users of your site get precisely what they need
 
-The importmap can be generated in the `_generated` folder with the following command:
+The importmap can be generated with the following command:
 
 ```sh
 deno task generate --importmap
 ```
 
-You have full control over the importmap in your `start.ts` script, with options for manually including packages, or transforming the result of the importmap generation.
+You have full control over the importmap in your config file, with options for manually including packages.
 
 ### No bundle
 
@@ -542,3 +904,11 @@ The [importmap](#importmap) lets the browser resolve dependencies (and higher-or
   - [Using custom elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements)
   - [Using Shadow DOM](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM)
   - [Using templates and slots](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_templates_and_slots)
+
+[^alg-effects]: What is algebraic about algebraic effects and handlers? — ANDREJ BAUER. https://arxiv.org/pdf/1807.05923
+
+[^ui-react]: 2015 blog post describing [UI as a function of state](https://www.kn8.lt/blog/ui-is-a-function-of-data/)
+
+[^ui-overreacted]: Overreacted blog post describing the UI=f(state, data) formula. https://overreacted.io/the-two-reacts/
+
+[^monads]: Moggi, E. (1991). Notions of Computation and Monads. Information and Computation, 93(1), 55–92. [DOI: 10.1016/0890-5401(91)90052-4](https://www.sciencedirect.com/science/article/pii/0890540191900524)
