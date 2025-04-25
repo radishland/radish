@@ -1,6 +1,6 @@
 {
   "name": "@radish/core",
-  "version": "1.0.0-alpha.35",
+  "version": "1.0.0-alpha.36",
   "license": "MIT",
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts",
@@ -10,7 +10,10 @@
     "create": "deno run -A scripts/create.ts",
     "dev": {
       "command": "deno run -A src/start.ts",
-      "dependencies": ["load-env", "build"]
+      "dependencies": [
+        "load-env",
+        "build"
+      ]
     }
   },
   "exports": {
@@ -23,16 +26,22 @@
     "./effects": "./exports/effects.ts"
   },
   "fmt": {
-    "exclude": ["**/*.md"]
+    "exclude": [
+      "**/*.md"
+    ]
   },
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "dom.asynciterable",
+      "deno.ns"
+    ],
     "checkJs": true,
     "noImplicitOverride": true
   },
   "imports": {
     "$env": "./src/env.ts",
-
     "@fcrozatier/type-strip": "jsr:@fcrozatier/type-strip@^1.2.0"
   }
 }
