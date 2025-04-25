@@ -28,7 +28,7 @@ Try it out, and you'll discover how refreshing it is to have readable and debugg
 **Create a new project:**
 
 ```sh
-deno run -A jsr:@radish/init@1.0.0-alpha-21 my-rad-project
+deno run -A jsr:@radish/init@1.0.0-alpha.21 my-rad-project
 ```
 
 **Build your project:**
