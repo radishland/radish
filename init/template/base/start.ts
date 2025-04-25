@@ -1,4 +1,4 @@
-import { startApp } from "$core";
+import { manifestPath, startApp } from "$core";
 import {
   pluginDefaultEmit,
   pluginRadish,
@@ -33,7 +33,6 @@ const config: Config = {
   // },
 };
 
-const loadManifest = async () =>
-  (await import("./_generated/manifest.ts"))["manifest"];
+const loadManifest = async () => (await import(manifestPath))["manifest"];
 
 await startApp(loadManifest, config);

@@ -1,6 +1,10 @@
-import { startApp } from "@radish/core";
+import { importmapPath, manifestPath, startApp } from "@radish/core";
+import { Handler, handlerFor, importmap, io } from "@radish/core/effects";
 import {
-  pluginDefaultEmit,
+  pluginConfig,
+  pluginImportmap,
+  pluginIO,
+  pluginManifest,
   pluginRadish,
   pluginStripTypes,
 } from "@radish/core/plugins";
@@ -26,29 +30,52 @@ const config: Config = {
         entrypoints: ["/cdn/components/rating/rating.js"],
       },
     ],
-    transform: (importmap) => {
-      const imports = {
-        // When using the development runtime version
-        "radish": "/_radish/runtime/index.js",
-        "radish/boot": "/_radish/runtime/boot.js",
-      };
-      return JSON.stringify({
-        imports: { ...importmap.imports, ...imports },
-        scopes: { ...importmap.scopes },
-      });
-    },
   },
   router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
   plugins: [
+    pluginRadish,
     {
-      name: "radish-rewrite-manifest-imports",
-      manifestWrite: (content) => {
-        return content.replace("$core", "@radish/core");
-      },
+      // rewrites the manifest imports
+      name: "plugin-rewrite-manifest-imports",
+      handlers: [
+        handlerFor(
+          io.writeFile,
+          (path, content) => {
+            if (path === manifestPath) {
+              content = content.replace("$core/parser", "@radish/core/parser");
+            }
+            return Handler.continue(path, content);
+          },
+        ),
+      ],
     },
-    pluginRadish(),
+    {
+      name: "plugin-rewrite-importmap-imports",
+      handlers: [
+        // rewrites the importmap when using the development runtime version
+        handlerFor(importmap.write, async () => {
+          const importmapObject = await importmap.get();
+
+          const imports = {
+            "radish": "/_radish/runtime/index.js",
+            "radish/boot": "/_radish/runtime/boot.js",
+          };
+
+          await io.writeFile(
+            importmapPath,
+            JSON.stringify({
+              imports: { ...importmapObject.imports, ...imports },
+              scopes: { ...importmapObject.scopes },
+            }),
+          );
+        }),
+      ],
+    },
+    pluginImportmap,
+    pluginManifest,
     pluginStripTypes,
-    pluginDefaultEmit,
+    pluginConfig,
+    pluginIO,
   ],
   // speculationRules: {
   //   prerender: [{
@@ -69,7 +96,7 @@ const config: Config = {
   // },
 };
 
-const loadManifest = async () =>
-  (await import("./_generated/manifest.ts"))["manifest"];
-
-await startApp(loadManifest, config);
+await startApp(
+  config,
+  async () => (await import("./" + manifestPath))["manifest"],
+);

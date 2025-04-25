@@ -1,17 +1,25 @@
 import { dev } from "$env";
-import { Builder } from "./generate/build.ts";
-import { UserAgent } from "@std/http/user-agent";
-import { App, FileCache, type Handle } from "./server/app.ts";
-import type { Config, ManifestBase, ResolvedConfig } from "./types.d.ts";
 import { parseArgs } from "@std/cli/parse-args";
-import { ManifestController } from "./generate/manifest.ts";
-import { globals } from "./constants.ts";
-import { ImportMapController } from "./generate/impormap.ts";
-import { pluginDefaultPlugins } from "./plugins.ts";
+import { UserAgent } from "@std/http/user-agent";
+import {
+  elementsFolder,
+  globals,
+  libFolder,
+  routesFolder,
+} from "./constants.ts";
+import { config as configEffect } from "./effects/config.ts";
+import * as effects from "./effects/effects.ts";
+import { manifest } from "./effects/manifest.ts";
+import { build } from "./effects/build.ts";
+import { createApp, type Handle } from "./server/app.ts";
+import type { CLIArgs, Config, ResolvedConfig } from "./types.d.ts";
+import { updateManifest } from "./plugins/manifest.ts";
+import { generateImportmap } from "./plugins/importmap.ts";
+import { importmap } from "./effects/importmap.ts";
 
-const args = parseArgs(Deno.args, {
+const cliArgs: CLIArgs = Object.freeze(parseArgs(Deno.args, {
   boolean: ["dev", "importmap", "manifest", "build"],
-});
+}));
 
 const handle: Handle = async ({ context, resolve }) => {
   // Avoid mime type sniffing
@@ -26,69 +34,48 @@ const handle: Handle = async ({ context, resolve }) => {
 };
 
 export async function startApp(
-  loadManifest: () => Promise<ManifestBase>,
-  config: Config = {},
+  config: Config,
+  getManifest: () => Promise<any>,
 ) {
-  if (args.dev) {
+  if (cliArgs.dev) {
     Deno.env.set("dev", "");
   }
 
-  config.plugins = [...(config.plugins ?? []), pluginDefaultPlugins];
-
-  for (const plugin of config.plugins) {
-    if (plugin.config) {
-      config = plugin.config?.(config, args);
+  for (const plugin of config.plugins ?? []) {
+    if (plugin.handlers) {
+      effects.addHandlers(plugin.handlers);
     }
   }
 
-  const resolvedConfig: ResolvedConfig = Object.assign(
-    { plugins: [], args },
-    config,
+  config = await configEffect.transform(config);
+
+  const resolvedConfig: ResolvedConfig = Object.freeze(
+    Object.assign({}, { args: cliArgs, ...config }),
   );
 
-  for (const plugin of resolvedConfig.plugins) {
-    plugin.configResolved?.(resolvedConfig);
-  }
+  effects.addHandlers([
+    effects.handlerFor(configEffect.read, () => resolvedConfig),
+  ]);
 
   globals();
 
-  const fileCache = new FileCache();
-  const manifestController = new ManifestController(
-    resolvedConfig.plugins,
-    loadManifest,
-    fileCache,
-  );
-
-  if (args.manifest) {
-    manifestController.createManifest();
-    manifestController.write();
+  if (cliArgs.manifest) {
+    console.log("Generating manifest...");
+    await updateManifest("**", { root: libFolder });
+    await updateManifest("**", { root: elementsFolder });
+    await updateManifest("**", { root: routesFolder });
+    await manifest.write();
   } else {
-    const manifest = await manifestController.loadManifest();
-    const importmapController = new ImportMapController(
-      fileCache,
-      resolvedConfig.importmap,
-    );
-    const builder = new Builder(
-      resolvedConfig.plugins,
-      manifest,
-      importmapController,
-      fileCache,
-    );
+    await manifest.setLoader(getManifest);
+    await manifest.load();
 
-    if (args.importmap) {
-      const importmap = await importmapController.generate(manifest);
-      await Deno.writeTextFile(importmapController.path, importmap);
-    } else if (args.build) {
-      await builder.build();
+    if (cliArgs.importmap) {
+      await generateImportmap();
+      await importmap.write();
+    } else if (cliArgs.build) {
+      await build();
     } else {
-      new App({
-        config: resolvedConfig,
-        manifestController,
-        importmapController,
-        builder,
-        handle,
-        fileCache,
-      });
+      await createApp(handle);
     }
   }
 }

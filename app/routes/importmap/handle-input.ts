@@ -1,5 +1,4 @@
-import { computed, HandlerRegistry } from "radish";
-import { signal } from "radish";
+import { computed, HandlerRegistry, signal } from "radish";
 import { round } from "ts-helpers/numbers";
 import { toSnakeCase } from "@std/text/to-snake-case";
 

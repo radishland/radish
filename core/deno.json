@@ -16,10 +16,11 @@
   "exports": {
     ".": "./exports/mod.ts",
     "./parser": "./exports/parser.ts",
-    "./utils": "./src/utils.ts",
+    "./utils": "./exports/utils.ts",
     "./env": "./exports/env.ts",
     "./types": "./exports/types.ts",
-    "./plugins": "./exports/plugins.ts"
+    "./plugins": "./exports/plugins.ts",
+    "./effects": "./exports/effects.ts"
   },
   "fmt": {
     "exclude": ["**/*.md"]

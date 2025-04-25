@@ -18,8 +18,7 @@
       "@radish/htmlcrunch": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/htmlcrunch/index.ts",
       "@fcrozatier/type-strip": "jsr:@fcrozatier/type-strip",
       "@radish/runtime": "./lib/index.js",
-      "@radish/runtime/utils": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/runtime/src/utils.ts",
-      "@jspm/generator": "npm:@jspm/generator@^2.5.1"
+      "@radish/runtime/utils": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/runtime/src/utils.ts"
     },
     "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/htmlcrunch/": {
       "@fcrozatier/monarch": "jsr:@fcrozatier/monarch"

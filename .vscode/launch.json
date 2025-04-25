@@ -31,7 +31,8 @@
         "test",
         "--unstable",
         "--inspect-wait",
-        "--allow-all"
+        "--allow-all",
+        "--no-check"
       ],
       "env": {},
       "attachSimplePort": 9229
