@@ -1,1 +1,1 @@
-export { dev } from "$env";
+export { dev } from "../src/env.ts";
