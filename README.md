@@ -5,7 +5,7 @@ Radish is a standards-first framework with a unified approach to building fullst
 - **[Unified Approach](#overview)**: A cohesive and simple approach to web dev
 - **Web Standards**: Embraces web standards with a component model centered on Web Components
 - **Server-Side rendering**: Supports declarative shadow root templates with SSR
-- **Declarative API**: Declarative [directives](#directives) and [Signals](#reactivity) for reactivity
+- **Declarative API**: [Declarative directives](#directives) and [signals](#reactivity) for reactivity
 - **Readable code**: Near-zero [build](#build) step and [no bundling](#no-bundle), making code readable and debuggable
 - **[Type Safety](#type-safety)**: Type-safe authoring
 - **Powerful [Effect System](#effect-system)**
@@ -95,8 +95,8 @@ my-rad-project/
   - [Effect system](#effect-system)
     - [Effects](#effects)
     - [Handlers](#handlers)
-      - [Sync / Async handlers](#sync--async-handlers)
-      - [Partial / Total handlers](#partial--total-handlers)
+      - [Sync \& Async Handlers](#sync--async-handlers)
+      - [Partial \& Total Handlers](#partial--total-handlers)
     - [Using handlers](#using-handlers)
   - [Plugin API](#plugin-api)
   - [Routing](#routing)
@@ -176,13 +176,13 @@ $$\mathrm{UI} = f(\mathrm{state}, \mathrm{data})$$
 
 The problem is that it overlooks all the interactions and side effects. For example, what happens when a user clicks a button that logs a message?
 
-Interactions are **effects**, and a side-effects are interactions with the environment. By contrast, Radish embraces effects and models fullstack applications as the handling of various effects:
+Interactions are **effects**, and side-effects are interactions with the environment. By contrast, Radish embraces effects and models fullstack applications as the handling of various effects:
 
 $$\mathrm{Fullstack} = \mathrm{handle\ effects}$$
 
-This formula generalizes the traditional one: $\mathrm{state}$ management is an effect (`get` and `set` operations), and data loading also is an effect (`load` operation). And this approach extends the traditional approach as it also captures server operations like validation, request handling, DB queries etc. as well as build operations, IO handling etc; all of which are effects.
+This formula contains the traditional one: state management is an effect (`get` and `set` operations), and data loading also is an effect (`load` operation). And this formula extends the traditional approach as it also captures server operations like validation, request handling, DB queries etc. as well as build operations, IO handling etc; all of which are effects.
 
-Radish is built around this idea, and provides a model on the backend with a complete [effect system](#effect-system), and on the frontend with [scoped handler registries](#scoped-handler-registry).
+Radish is built around this idea, and provides a model for effects and handlers on the backend with a complete [effect system](#effect-system), and on the frontend with [scoped handler registries](#scoped-handler-registry).
 
 ### Modeling effects for the web
 
@@ -264,7 +264,7 @@ Styling in CSS also fits into this mental model, and exhibits all the key charac
 - **Declarative separation**: CSS declares *what* should happen rather than *how*, separating the *effect* from its *handling* by the browser rendering engine
 - **Compositional behavior**: Cascading styles can be combined, overridden, and inherited like effect handling hierarchies.
 
-Thinking of CSS styling as effects provides an insightful perspective on design, encouraging a mindset that embraces the cascade and lets us think in terms of style delegation and layered handling.
+Thinking of CSS styling in terms of effects provides an insightful perspective on design, encouraging a mindset that embraces the cascade, style delegation and layered handling.
 
 ## Effect system
 
@@ -327,7 +327,7 @@ We perform an effect operation by awaiting it. Calling effects without handlers 
 </details>
 
 ### Handlers
-#### Sync / Async handlers
+#### Sync & Async Handlers
 
 Use `handlerFor` to implement an effect operation:
 
@@ -376,7 +376,7 @@ The operation signature (*e.g.* `A -> B`) is the minimal, effect-free contract. 
   <hr>
 </details>
 
-#### Partial / Total handlers
+#### Partial & Total Handlers
 
 A handler doesn't have to be a total function. It can be **partial**, handling only specific cases, and delegating the rest to other handlers.
 
