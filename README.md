@@ -21,7 +21,7 @@ Today we can manage frontend dependencies with importmaps and create modular cod
 
 Radish is designed to offer top-tier features, DX, maintainability and future-proofing, while minimizing abstraction, bundling, and deviation from web standards.
 
-Try it out, and you'll discover how refreshing it is to have readable and debuggable code in the browser at every stage (we're just strip types). Radish deepens your understanding of platform technologies and helps you build more robust, future-proof applications. Its clear and coherent [mental model](#overview) helps everything click into place.
+Try it out, and you'll discover how refreshing it is to have readable and debuggable code in the browser at every stage (we just strip types). Radish deepens your understanding of platform technologies and helps you build more robust, future-proof applications. Its clear and coherent [mental model](#overview) helps everything click into place.
 
 ## Try-out the alpha
 
