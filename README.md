@@ -1,27 +1,27 @@
 # Radish!
 
-Radish is a standards-first framework with a unified approach to developing fullstack web apps.
+Radish is a standards-first framework with a unified approach to building fullstack web apps.
 
-- **[Unified Approach](#overview)**: A simple, cohesive approach to web dev
-- **Web Standards**: Embraces web standards with its component model built around Web Components
-- **Server-Side rendering**: Declarative shadow root templates are SSRd
+- **[Unified Approach](#overview)**: A cohesive and simple approach to web dev
+- **Web Standards**: Embraces web standards with a component model centered on Web Components
+- **Server-Side rendering**: Supports declarative shadow root templates with SSR
 - **Declarative API**: Declarative [directives](#directives) and [Signals](#reactivity) for reactivity
-- **Readable code**: Near-zero [build](#build) step and [no bundling](#no-bundle), ensuring readable and debuggable code
+- **Readable code**: Near-zero [build](#build) step and [no bundling](#no-bundle), making code readable and debuggable
 - **[Type Safety](#type-safety)**: Type-safe authoring
 - **Powerful [Effect System](#effect-system)**
-- **Extendable [Plugin API](#plugin-api)**
+- **Extensible [Plugin API](#plugin-api)**
 - **Disappearing Framework**: Fades away as the platform evolves
 - **Secure by Default**: Powered by Deno
 
 ## Introduction
 
-The web platform is rapidly maturing, with features around the corner and landing at an unheard pace: HTML declarative shadow root, CSS functions, JS Signals, Navigation API etc. Relying more on the platform means less migration hassle as platform APIs change slowly.
+The web platform is rapidly maturing, with features arriving at an unprecedented pace: HTML declarative shadow root, CSS functions, JS Signals, Navigation API, and more. Relying on the platform means less churn: web APIs evolve slowly, reducing migration overhead.
 
-In particular we now have means to manage dependencies on the frontend with importmaps and to create modular code with native ES modules. So the future of web is moving beyond traditional bundlers, freeing us from js toolchain entropy.
+Today we can manage frontend dependencies with importmaps and create modular code with native ES modules. The future is moving beyond traditional bundlers, freeing us from JavaScript toolchain sprawl.
 
-Radish aims to provide the best features, DX, future-proofing and maintainability while minimizing abstraction, bundling, and deviation from web standards.
+Radish is designed to offer top-tier features, DX, maintainability and future-proofing, while minimizing abstraction, bundling, and deviation from web standards.
 
-Try it and you'll see how refreshing it is to have readable and debuggable your code in the browser at every stage - we're just stripping your types - while deepening your understanding of platform technologies and making your apps more robust and future-proof. The clear and coherent [mental model](#overview) will make everything click.
+Try it out, and you'll discover how refreshing it is to have readable and debuggable code in the browser at every stage (we're just strip types). Radish deepens your understanding of platform technologies and helps you build more robust, future-proof applications. Its clear and coherent [mental model](#overview) helps everything click into place.
 
 ## Try-out the alpha
 
@@ -131,13 +131,13 @@ my-rad-project/
 
 ## Overview
 
-The design of Radish is heavily inspired by algebraic effects[^alg-effects]. You've probably heard of "effects" before, but the word is overloaded with different meanings so let's clarify its meaning
+The design of Radish is heavily inspired by algebraic effects[^alg-effects]. You've probably heard of "effects" before, but the word is overloaded, so let's clarify what we mean here
 
 ### Effects as in algebraic effects
 
-In modern JS we're used to manipulating effects in the context of a reactivity system like signals. That's not the kind of effects we're talking about here, but signals do play a role in Radish as the [reactivity primitive](#reactivity).
+In modern JS we're used to talking about effects in the context of a reactivity systems like signals. That's not the kind of effects we're talking about here, though signals do play a role in Radish as the [reactivity primitive](#reactivity).
 
-Algebraic effects[^alg-effects] are a more general concept from functional programming allowing to structure a program in a very composable way.
+Algebraic effects[^alg-effects] are a more general concept from functional programming allowing to structure a program in a modular and composable way.
 
 A good mental model is the handling of exceptions in JS: we can *perform* a `throw` operation to create an exception which then bubbles up the stack until it finds a handler. And in JS we can add an exception handler with the try-catch construct.
 
@@ -145,60 +145,67 @@ A good mental model is the handling of exceptions in JS: we can *perform* a `thr
 try {
   f(() => {
     ...
-    // You can throw several layers deep in the call stack...
+    // You can throw several layers deep...
     throw new Error("Oops");
   })
 } catch (error) {
-  // ... as long as there is a handler (the try-catch construct), we're good
+  // ...and the nearest handler (the try-catch construct) will catch it
   console.log(error);
 }
 ```
 
-Similarly, an effect consists of an operation that we can perform and handlers to interpret this operation. HTML events and listeners give another good analogy with the bubbling of events in the DOM.
+Similarly, an effect consists of an operation that you *perform* and a handler that *interpret* it. HTML events and listeners are another good analogy, with the DOM event bubbling.
 
 <details>
   <summary>Advanced note</summary>
   <hr>
   <p>
-    In algebraic effects systems like those in OCaml and Koka when an effect is performed, the current continuation (the rest of the computation) is captured and passed as a first-class value to the handler, who can store it for later, discard it, resume it once or multiple times.
+    In algebraic effects systems like those in OCaml and Koka, when an effect is performed, the current continuation (the rest of the computation) is captured and passed as a first-class value to the handler. Then handler can then store it, discard it, resume it once or multiple times.
   </p>
   <p>
-    In contrast in JavaScript we don't have first-class continuations, and we can't cleanly model the multi-shot capability. The intuition given above with the try-catch construct and event and listeners is accurate when we limit ourselves to one-shot delimited continuations. It turns out that this approach is easier to reason about and model in JavaScript, and that's the approach Radish uses to model (constrained) effects.
+    In contrast in JavaScript we don't have first-class continuations, so we can't cleanly model the multi-shot capability. Instead we can model effects using one-shot delimited continuations, matching the intuition given above with the try-catch construct and event and listeners. It turns out that this approach is easier to reason about and fits well with how JavaScript works.
   </p>
   <hr>
 </details>
 
 ### A unified approach
 
-Traditionally, UI is described as a function of state. This functional approach was promoted by frameworks like Elm or React 10 years ago[^ui-react] and can be captured in the following formula[^ui-overreacted]:
+Traditionally, UI is described as a pure function of state and data[^ui-overreacted], a pattern popularized by frameworks like Elm or React around 2015[^ui-react]:
 
 $$\mathrm{UI} = f(\mathrm{state}, \mathrm{data})$$
 
-The problem is that it misses all the interactions and side effects. For example, what happens when we click a button that logs a message to the console? Side-effects are not idiomatically described in this paradigm, and in general UI is not a pure function of state and data.
+The problem is that it overlooks all the interactions and side effects. For example, what happens when a user clicks a button that logs a message?
 
-A user interaction is an effect, and a side-effect is an interaction with the context. Effects actually play a major role in apps, and we propose a different approach where we describe fullstack applications by the handling of various effects:
+Interactions are **effects**, and a side-effects are interactions with the environment. By contrast, Radish embraces effects and models fullstack applications as the handling of various effects:
 
 $$\mathrm{Fullstack} = \mathrm{handle\ effects}$$
 
-This formula generalizes the previous one since $\mathrm{state}$ is an effect with get and set operations and data loading also is an effect, with a load operation. So this approach is at least as expressive as the traditional approach. But it also captures server operations like validation, request handling, db queries etc. as well as build operations, io handling etc; all of which are effects.
+This formula generalizes the traditional one: $\mathrm{state}$ management is an effect (`get` and `set` operations), and data loading also is an effect (`load` operation). And this approach extends the traditional approach as it also captures server operations like validation, request handling, DB queries etc. as well as build operations, IO handling etc; all of which are effects.
 
-Radish is designed around this vision and provides a model on the backend with a complete [effect system](#effect-system), and on the frontend with [scoped handler registries](#scoped-handler-registry).
+Radish is built around this idea, and provides a model on the backend with a complete [effect system](#effect-system), and on the frontend with [scoped handler registries](#scoped-handler-registry).
 
 ### Modeling effects for the web
 
-The formula $\mathrm{Fullstack} = \mathrm{handle\ effects}$ can be modelled in the different environments where our applications run
+The $\mathrm{Fullstack} = \mathrm{handle\ effects}$ formula can be modelled in the different environments where our applications run
 
 #### Effects on the server
 
-Event bubbling is a concept specific to the DOM. There is no bubbling of events in JS backend runtimes like Deno, so the event/listeners model is not helpful on the server.
+Radish provides a full-featured [effect system](#effect-system) on the backend.
 
-Instead, Radish implements a complete [effect system](#effect-system) on the backend. This has many advantages for our apps in particular in terms of extendability which, as a bonus, yields us a powerful [plugin API](#plugin-api). In fact, all built-in effect handlers are plugins.
+This has many advantages for our apps in particular in terms of extendability which, as a bonus, yields us a powerful [plugin API](#plugin-api). In fact, all built-in effect handlers are implemented as plugins.
+
+<details>
+  <summary>Note</summary>
+  <p>
+    Event bubbling is a concept specific to the DOM. There is no bubbling in environments like Deno, so the event/listeners model is not helpful on the server.
+  </p>
+</details>
 
 #### Effects in the browser
 
-In the browser, we can leverage the DOM event model with its bubbling behavior to model effects. Radish introduces [scoped handler registries](#scoped-handler-registry), custom elements in charge of handling effects like declarative directives.
+In the browser, Radish leverages the DOM event bubbling to model effects, and introduces [scoped handler registries](#scoped-handler-registry): custom elements that can handle effects like declarative directives.
 
-In HTML, the handling of effects with scoped handler registries is isomorphic to the try-catch construct we are familiar with in JS: we apply a handler by *wrapping* it around a subtree
+This is isomorphic to try-catch: a handler wraps a subtree and intercepts effect inside it
 
 ```ts
 import { signal, HandlerRegistry } from "radish";
@@ -219,7 +226,7 @@ customElements.define("handle-input-demo", HandleInputDemo);
 </handle-input-demo>
 ```
 
-Handlers can be stacked, with the closest one handling the effects it can interpret.
+Handlers can be nested. The closest one handles effects it can interpret.
 
 ```ts
 import { signal, HandlerRegistry } from "radish";
@@ -247,47 +254,44 @@ customElements.define("other-handler", OtherHandler);
 </other-handler>
 ```
 
-Notice there is no props drilling here, we have something akin to automatic context.
+Notice there is no props drilling here, we have automatic context.
 
 #### Effects & CSS
 
-Let's zoom in on how our $\mathrm{Fullstack} = \mathrm{handle\ effects}$ formula can be interpreted in the CSS realm, expanding our mental model.
+Styling in CSS also fits into this mental model, and exhibits all the key characteristics of effects:
+- **External impact**: Styling changes the visual appearance of elements
+- **Contextual**: Behavior varies depending on the environment (browser, device, viewport size)
+- **Declarative separation**: CSS declares *what* should happen rather than *how*, separating the *effect* from its *handling* by the browser rendering engine
+- **Compositional behavior**: Cascading styles can be combined, overridden, and inherited like effect handling hierarchies.
 
-Styling in CSS exhibits all the key characteristics of an effect:
-- **External impact**: Styling changes the visual presentation of elements
-- **Contextual application**: The same CSS can result in different appearances depending on the environment (browser, device, viewport size)
-- **Declarative separation**: CSS declares what should happen rather than how, separating the *effect* from its *handling* by the browser rendering engine
-- **Composition behavior**: CSS effects can be combined, overridden, and inherited in similar ways to effect handling hierarchies.
-
-Thinking of styling as an effect provides an insightful perspective on design, and the analogy invites us to embrace the cascade and think in terms of style delegation.
+Thinking of CSS styling as effects provides an insightful perspective on design, encouraging a mindset that embraces the cascade and lets us think in terms of style delegation and layered handling.
 
 ## Effect system
 
-Having an effect system provides many advantages:
+Radish's effect system unlocks:
 
-- **Testability**: swapping handlers in a testing environment makes it easy to test scenarios where there is a deep effect to mock
-- **Simplicity**: not having to pass around context objects or callbacks just for the testability of a function that's many layers deep makes your code simpler and more focused (single responsibility) with a thinner API.
-- **Modularity**: thinner APIs like above also implies that functions can be reused more easily, which means more generic and composable code
-- **Extendability**: plugins can extend the base behavior by adding their own handlers and creating their own effects.
-- **Flexibility**: plugin handlers can also re-interpret core effects in new ways, giving a level of control and customizability that's unheard of.
+- **Testability**: Swap handlers in tests to mock a deep side-effect
+- **Simplicity**: Avoid passing context or callbacks just for testability makes code simpler and more focused (single responsibility) with a thinner API.
+- **Modularity**: Thinner APIs implies more reuseable and composable code
+- **Extendability**: Plugins define their own effects and handlers.
+- **Flexibility**: Plugin handlers can re-interpret built-in effects, giving a high level of control and customizability.
 
-The Radish effect system consists of [effects](#effects) you can create and perform (effects and their operations are commonly identified), and [handlers](#handlers) you can create and use in [plugins](#plugin-api).
+The system is built around [effects](#effects) you define and perform, and [handlers](#handlers) that interpret them, usually via [plugins](#plugin-api).
 
 ### Effects
 
-To define a new effect we use `createEffect` and pass it the signature of the operation and the name of the effect:
+Define a new effect with `createEffect` by specifying the operation signature and the name of the effect:
 
 ```ts
 import { createEffect } from "radish/effects";
 
-// Signatures could also be inlined directly with the `createEffect` calls
+// Signatures can also be inlined directly with the `createEffect` calls
 interface IO {
-  // We define the signatures of the operations
   read: (path: string) => string;
   write: (path: string, content: string) => void;
 }
 
-// To keep things organized we can group related operations in an object, which also prevents conflicting operation names like with io.read and config.read
+// We group related operations in an object to prevent conflicting names eg. with io.read and config.read
 const io = {
   // We pass the signature as the type argument of `createEffect`
   read: createEffect<IO['read']>("io/read");
@@ -295,9 +299,9 @@ const io = {
 }
 ```
 
-Notice that we didn't implement any handlers yet. This allows for a clean separation between definition and implementation.
+Notice that we haven't implement any handlers yet. This cleanly separates definition from implementation.
 
-We can already use our effects in a type-safe way:
+We can already use our effects type-safely:
 
 ```ts
 // `content` is of type string
@@ -305,19 +309,19 @@ const content = await io.read("path/to/file"); // await to perform an effect
 await io.write(content); // we can sequence effects in direct style
 ```
 
-We perform an effect operation by awaiting it. Using our `io` effect directly as above would result in an "Unhandled effect" error, similarly to unhandled exceptions, as we haven't defined a handler yet.
+We perform an effect operation by awaiting it. Calling effects without handlers will throw an "Unhandled effect" error, similarly to unhandled exceptions.
 
 <details>
   <summary>Advanced note</summary>
   <hr>
   <p>
-   Effects are often sequenced in pipelines like read -> transform -> write, which is a hint at their monadic[^monads] nature.
+   Effects are often sequenced in pipelines like read -> transform -> write, hinting at their monadic[^monads] nature.
   </p>
   <p>
-   In Radish, handlers interpret the `Effect&ltT&gt` monad into the `Promise&ltT&gt` monad allowing us to sequence effects in simple direct style with <code>await</code> instead of having to <code>.then</code> or <code>.bind</code> them.
+   In Radish, handlers interpret the `Effect&ltT&gt` monad into the `Promise&ltT&gt` monad letting us <code>await</code> for clean, direct sequencing.
   </p>
   <p>
-    So <code>await</code> here is just the syntax sugar for sequencing offered by the `PromiseLike` interface. It's the JS equivalent of Haskell's [do-notation](https://en.wikibooks.org/wiki/Haskell/do_notation)
+    Here <code>await</code> is just the syntax sugar offered by the `PromiseLike` interface. It's the JS equivalent of Haskell's [do-notation](https://en.wikibooks.org/wiki/Haskell/do_notation)
   </p>
   <hr>
 </details>
@@ -325,7 +329,7 @@ We perform an effect operation by awaiting it. Using our `io` effect directly as
 ### Handlers
 #### Sync / Async handlers
 
-To create a handler we can use `handlerFor` and pass it the effect and an implementation.
+Use `handlerFor` to implement an effect operation:
 
 ```ts
 import { handlerFor } from "radish/effects";
@@ -350,34 +354,31 @@ const IOReadHandlerMock = handlerFor(io.read, (path: string) => {
 })
 ```
 
-Notice that one handler is asynchronous while the others are synchronous. We're free to implement our handlers synchronously or asynchronously, this is an implementation detail.
+Handlers can be synchronous or asynchronous.
 
-The signature `A -> B` of an operation is in fact the minimal, effect-free contract for its handlers. This gives us great flexibility when implementing handlers since, asynchrony being an effect, async handlers `A -> Promise<B>` are allowed, as well as handlers performing any other effects.
+The operation signature (*e.g.* `A -> B`) is the minimal, effect-free contract. Handlers are free to perform their own effects, and asynchrony being an effect, async handlers (*e.g.* `A -> Promise<B>`) are allowed.
 
 <details>
   <summary>Note</summary>
   <hr>
   <p>
-    One of the quirks of JavaScript/TypeScript is that asynchrony is the only effect we have markers for, with the `async` keyword and the `Promise` return type.
+    In JavaScript/TypeScript, asynchrony is the only effect we have markers for, with the `async` keyword and the `Promise` return type. Other effects (throwing, logging) have no markers.
   </p>
   <p>
-    All other effects have no marker. For example, there is no keyword or type for a function that can throw an exception, log, or do io, as is the case in strongly typed languages built around effects like <a href="https://koka-lang.github.io/koka/doc/index.html">Koka</a>
+    One approach would be to encode all effects in types. This is the approach taken by the <a href="https://effect.website/">Effect framework</a>.
   </p>
   <p>
-    One approach would be to try to include TypeScript types in all function signatures for every effect they can perform. This is the approach taken by the <a href="https://effect.website/">Effect framework</a>. But at this point we'd rather use a different language.
+    Instead, Radish is lightweight approach and we embrace the JavaScript/TypeScript languages, with no need to wrap all your libraries and with no interop concerns as it's all standard JavaScript.
   </p>
   <p>
-    Instead Radish is a more lightweight approach that embraces the JavaScript/TypeScript languages, with no need to wrap all your libraries and with no interop concerns as it's all standard JavaScript.
-  </p>
-  <p>
-    So this is why we don't mark asynchrony in an effect operation signature, and instead think of it as any other JavaScript effect. This provides a uniform treatment of effects in operation signatures. This also gives us more flexibility in how we implement handlers as an operation signature is in fact an effect-free signature.
+    Asynchrony is treated like any other effect, and we don't mark it in an effect operation signature. This provides a uniform treatment of effects in operation signatures. This also gives us more flexibility in how we implement handlers as an operation signature is in fact an effect-free signature.
   </p>
   <hr>
 </details>
 
 #### Partial / Total handlers
 
-An effect handler doesn't even need to be a total function. It can be a partial function that handles its effect only on certain conditions, and relies on other handlers the rest of the time
+A handler doesn't have to be a total function. It can be **partial**, handling only specific cases, and delegating the rest to other handlers.
 
 ```ts
 import { Handler } from "radish/effects";
@@ -387,10 +388,10 @@ const IOReadTXTOnly = handlerFor(io.read, (path: string) => {
   if(path.endsWith(".txt")) {
     return "I can only handle .txt files"
   }
-  return Handler.continue(path) // relies on other handlers
+  return Handler.continue(path) // delegates to other handlers
 })
 
-// This handler actually is a decorator
+// A decorator handler that modifies content before writing
 const IODecorateTXT = handlerFor(io.write, (path: string, content: string)=>{
   if(path.endsWith(".txt")) {
     content = "/** Copyright notice **/" + content
@@ -399,7 +400,7 @@ const IODecorateTXT = handlerFor(io.write, (path: string, content: string)=>{
 })
 
 let count = 0;
-// This handler is a listener that does something orthogonal
+// A listener that performs orthogonal logic
 const IOCountTXTReads = handlerFor(io.read, (path: string)=>{
   if(path.endsWith(".txt")) {
     count += 1
@@ -408,24 +409,29 @@ const IOCountTXTReads = handlerFor(io.read, (path: string)=>{
 })
 
 ```
-To delegate the handling we use `Handler.continue` as above to forward the effect with the potentially modified params.
+To delegate the handling we use `Handler.continue(...)` as shown above. You can also modify arguments before forwarding them.
 
-This allows many patterns like handlers cooperation, delegation and decoration. Handlers can also act as event listeners and do something orthogonal like logging while forwarding the effect.
+This enables several powerful patterns:
 
-Summing-up, different handlers for the same effect can be:
-- synchronous / asynchronous
-- total function / partial function
+- **Delegation**: Focus on handling a specific case
+- **Decoration**: Wrap or augment behavior
+- **Observation**: React to effects and do something orthogonal to the handling
 
-all mixed and matched as needed.
+Handlers can also perform other effects while handling their own operation, as long as a handler in scope for those as well.
 
-A handler can also perform another effect while handling its own operation, as long as there is a handler in scope for this other effect.
+In summary, handlers for the same effect can be:
+- **Synchronous** or **asynchronous**
+- **Total** (handle all inputs) or **partial** (handle selectively)
+
+and they can be freely mixed and composed as needed.
 
 ### Using handlers
 
-To run our code with the handlers we have two options:
+To execute code with handlers you have a few options:
 
-1. Often we'll just group related handlers in a [plugin](#plugin-api)
-1. If more control is needed, we can also use `runWith` directly in our code, which creates a new handlers scope with our handlers attached:
+1. **Use a plugin** (see [Plugin API](#plugin-api)) the common way to group handlers
+2. **Use `runWith` directly** to create a new scope for handlers
+3. **Use `addHandlers`** to attach handlers dynamically
 
 ```ts
 import { runWith } from 'radish/effects';
@@ -435,7 +441,7 @@ runWith(async () => {
   const jsonFile = await io.read("hello.json"); // ...
 }, [IOHandleTXTOnly, IOReadHandler])
 ```
-The order of the handlers matters here because `IOHandleTXTOnly` relies on delegation.
+The order of the handlers matters as `IOHandleTXTOnly` relies on delegation.
 
 Many effects are provided by Radish out of the box, see the [`core/src/effects`](https://github.com/radishland/radish/tree/main/core/src/effects) folder. They can be imported from `radish/effects`
 
@@ -448,14 +454,22 @@ import type { Plugin } from 'radish/types';
 
 export const myIOPlugin: Plugin = {
   name: 'my-io-plugin',
-  handlers: [IOCountTXTReads, IODecorateTXT, IOHandleTXTOnly, IOReadHandler, IOWriteHandler]
+  handlers: [
+    IOCountTXTReads,
+    IODecorateTXT,
+    IOHandleTXTOnly,
+    IOReadHandler,
+    IOWriteHandler
+  ]
 }
 ```
-When handlers rely on delegation, the order matters, and the first handler of the list is executed first. All built-in plugin handlers are total, so you can safely build specialized handlers decorating or delegating to these handlers.
+When handlers rely on delegation (`Handler.continue(...)`), the **order matters**. Handlers are evaluated in sequence with the first handler of the list being executed first.
 
-Once your plugin is ready, extend Radish's behavior by prepending it to the `plugins` field of your config file.
+All built-in plugin handlers in Radish are total, so you can safely build specialized handlers that delegate or decorate them.
 
-All framework features come in the form of built-in plugins that can be extended. For example declarative shadow root inlining, server directives, type stripping etc. are all plugins.
+Once your plugin is ready, extend Radish's behavior by prepending it to the `plugins` array of your config file.
+
+All core framework features, like declarative shadow root inlining, server directives, type stripping etc., are implemented as built-in plugins. You can extend, override, or layer on top of them with the plugin API.
 
 The provided plugins can be imported from `radish/plugins`, see the [core/src/plugins](https://github.com/radishland/radish/tree/main/core/src/plugins) folder. Here's an overview
 
