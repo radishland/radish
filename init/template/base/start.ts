@@ -12,7 +12,11 @@ import type { Config } from "@radish/core/types";
 const config: Config = {
   importmap: {
     install: [
-      { package: "npm:@radishland/runtime", entrypoints: ["/boot"] },
+      {
+        package: "npm:@radishland/runtime",
+        alias: "@radish/runtime",
+        entrypoints: [".", "/boot"],
+      },
     ],
   },
   plugins: [
