@@ -1,4 +1,4 @@
-import { HandlerRegistry, signal } from "$runtime";
+import { HandlerRegistry, signal } from "@radish/runtime";
 
 export class MyComponent extends HandlerRegistry {
   state = signal(0);

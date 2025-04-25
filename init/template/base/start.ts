@@ -1,4 +1,4 @@
-import { manifestPath, startApp } from "$core";
+import { manifestPath, startApp } from "@radish/core";
 import {
   pluginConfig,
   pluginImportmap,
@@ -6,8 +6,8 @@ import {
   pluginManifest,
   pluginRadish,
   pluginStripTypes,
-} from "$core/plugins";
-import type { Config } from "$core/types";
+} from "@radish/core/plugins";
+import type { Config } from "@radish/core/types";
 
 const config: Config = {
   importmap: {

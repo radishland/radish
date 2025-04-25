@@ -1,5 +1,5 @@
 import { importmapPath, manifestPath, startApp } from "@radish/core";
-import { Handler, handlerFor, importmap, io } from "@radish/core/effects";
+import { handlerFor, importmap, io } from "@radish/core/effects";
 import {
   pluginConfig,
   pluginImportmap,
@@ -34,21 +34,6 @@ const config: Config = {
   router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
   plugins: [
     pluginRadish,
-    {
-      // rewrites the manifest imports
-      name: "plugin-rewrite-manifest-imports",
-      handlers: [
-        handlerFor(
-          io.writeFile,
-          (path, content) => {
-            if (path === manifestPath) {
-              content = content.replace("$core/parser", "@radish/core/parser");
-            }
-            return Handler.continue(path, content);
-          },
-        ),
-      ],
-    },
     {
       name: "plugin-rewrite-importmap-imports",
       handlers: [
