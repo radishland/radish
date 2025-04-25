@@ -1,25 +1,25 @@
 # Radish!
 
-Radish is a standards-first framework with a unified approach to writing fullstack web apps.
+Radish is a standards-first framework with a unified approach to developing fullstack web apps.
 
-- Simple, [unified approach](#overview) to web dev
-- Embraces Web Standards with its component model built around Web Components
-- Server-Side rendered templates with declarative shadow root
-- Minimal, declarative API with [signals](#reactivity) and reactive [directives](#directives)
-- Readable, debuggable code with a near-zero [build](#build) step and [no bundle](#no-bundle)
-- [Type-safe](#type-safety) authoring
-- Powerful [effect system](#effect-system)
-- Extendable [plugin API](#plugin-api)
-- Disappearing framework that fades away as the platform evolves
-- Powered by Deno, secure by default
+- **[Unified Approach](#overview)**: A simple, cohesive approach to web dev
+- **Web Standards**: Embraces web standards with its component model built around Web Components
+- **Server-Side rendering**: Declarative shadow root templates are SSRd
+- **Declarative API**: Declarative [directives](#directives) and [Signals](#reactivity) for reactivity
+- **Readable code**: Near-zero [build](#build) step and [no bundling](#no-bundle), ensuring readable and debuggable code
+- **[Type Safety](#type-safety)**: Type-safe authoring
+- **Powerful [Effect System](#effect-system)**
+- **Extendable [Plugin API](#plugin-api)**
+- **Disappearing Framework**: Fades away as the platform evolves
+- **Secure by Default**: Powered by Deno
 
 ## Introduction
 
-The platform is more and more mature, with features around the corner and landing at an unheard pace: HTML declarative shadow root, CSS functions, JS Signals, Navigation API etc. Relying more on the platform means less migration hell as platform API change slowly.
+The web platform is rapidly maturing, with features around the corner and landing at an unheard pace: HTML declarative shadow root, CSS functions, JS Signals, Navigation API etc. Relying more on the platform means less migration hassle as platform APIs change slowly.
 
 In particular we now have means to manage dependencies on the frontend with importmaps and to create modular code with native ES modules. So the future of web is moving beyond traditional bundlers, freeing us from js toolchain entropy.
 
-Radish seeks the best possible outcome in terms of features, DX, future-proofing and maintainability while enforcing the lowest possible cost in terms of abstraction, bundling, and deviation from web standards.
+Radish aims to provide the best features, DX, future-proofing and maintainability while minimizing abstraction, bundling, and deviation from web standards.
 
 Try it and you'll see how refreshing it is to have readable and debuggable your code in the browser at every stage - we're just stripping your types - while deepening your understanding of platform technologies and making your apps more robust and future-proof. The clear and coherent [mental model](#overview) will make everything click.
 
@@ -131,7 +131,7 @@ my-rad-project/
 
 ## Overview
 
-The design of Radish is heavily inspired by algebraic effects[^alg-effects]. You've probably heard of effects before, but the word is overloaded with different meanings so let's clarify a bit first
+The design of Radish is heavily inspired by algebraic effects[^alg-effects]. You've probably heard of "effects" before, but the word is overloaded with different meanings so let's clarify its meaning
 
 ### Effects as in algebraic effects
 
@@ -170,11 +170,11 @@ Similarly, an effect consists of an operation that we can perform and handlers t
 
 ### A unified approach
 
-We traditionally describe the UI as a function of the state. This functional approach was promoted by frameworks like Elm or React 10 years ago[^ui-react] and can be captured in the following formula[^ui-overreacted]:
+Traditionally, UI is described as a function of state. This functional approach was promoted by frameworks like Elm or React 10 years ago[^ui-react] and can be captured in the following formula[^ui-overreacted]:
 
 $$\mathrm{UI} = f(\mathrm{state}, \mathrm{data})$$
 
-The problem is that it misses all the interactions and side effects. What happens when we click a button that logs a message to the console? Side-effects are not idiomatically described in this paradigm, and in general UI is not a pure function of state and data.
+The problem is that it misses all the interactions and side effects. For example, what happens when we click a button that logs a message to the console? Side-effects are not idiomatically described in this paradigm, and in general UI is not a pure function of state and data.
 
 A user interaction is an effect, and a side-effect is an interaction with the context. Effects actually play a major role in apps, and we propose a different approach where we describe fullstack applications by the handling of various effects:
 
@@ -182,21 +182,21 @@ $$\mathrm{Fullstack} = \mathrm{handle\ effects}$$
 
 This formula generalizes the previous one since $\mathrm{state}$ is an effect with get and set operations and data loading also is an effect, with a load operation. So this approach is at least as expressive as the traditional approach. But it also captures server operations like validation, request handling, db queries etc. as well as build operations, io handling etc; all of which are effects.
 
-Radish is designed around this vision and provides a model for it both on the backend with a complete [effect system](#effect-system), as well as on the frontend, with [scoped handler registries](#scoped-handler-registry).
+Radish is designed around this vision and provides a model on the backend with a complete [effect system](#effect-system), and on the frontend with [scoped handler registries](#scoped-handler-registry).
 
 ### Modeling effects for the web
 
-The formula $\mathrm{Fullstack} = \mathrm{handle\ effects}$ can be modelled idiomatically in the different environments where our applications run
+The formula $\mathrm{Fullstack} = \mathrm{handle\ effects}$ can be modelled in the different environments where our applications run
 
 #### Effects on the server
 
-Event bubbling is a concept specific to the DOM. So the event / listeners model is not helpful on the server as there is no bubbling of events in JS backend runtimes like Deno.
+Event bubbling is a concept specific to the DOM. There is no bubbling of events in JS backend runtimes like Deno, so the event/listeners model is not helpful on the server.
 
-Instead Radish implements a complete [effect system](#effect-system) on the backend. This has many advantages for our apps in particular in terms of extendability which, as a bonus, yields us a powerful [plugin API](#plugin-api). In fact, all built-in effect handlers are plugins.
+Instead, Radish implements a complete [effect system](#effect-system) on the backend. This has many advantages for our apps in particular in terms of extendability which, as a bonus, yields us a powerful [plugin API](#plugin-api). In fact, all built-in effect handlers are plugins.
 
 #### Effects in the browser
 
-In the browser we can leverage the DOM event model with its bubbling behavior to model effects. Radish introduces the concept of [scoped handler registries](#scoped-handler-registry) which are custom elements in charge of handling effects like declarative directives.
+In the browser, we can leverage the DOM event model with its bubbling behavior to model effects. Radish introduces [scoped handler registries](#scoped-handler-registry), custom elements in charge of handling effects like declarative directives.
 
 In HTML, the handling of effects with scoped handler registries is isomorphic to the try-catch construct we are familiar with in JS: we apply a handler by *wrapping* it around a subtree
 
@@ -219,7 +219,7 @@ customElements.define("handle-input-demo", HandleInputDemo);
 </handle-input-demo>
 ```
 
-We can also stack handlers, and the closer one handles the effects it can interpret.
+Handlers can be stacked, with the closest one handling the effects it can interpret.
 
 ```ts
 import { signal, HandlerRegistry } from "radish";
@@ -259,19 +259,19 @@ Styling in CSS exhibits all the key characteristics of an effect:
 - **Declarative separation**: CSS declares what should happen rather than how, separating the *effect* from its *handling* by the browser rendering engine
 - **Composition behavior**: CSS effects can be combined, overridden, and inherited in similar ways to effect handling hierarchies.
 
-Thinking of styling as an effect gives us an insightful perspective on our designs, and by analogy with other effects we looked at, it invites us to embrace the cascade and think in terms of style delegation.
+Thinking of styling as an effect provides an insightful perspective on design, and the analogy invites us to embrace the cascade and think in terms of style delegation.
 
 ## Effect system
 
 Having an effect system provides many advantages:
 
-- **testability**: swapping handlers in a testing environment makes it easy to test scenarios where there is a deep effect to mock
-- **simplicity**: not having to pass around context objects or callbacks just for the testability of a function that's many layers deep makes your code simpler and more focused (single responsibility) with a thinner API.
-- **modularity**: thinner APIs like above also implies that functions can be reused more easily, which means more generic and composable code
-- **extendability**: plugins can extend the base behavior by adding their own handlers and creating their own effects.
-- **flexibility**: plugin handlers can also re-interpret core effects in new ways, giving a level of control and customizability that's unheard of.
+- **Testability**: swapping handlers in a testing environment makes it easy to test scenarios where there is a deep effect to mock
+- **Simplicity**: not having to pass around context objects or callbacks just for the testability of a function that's many layers deep makes your code simpler and more focused (single responsibility) with a thinner API.
+- **Modularity**: thinner APIs like above also implies that functions can be reused more easily, which means more generic and composable code
+- **Extendability**: plugins can extend the base behavior by adding their own handlers and creating their own effects.
+- **Flexibility**: plugin handlers can also re-interpret core effects in new ways, giving a level of control and customizability that's unheard of.
 
-The Radish effect system consists of [effects](#effects) that you can create or perform (effects and their operations are commonly identified), as well as [handlers](#handlers) you can create and use in [plugins](#plugin-api).
+The Radish effect system consists of [effects](#effects) you can create and perform (effects and their operations are commonly identified), and [handlers](#handlers) you can create and use in [plugins](#plugin-api).
 
 ### Effects
 
@@ -410,7 +410,7 @@ const IOCountTXTReads = handlerFor(io.read, (path: string)=>{
 ```
 To delegate the handling we use `Handler.continue` as above to forward the effect with the potentially modified params.
 
-This allows many patterns like handlers cooperation, delegation and decoration. Handlers can also be used as event listeners to do something orthogonal like logging while forwarding the effect.
+This allows many patterns like handlers cooperation, delegation and decoration. Handlers can also act as event listeners and do something orthogonal like logging while forwarding the effect.
 
 Summing-up, different handlers for the same effect can be:
 - synchronous / asynchronous
@@ -453,9 +453,9 @@ export const myIOPlugin: Plugin = {
 ```
 When handlers rely on delegation, the order matters, and the first handler of the list is executed first. All built-in plugin handlers are total, so you can safely build specialized handlers decorating or delegating to these handlers.
 
-Once your plugin is done, you're ready to extend the behavior of Radish by prepending your plugin to the `plugins` field of your config file.
+Once your plugin is ready, extend Radish's behavior by prepending it to the `plugins` field of your config file.
 
-All the framework features themselves come in the form of built-in plugins which can be extended. For example declarative shadow root inlining, server directives, type stripping etc. are all plugins.
+All framework features come in the form of built-in plugins that can be extended. For example declarative shadow root inlining, server directives, type stripping etc. are all plugins.
 
 The provided plugins can be imported from `radish/plugins`, see the [core/src/plugins](https://github.com/radishland/radish/tree/main/core/src/plugins) folder. Here's an overview
 
