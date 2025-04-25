@@ -1,12 +1,15 @@
 import type { Config, ResolvedConfig } from "../types.d.ts";
-import { createEffect } from "./effects.ts";
+import { createEffect, type EffectWithType } from "./effects.ts";
 
 interface ConfigEffect {
   read: () => ResolvedConfig;
   transform: (config: Config) => Config;
 }
 
-export const config = {
+export const config: {
+  read: EffectWithType<[], ResolvedConfig>;
+  transform: EffectWithType<[config: Config], Config>;
+} = {
   /**
    * Returns the resolved config object
    */
@@ -19,7 +22,9 @@ export const config = {
   ),
 };
 
-export const denoConfig = {
+export const denoConfig: {
+  read: EffectWithType<[], Record<string, any>>;
+} = {
   /**
    * Returns the parsed deno config and throws if it can't find it
    */

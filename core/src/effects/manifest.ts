@@ -2,7 +2,7 @@ import type { WalkEntry } from "@std/fs";
 import { join } from "@std/path";
 import { generatedFolder } from "../constants.ts";
 import type { ManifestBase } from "../types.d.ts";
-import { createEffect } from "./effects.ts";
+import { createEffect, type EffectWithType } from "./effects.ts";
 
 /**
  * The path to the manifest file
@@ -22,7 +22,13 @@ interface ManifestOperations {
 /**
  * The manifest effect
  */
-export const manifest = {
+export const manifest: {
+  setLoader: EffectWithType<[loader: () => Promise<ManifestBase>], void>;
+  load: EffectWithType<[], void>;
+  get: EffectWithType<[], ManifestBase>;
+  update: EffectWithType<[param: UpdateManifestParam], UpdateManifestParam>;
+  write: EffectWithType<[], void>;
+} = {
   /**
    * Sets the loader function used by `manifest/load`
    */

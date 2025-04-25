@@ -11,7 +11,7 @@ import type { HmrEvent } from "../types.d.ts";
 import { TtlCache } from "../utils/cache.ts";
 import { ws } from "../server/ws.ts";
 import { generateImportmap } from "../plugins/importmap.ts";
-import { createEffect } from "./effects.ts";
+import { createEffect, type EffectWithType } from "./effects.ts";
 
 type HotUpdateParam = {
   event: HmrEvent;
@@ -26,7 +26,9 @@ interface Hot {
   update: (param: HotUpdateParam) => HotUpdateParam;
 }
 
-export const hot = {
+export const hot: {
+  update: EffectWithType<[param: HotUpdateParam], HotUpdateParam>;
+} = {
   /**
    * Triggers the hot update transform
    */
