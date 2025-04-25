@@ -1,6 +1,5 @@
 import { dev } from "$env";
-import { STATUS_CODE } from "@std/http";
-import { getCookies } from "@std/http/cookie";
+import { getCookies, STATUS_CODE } from "@std/http";
 import { join } from "@std/path";
 import {
   buildFolder,
