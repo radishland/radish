@@ -12,7 +12,7 @@ interface HandlerWithType<P extends any[], R> extends Handler<P, R> {
  */
 export type Handlers = (HandlerWithType<any, any>)[];
 
-interface EffectWithType<P extends any[], R> {
+export interface EffectWithType<P extends any[], R> {
   (...payload: P): Effect<R>;
   readonly type: string;
 }

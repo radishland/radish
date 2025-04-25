@@ -31,7 +31,7 @@ export class Handler<P extends any[], R> {
     });
   }
 
-  static fold<P extends any[], R>(handlers: Handler<P, R>[]) {
+  static fold<P extends any[], R>(handlers: Handler<P, R>[]): Handler<P, R> {
     return handlers.reduce((acc, curr) =>
       acc.flatMap((...args) => curr.run(...args))
     );
