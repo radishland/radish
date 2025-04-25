@@ -1,16 +1,27 @@
-import { manifestPath, startApp } from "$core";
+import { manifestPath, startApp } from "@radish/core";
 import {
-  pluginDefaultEmit,
+  pluginConfig,
+  pluginImportmap,
+  pluginIO,
+  pluginManifest,
   pluginRadish,
   pluginStripTypes,
-} from "$core/plugins";
-import type { Config } from "$core/types";
+} from "@radish/core/plugins";
+import type { Config } from "@radish/core/types";
 
 const config: Config = {
+  importmap: {
+    install: [
+      { package: "npm:@radishland/runtime", entrypoints: ["/boot"] },
+    ],
+  },
   plugins: [
-    pluginRadish(),
+    pluginRadish,
+    pluginImportmap,
+    pluginManifest,
     pluginStripTypes,
-    pluginDefaultEmit,
+    pluginConfig,
+    pluginIO,
   ],
   // speculationRules: {
   //   prerender: [{
@@ -33,6 +44,7 @@ const config: Config = {
   // },
 };
 
-const loadManifest = async () => (await import(manifestPath))["manifest"];
-
-await startApp(loadManifest, config);
+await startApp(
+  config,
+  async () => (await import("./" + manifestPath))["manifest"],
+);

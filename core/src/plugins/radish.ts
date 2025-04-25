@@ -371,7 +371,7 @@ export const pluginRadish: Plugin = {
       if (path !== manifestPath) return Handler.continue(path, content);
 
       content =
-        `import { fragments, shadowRoot } from "$core/parser";\n\n${content}`;
+        `import { fragments, shadowRoot } from "@radish/core/parser";\n\n${content}`;
 
       return Handler.continue(path, content);
     }),
