@@ -11,9 +11,26 @@ import type { Plugin } from "../types.d.ts";
 import { stringifyObject } from "../utils/stringify.ts";
 
 /**
+ * This module implements the {@linkcode env} effect
+ *
+ * {@linkcode env.load} generates an `env.ts` module to import environment
+ * variables from with the `$env` alias
+ *
+ * @example
+ * ```ts
+ * import { API_KEY } from "$env";
+ * ```
+ *
+ * This gives autocompletion on keys and will allow further refinements like preventing leaking
+ * variables in the browser by specifying rules or inlining public env imports
+ *
+ * @module
+ */
+
+/**
  * Path to the generated env module
  */
-export const envModulePath = join(generatedFolder, "env.ts");
+const envModulePath = join(generatedFolder, "env.ts");
 
 /**
  * Implements {@linkcode env.load} by generating an `env.ts` module to import environment
