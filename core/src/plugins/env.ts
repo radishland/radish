@@ -25,15 +25,14 @@ export const envModulePath = join(generatedFolder, "env.ts");
 export const pluginEnv: Plugin = {
   name: "plugin-env",
   handlers: [
-    handlerFor(env.load, envLoadHandler),
+    handlerFor(env.load, load),
     handlerFor(env.get, (key: string) => {
       const value = Deno.env.get(key);
-      if (value) return parseEnvValue(value);
-      return undefined;
+      return parseValue(value);
     }),
     handlerFor(hot.update, async ({ event, paths }) => {
       if (event.path === await getEnvPath()) {
-        await envLoadHandler();
+        await load();
       }
 
       return Handler.continue({ event, paths });
@@ -41,7 +40,7 @@ export const pluginEnv: Plugin = {
   ],
 };
 
-async function envLoadHandler() {
+async function load() {
   const envPath = await getEnvPath();
 
   if (envPath) {
@@ -50,7 +49,7 @@ async function envLoadHandler() {
     let envModule = "";
 
     for (const [key, value] of Object.entries(envObject)) {
-      envModule += `export const ${key} = ${parseEnvValue(value)};\n`;
+      envModule += `export const ${key} = ${parseValue(value)};\n`;
       if (Deno.env.get(key) !== undefined) continue;
       Deno.env.set(key, value);
     }
@@ -62,7 +61,9 @@ async function envLoadHandler() {
 /**
  * Parses booleans, numbers, JSON objects, quotes strings
  */
-const parseEnvValue = (value: string) => {
+const parseValue = (value: string | undefined) => {
+  if (value === "" || value === undefined) return undefined;
+
   if (Boolean(value).toString() === value) {
     return Boolean(value);
   }
