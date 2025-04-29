@@ -5,6 +5,11 @@ maintainer, you don't need to read this.
 
 To cut a release, follow these steps:
 
+1. Fix any lint error (slow-types etc.) preventing publishing:
+   ```sh
+   deno publish --dry-run
+   ```
+
 1. Create a release branch and run the version bump script:
    ```sh
    deno run -A jsr:@deno/bump-workspaces@0.1.22/cli

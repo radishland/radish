@@ -2,7 +2,7 @@
 
 Radish is a standards-first framework with a unified approach to building fullstack web apps.
 
-- **[Unified Approach](#overview)**: A cohesive and simple approach to web dev
+- **[Unified Approach](#overview)**: A cohesive and simple mental model
 - **Web Standards**: Embraces web standards with a component model centered on Web Components
 - **Server-Side rendering**: Supports declarative shadow root templates with SSR
 - **Declarative API**: [Declarative directives](#directives) and [signals](#reactivity) for reactivity
@@ -154,13 +154,13 @@ try {
 }
 ```
 
-Similarly, an effect consists of an operation that you *perform* and a handler that *interpret* it. HTML events and listeners are another good analogy, with the DOM event bubbling.
+Similarly, an effect consists of an operation that you *perform* and a handler that *interprets* it. HTML events and listeners are another good analogy, with the DOM event bubbling.
 
 <details>
   <summary>Advanced note</summary>
   <hr>
   <p>
-    In algebraic effects systems like those in OCaml and Koka, when an effect is performed, the current continuation (the rest of the computation) is captured and passed as a first-class value to the handler. Then handler can then store it, discard it, resume it once or multiple times.
+    In algebraic effects systems like those in OCaml and <a href="https://koka-lang.github.io/koka/doc/index.html">Koka</a>, when an effect is performed, the current continuation (the rest of the computation) is captured and passed as a first-class value to the handler. The handler can then store it, discard it, resume it once or multiple times.
   </p>
   <p>
     In contrast in JavaScript we don't have first-class continuations, so we can't cleanly model the multi-shot capability. Instead we can model effects using one-shot delimited continuations, matching the intuition given above with the try-catch construct and event and listeners. It turns out that this approach is easier to reason about and fits well with how JavaScript works.
@@ -196,16 +196,18 @@ This has many advantages for our apps in particular in terms of extendability wh
 
 <details>
   <summary>Note</summary>
+  <hr>
   <p>
     Event bubbling is a concept specific to the DOM. There is no bubbling in environments like Deno, so the event/listeners model is not helpful on the server.
   </p>
+  <hr>
 </details>
 
 #### Effects in the browser
 
 In the browser, Radish leverages the DOM event bubbling to model effects, and introduces [scoped handler registries](#scoped-handler-registry): custom elements that can handle effects like declarative directives.
 
-This is isomorphic to try-catch: a handler wraps a subtree and intercepts effect inside it
+This is isomorphic to try-catch: a handler wraps a subtree and intercepts effects inside it
 
 ```ts
 import { signal, HandlerRegistry } from "radish";
@@ -226,7 +228,7 @@ customElements.define("handle-input-demo", HandleInputDemo);
 </handle-input-demo>
 ```
 
-Handlers can be nested. The closest one handles effects it can interpret.
+Handlers can be nested. The closest one handles the effects it can interpret.
 
 ```ts
 import { signal, HandlerRegistry } from "radish";
@@ -254,7 +256,7 @@ customElements.define("other-handler", OtherHandler);
 </other-handler>
 ```
 
-Notice there is no props drilling here, we have automatic context.
+Notice there is no props drilling here: we have automatic context.
 
 #### Effects & CSS
 
@@ -315,13 +317,13 @@ We perform an effect operation by awaiting it. Calling effects without handlers 
   <summary>Advanced note</summary>
   <hr>
   <p>
-   Effects are often sequenced in pipelines like read -> transform -> write, hinting at their monadic[^monads] nature.
+   Effects are often sequenced in pipelines like read -> transform -> write, hinting at their monadic<sup><a href="#ref-monad">4</a></sup> nature.
   </p>
   <p>
    In Radish, handlers interpret the `Effect&ltT&gt` monad into the `Promise&ltT&gt` monad letting us <code>await</code> for clean, direct sequencing.
   </p>
   <p>
-    Here <code>await</code> is just the syntax sugar offered by the `PromiseLike` interface. It's the JS equivalent of Haskell's [do-notation](https://en.wikibooks.org/wiki/Haskell/do_notation)
+    Here <code>await</code> is just the syntax sugar offered by the `PromiseLike` interface. It's the JS equivalent of Haskell's <a href="https://en.wikibooks.org/wiki/Haskell/do_notation">do-notation</a>
   </p>
   <hr>
 </details>
@@ -925,4 +927,11 @@ The [importmap](#importmap) lets the browser resolve dependencies (and higher-or
 
 [^ui-overreacted]: Overreacted blog post describing the UI=f(state, data) formula. https://overreacted.io/the-two-reacts/
 
-[^monads]: Moggi, E. (1991). Notions of Computation and Monads. Information and Computation, 93(1), 55–92. [DOI: 10.1016/0890-5401(91)90052-4](https://www.sciencedirect.com/science/article/pii/0890540191900524)
+<li id="ref-monads">
+<p>
+  4. Moggi, E. (1991). Notions of Computation and Monads. Information and Computation, 93(1), 55–92. <a href="https://www.sciencedirect.com/science/article/pii/0890540191900524">DOI: 10.1016/0890-5401(91)90052-4</a>
+  <a href="#ref-4"
+  data-footnote-backref=""
+  aria-label="Back to reference 4" class="data-footnote-backref">↩</a>
+</p>
+</li>

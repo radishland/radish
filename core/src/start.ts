@@ -1,4 +1,3 @@
-import { dev } from "$env";
 import { parseArgs } from "@std/cli/parse-args";
 import { UserAgent } from "@std/http";
 import {
@@ -16,16 +15,18 @@ import type { CLIArgs, Config, ResolvedConfig } from "./types.d.ts";
 import { updateManifest } from "./plugins/manifest.ts";
 import { generateImportmap } from "./plugins/importmap.ts";
 import { importmap } from "./effects/importmap.ts";
+import { env } from "./effects/env.ts";
+import { dev } from "./environment.ts";
 
 const cliArgs: CLIArgs = Object.freeze(parseArgs(Deno.args, {
-  boolean: ["dev", "importmap", "manifest", "build"],
+  boolean: ["dev", "env", "importmap", "manifest", "build", "server"],
 }));
 
 const handle: Handle = async ({ context, resolve }) => {
   // Avoid mime type sniffing
   context.headers.set("X-Content-Type-Options", "nosniff");
 
-  if (!dev()) {
+  if (!dev) {
     const ua = new UserAgent(context.request.headers.get("user-agent") ?? "");
     console.log("ua:", ua);
   }
@@ -37,10 +38,6 @@ export async function startApp(
   config: Config,
   getManifest: () => Promise<any>,
 ) {
-  if (cliArgs.dev) {
-    Deno.env.set("dev", "");
-  }
-
   for (const plugin of config.plugins ?? []) {
     if (plugin.handlers) {
       effects.addHandlers(plugin.handlers);
@@ -59,23 +56,33 @@ export async function startApp(
 
   globals();
 
+  if (cliArgs.env) {
+    await env.load();
+  }
+
   if (cliArgs.manifest) {
     console.log("Generating manifest...");
     await updateManifest("**", { root: libFolder });
     await updateManifest("**", { root: elementsFolder });
     await updateManifest("**", { root: routesFolder });
     await manifest.write();
-  } else {
+  }
+
+  if (cliArgs.importmap || cliArgs.build) {
     await manifest.setLoader(getManifest);
     await manifest.load();
 
     if (cliArgs.importmap) {
       await generateImportmap();
       await importmap.write();
-    } else if (cliArgs.build) {
-      await build();
-    } else {
-      await createApp(handle);
     }
+
+    if (cliArgs.build) {
+      await build();
+    }
+  }
+
+  if (cliArgs.server) {
+    await createApp(handle);
   }
 }

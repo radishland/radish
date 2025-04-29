@@ -2,6 +2,7 @@ import { importmapPath, manifestPath, startApp } from "@radish/core";
 import { handlerFor, importmap, io } from "@radish/core/effects";
 import {
   pluginConfig,
+  pluginEnv,
   pluginImportmap,
   pluginIO,
   pluginManifest,
@@ -60,6 +61,7 @@ const config: Config = {
     pluginManifest,
     pluginStripTypes,
     pluginConfig,
+    pluginEnv,
     pluginIO,
   ],
   // speculationRules: {
