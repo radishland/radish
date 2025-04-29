@@ -12,6 +12,8 @@
   },
   "nodeModulesDir": "auto",
   "imports": {
+    "$env": "_generated/env.ts",
+
     "@radish/core": "jsr:@radish/core@^1.0.0-alpha.36",
     "@radish/runtime": "npm:@radishland/runtime@^0.2.1"
   }
