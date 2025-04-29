@@ -1,6 +1,7 @@
 import type { Handlers } from "./effects/effects.ts";
 import type { ImportMapOptions } from "./plugins/importmap.ts";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
+import type { LoadOptions } from "@std/dotenv";
 
 export type Maybe<T> = T | undefined;
 export type MaybePromise<T> = T | Promise<T>;
@@ -40,10 +41,18 @@ export interface Plugin {
    * The name of the plugin
    */
   name: string;
-  handlers?: Handlers;
+  handlers: Handlers;
 }
 
 export interface Config {
+  env?: {
+    /**
+     * Path to the env file. Set to `null` to prevent the default value from being used.
+     *
+     * @default ".env"
+     */
+    envPath?: LoadOptions["envPath"];
+  };
   importmap?: ImportMapOptions;
   /**
    * Array of plugins to use
@@ -82,10 +91,12 @@ export interface Config {
 }
 
 export type CLIArgs = Readonly<{
+  build: boolean;
   dev: boolean;
+  env: boolean;
   importmap: boolean;
   manifest: boolean;
-  build: boolean;
+  start: boolean;
 }>;
 
 export interface ResolvedConfig extends Config {

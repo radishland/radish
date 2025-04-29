@@ -16,9 +16,10 @@ import type { CLIArgs, Config, ResolvedConfig } from "./types.d.ts";
 import { updateManifest } from "./plugins/manifest.ts";
 import { generateImportmap } from "./plugins/importmap.ts";
 import { importmap } from "./effects/importmap.ts";
+import { env } from "./effects/env.ts";
 
 const cliArgs: CLIArgs = Object.freeze(parseArgs(Deno.args, {
-  boolean: ["dev", "importmap", "manifest", "build"],
+  boolean: ["dev", "env", "importmap", "manifest", "build", "start"],
 }));
 
 const handle: Handle = async ({ context, resolve }) => {
@@ -59,22 +60,32 @@ export async function startApp(
 
   globals();
 
+  if (cliArgs.env) {
+    await env.load();
+  }
+
   if (cliArgs.manifest) {
     console.log("Generating manifest...");
     await updateManifest("**", { root: libFolder });
     await updateManifest("**", { root: elementsFolder });
     await updateManifest("**", { root: routesFolder });
     await manifest.write();
-  } else {
+  }
+
+  if (cliArgs.importmap || cliArgs.build || cliArgs.start) {
     await manifest.setLoader(getManifest);
     await manifest.load();
 
     if (cliArgs.importmap) {
       await generateImportmap();
       await importmap.write();
-    } else if (cliArgs.build) {
+    }
+
+    if (cliArgs.build) {
       await build();
-    } else {
+    }
+
+    if (cliArgs.start) {
       await createApp(handle);
     }
   }
