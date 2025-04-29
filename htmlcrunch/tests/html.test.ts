@@ -10,7 +10,7 @@ import {
   serializeFragments,
   spacesAndComments,
   textNode,
-} from "../mod.ts";
+} from "../parser.ts";
 
 Deno.test("comments_simple", () => {
   const singleline = comment.parseOrThrow("<!-- A simple comment -->");
