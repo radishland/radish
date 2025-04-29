@@ -26,6 +26,11 @@ export const pluginEnv: Plugin = {
   name: "plugin-env",
   handlers: [
     handlerFor(env.load, envLoadHandler),
+    handlerFor(env.get, (key: string) => {
+      const value = Deno.env.get(key);
+      if (value) return parseEnvValue(value);
+      return undefined;
+    }),
     handlerFor(hot.update, async ({ event, paths }) => {
       if (event.path === await getEnvPath()) {
         await envLoadHandler();
@@ -46,6 +51,8 @@ async function envLoadHandler() {
 
     for (const [key, value] of Object.entries(envObject)) {
       envModule += `export const ${key} = ${parseEnvValue(value)};\n`;
+      if (Deno.env.get(key) !== undefined) continue;
+      Deno.env.set(key, value);
     }
 
     await io.writeFile(envModulePath, envModule);
