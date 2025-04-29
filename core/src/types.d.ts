@@ -96,7 +96,7 @@ export type CLIArgs = Readonly<{
   env: boolean;
   importmap: boolean;
   manifest: boolean;
-  start: boolean;
+  server: boolean;
 }>;
 
 export interface ResolvedConfig extends Config {
