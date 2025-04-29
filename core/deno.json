@@ -20,7 +20,7 @@
     ".": "./exports/mod.ts",
     "./parser": "./exports/parser.ts",
     "./utils": "./exports/utils.ts",
-    "./env": "./exports/env.ts",
+    "./environment": "./src/environment.ts",
     "./types": "./exports/types.ts",
     "./plugins": "./exports/plugins.ts",
     "./effects": "./exports/effects.ts"

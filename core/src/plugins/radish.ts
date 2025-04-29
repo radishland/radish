@@ -1,4 +1,4 @@
-import { dev } from "../env.ts";
+import { dev } from "../environment.ts";
 import {
   booleanAttributes,
   fragments,
@@ -656,7 +656,7 @@ export const pluginRadish: Plugin = {
       `;
       }
       // Insert WebSocket script
-      if (dev()) {
+      if (dev) {
         pageHeadContent += `
           <script>
             const ws = new WebSocket("ws://localhost:1235/ws");
@@ -707,14 +707,14 @@ export const pluginRadish: Plugin = {
           .filter((node) => !!node).flat();
 
         pageHeadContent += serializeFragments(head, {
-          removeComments: !dev(),
+          removeComments: !dev,
         });
       }
 
       let pageBodyContent = "";
       if (pageGroups.body) {
         pageBodyContent = serializeFragments(pageGroups.body, {
-          removeComments: !dev(),
+          removeComments: !dev,
         });
       }
 

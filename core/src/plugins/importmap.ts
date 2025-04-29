@@ -13,7 +13,7 @@ import { throwUnlessNotFound } from "../utils/io.ts";
 import { findLongestMatchingPrefix } from "./resolve.ts";
 import { assert, assertExists, unimplemented } from "@std/assert";
 import { ts_extension_regex } from "../constants.ts";
-import { dev } from "../env.ts";
+import { dev } from "../environment.ts";
 
 let importmapObject: ImportMap = {};
 
@@ -157,7 +157,7 @@ export const pureImportMap = (
     } else if (target?.startsWith("npm:")) {
       for (const path of paths) {
         const packageName = target.replace("npm:", ""); // scope, name and version
-        const devMode = dev() ? "?dev" : "";
+        const devMode = dev ? "?dev" : "";
         importsMap.set(
           alias + path,
           `https://esm.sh/${packageName}/${path.replace(/^\//, "")}${devMode}`,

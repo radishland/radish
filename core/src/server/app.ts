@@ -1,4 +1,4 @@
-import { dev } from "../env.ts";
+import { dev } from "../environment.ts";
 import { getCookies, STATUS_CODE } from "@std/http";
 import { join } from "@std/path";
 import {
@@ -67,7 +67,7 @@ export const createApp = async (handler: Handle) => {
   });
   router.serveStatic({ pathname: `/${staticFolder}/*` });
 
-  if (dev()) {
+  if (dev) {
     router.serveStatic({ pathname: `/node_modules/*` }, {
       fsRoot: join(config.router?.nodeModulesRoot ?? "."),
     });
@@ -88,11 +88,11 @@ export const createApp = async (handler: Handle) => {
     },
   }, (request, info) => {
     console.log("Request", request.method, request.url);
-    if (!dev() && request.headers.get("upgrade")) {
+    if (!dev && request.headers.get("upgrade")) {
       // Not implemented: we don't support upgrades in production
       return createStandardResponse(STATUS_CODE.NotImplemented);
     }
-    if (dev() && request.headers.get("upgrade") === "websocket") {
+    if (dev && request.headers.get("upgrade") === "websocket") {
       const { socket, response } = Deno.upgradeWebSocket(request);
       ws.handleWebSocket(socket);
       return response;
@@ -103,7 +103,7 @@ export const createApp = async (handler: Handle) => {
   Deno.addSignalListener("SIGINT", shutdown);
   Deno.addSignalListener("SIGTERM", shutdown);
 
-  if (dev()) startHMR();
+  if (dev) startHMR();
 };
 
 const shutdown = (): void => {

@@ -1,4 +1,3 @@
-import { dev } from "./env.ts";
 import { parseArgs } from "@std/cli/parse-args";
 import { UserAgent } from "@std/http";
 import {
@@ -17,16 +16,17 @@ import { updateManifest } from "./plugins/manifest.ts";
 import { generateImportmap } from "./plugins/importmap.ts";
 import { importmap } from "./effects/importmap.ts";
 import { env } from "./effects/env.ts";
+import { dev } from "./environment.ts";
 
 const cliArgs: CLIArgs = Object.freeze(parseArgs(Deno.args, {
-  boolean: ["dev", "env", "importmap", "manifest", "build", "start"],
+  boolean: ["dev", "env", "importmap", "manifest", "build", "server"],
 }));
 
 const handle: Handle = async ({ context, resolve }) => {
   // Avoid mime type sniffing
   context.headers.set("X-Content-Type-Options", "nosniff");
 
-  if (!dev()) {
+  if (!dev) {
     const ua = new UserAgent(context.request.headers.get("user-agent") ?? "");
     console.log("ua:", ua);
   }
@@ -38,10 +38,6 @@ export async function startApp(
   config: Config,
   getManifest: () => Promise<any>,
 ) {
-  if (cliArgs.dev) {
-    Deno.env.set("dev", "");
-  }
-
   for (const plugin of config.plugins ?? []) {
     if (plugin.handlers) {
       effects.addHandlers(plugin.handlers);
@@ -72,7 +68,7 @@ export async function startApp(
     await manifest.write();
   }
 
-  if (cliArgs.importmap || cliArgs.build || cliArgs.start) {
+  if (cliArgs.importmap || cliArgs.build) {
     await manifest.setLoader(getManifest);
     await manifest.load();
 
@@ -84,9 +80,9 @@ export async function startApp(
     if (cliArgs.build) {
       await build();
     }
+  }
 
-    if (cliArgs.start) {
-      await createApp(handle);
-    }
+  if (cliArgs.server) {
+    await createApp(handle);
   }
 }
