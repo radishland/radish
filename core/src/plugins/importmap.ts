@@ -13,7 +13,7 @@ import { throwUnlessNotFound } from "../utils/io.ts";
 import { findLongestMatchingPrefix } from "./resolve.ts";
 import { assert, assertExists, unimplemented } from "@std/assert";
 import { ts_extension_regex } from "../constants.ts";
-import { dev } from "$env";
+import { dev } from "../env.ts";
 
 let importmapObject: ImportMap = {};
 

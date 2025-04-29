@@ -1,4 +1,4 @@
-import { dev } from "$env";
+import { dev } from "../env.ts";
 import {
   booleanAttributes,
   fragments,

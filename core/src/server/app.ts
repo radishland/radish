@@ -1,4 +1,4 @@
-import { dev } from "$env";
+import { dev } from "../env.ts";
 import { getCookies, STATUS_CODE } from "@std/http";
 import { join } from "@std/path";
 import {
