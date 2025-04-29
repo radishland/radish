@@ -1,4 +1,4 @@
-import { dev } from "$env";
+import { dev } from "./env.ts";
 import { parseArgs } from "@std/cli/parse-args";
 import { UserAgent } from "@std/http";
 import {

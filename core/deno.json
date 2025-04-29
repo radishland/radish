@@ -41,7 +41,6 @@
     "noImplicitOverride": true
   },
   "imports": {
-    "$env": "./src/env.ts",
     "@fcrozatier/type-strip": "jsr:@fcrozatier/type-strip@^1.2.0"
   }
 }

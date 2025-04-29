@@ -3,7 +3,6 @@
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts",
     "test": "deno test -A --no-check",
-    "load-env": "deno run -A scripts/load-env.ts",
     "css": "deno run -A scripts/css.ts",
     "create": "deno run -A scripts/create.ts",
     "dev": {
@@ -36,8 +35,6 @@
   },
   "nodeModulesDir": "auto",
   "imports": {
-    "$env": "./src/env.ts",
-
     "@fcrozatier/ts-helpers": "npm:@fcrozatier/ts-helpers@^2.10.0",
     "@preact/signals-core": "npm:@preact/signals-core@^1.8.0",
     "radish": "./runtime/src/index.ts",

@@ -11,8 +11,6 @@
   },
   "scopes": {
     "https://raw.githubusercontent.com/radishland/radish/": {
-      "$env": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/src/env.ts",
-
       "@std/assert": "jsr:@std/assert@^1.0.13",
       "@std/cli": "jsr:@std/cli@^1.0.17",
       "@std/cli/parse-args": "jsr:@std/cli@^1.0.17",
