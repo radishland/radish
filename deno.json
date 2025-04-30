@@ -24,7 +24,7 @@
     }
   },
   "fmt": {
-    "exclude": ["**/*.md", "**/pnpm-lock.yaml"]
+    "exclude": ["**/*.md", "**/*nofmt*", "**/pnpm-lock.yaml"]
   },
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"],
