@@ -6,6 +6,7 @@ export const staticFolder = "static";
 export const generatedFolder = "_generated";
 
 export const ts_extension_regex = /\.ts$/;
+export const target_head = /^\s*%radish\.head%/m;
 
 /**
  * Sets the following browser globals to no-op on the server: `window`, `customElements`,

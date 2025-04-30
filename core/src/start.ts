@@ -13,7 +13,7 @@ import { build } from "./effects/build.ts";
 import { createApp, type Handle } from "./server/app.ts";
 import type { CLIArgs, Config, ResolvedConfig } from "./types.d.ts";
 import { updateManifest } from "./plugins/manifest.ts";
-import { generateImportmap } from "./plugins/importmap.ts";
+import { generateImportmap } from "./plugins/importmap/importmap.ts";
 import { importmap } from "./effects/importmap.ts";
 import { env } from "./effects/env.ts";
 import { dev } from "./environment.ts";

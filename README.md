@@ -123,7 +123,7 @@ my-rad-project/
     - [@prop directive](#prop-directive)
     - [@use directive: declarative hooks](#use-directive-declarative-hooks)
   - [Special elements](#special-elements)
-    - [radish:head](#radishhead)
+    - [head](#head)
   - [Build](#build)
     - [Importmap](#importmap)
     - [No bundle](#no-bundle)
@@ -869,16 +869,14 @@ You can use a hook defined in a parent handler registry, similar to if it were a
 
 ## Special elements
 
-### <radish:head>
+### head
 
-This lets you declaratively add content to the document's head, and provide it with a title, description etc.
-
-It must appear at the top-level of your component
+Use the `head` element at the top level of pages to declaratively add content to the document's head, like providing a title, description etc.
 
 ```html
-<radish:head>
+<head>
   <title>The page title</title>
-</radish:head>
+</head>
 ```
 
 ## Build

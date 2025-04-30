@@ -1,4 +1,3 @@
-import { dev } from "../environment.ts";
 import {
   booleanAttributes,
   fragments,
@@ -17,6 +16,7 @@ import {
   assertArrayIncludes,
   assertExists,
   assertObjectMatch,
+  unreachable,
 } from "@std/assert";
 import type { WalkEntry } from "@std/fs";
 import { basename, dirname, extname, join, relative } from "@std/path";
@@ -30,12 +30,12 @@ import {
 import { buildPipeline } from "../effects/build.ts";
 import { config } from "../effects/config.ts";
 import { handlerFor } from "../effects/effects.ts";
+import { Handler } from "../effects/handlers.ts";
 import { hot } from "../effects/hot-update.ts";
-import { importmap } from "../effects/importmap.ts";
 import { io } from "../effects/io.ts";
 import { manifest, manifestPath } from "../effects/manifest.ts";
+import { dev } from "../environment.ts";
 import type { ManifestBase, Plugin } from "../types.d.ts";
-import { Handler } from "../effects/handlers.ts";
 import { filename, isParent } from "../utils/path.ts";
 import { setScope } from "../utils/stringify.ts";
 import { dependencies } from "../walk.ts";
@@ -72,19 +72,14 @@ export type Manifest = ManifestBase & {
   layouts: Record<string, LayoutManifest>;
 };
 
-/**
- * Ensures a path only consists of parent folders
- */
-const is_parent_path_regex = /^\.\.(\/\.\.)*$/;
-
-const appPath = join(routesFolder, "_app.html");
-
 const manifestShape = {
   elements: {},
   imports: {},
   layouts: {},
   routes: {},
 } satisfies Manifest;
+
+const appPath = join(routesFolder, "_app.html");
 
 let handlerStack: { tagName: string; instance: HandlerRegistry }[] = [];
 
@@ -136,11 +131,9 @@ async function applyServerEffects(
       // component is a custom element
       if (element.classLoader) {
         const ElementClass = await element.classLoader();
+        const instance = new ElementClass();
 
-        handlerStack.push({
-          tagName,
-          instance: new ElementClass(),
-        });
+        handlerStack.push({ tagName, instance });
       }
       // component has a shadow root
       if (element.templateLoader) {
@@ -156,11 +149,11 @@ async function applyServerEffects(
   let innerHTML: MFragment = [];
   const textContent = textNode("");
 
-  for (const attribute of attributes) {
-    if (server_attr_directive.test(attribute[0])) {
+  for (const [attrKey, attrValue] of attributes) {
+    if (server_attr_directive.test(attrKey)) {
       // @attr
 
-      const assignments = attribute[1].trim().split(
+      const assignments = attrValue.trim().split(
         spaces_sep_by_comma,
       );
 
@@ -183,10 +176,10 @@ async function applyServerEffects(
           setAttribute(attributes, attribute, value);
         }
       }
-    } else if (attribute[0].startsWith("@bind")) {
+    } else if (attrKey.startsWith("@bind:")) {
       // @bind
 
-      const property = attribute[0].split(
+      const property = attrKey.split(
         ":",
       )[1] as keyof typeof bindingConfig;
 
@@ -195,7 +188,7 @@ async function applyServerEffects(
         `${property} is not bindable`,
       );
 
-      const identifier = attribute[1] || property;
+      const identifier = attrValue || property;
       const value = contextLookup(identifier);
 
       assert(
@@ -206,10 +199,10 @@ async function applyServerEffects(
       );
 
       setAttribute(attributes, property, value);
-    } else if (attribute[0] === "@bool") {
+    } else if (attrKey === "@bool") {
       // @bool
 
-      const booleanAttributes = attribute[1].trim().split(
+      const booleanAttributes = attrValue.trim().split(
         spaces_sep_by_comma,
       );
 
@@ -233,10 +226,10 @@ async function applyServerEffects(
           attributes.push([attribute, ""]);
         }
       }
-    } else if (attribute[0] === "@class") {
+    } else if (attrKey === "@class") {
       // @class
 
-      const identifier = attribute[1] || "class";
+      const identifier = attrValue || "class";
       const value = contextLookup(identifier);
 
       assert(typeof value === "object", "@class should reference an object");
@@ -260,10 +253,10 @@ async function applyServerEffects(
       } else {
         attributes.push(["class", classes]);
       }
-    } else if (attribute[0] === "@text") {
+    } else if (attrKey === "@text") {
       // @text
 
-      const identifier = attribute[1] || "text";
+      const identifier = attrValue || "text";
       const value = contextLookup(identifier);
 
       assert(kind !== Kind.VOID, "Void elements can't have textContent");
@@ -271,10 +264,10 @@ async function applyServerEffects(
       if (value !== null && value !== undefined) {
         textContent.text = `${value}`;
       }
-    } else if (attribute[0] === "@html") {
+    } else if (attrKey === "@html") {
       // @html
 
-      const identifier = attribute[1] || "html";
+      const identifier = attrValue || "html";
       const value = contextLookup(identifier);
 
       assert(kind !== Kind.VOID, "Void elements can't have innerHTML");
@@ -312,7 +305,8 @@ async function applyServerEffects(
 }
 
 /**
- * Return the build order of a list of components, taking their relative dependencies into account
+ * Return the build order of a list of components, taking their relative dependencies into
+ * account
  */
 const sortComponents = <T extends ElementManifest | RouteManifest>(
   components: T[],
@@ -365,7 +359,7 @@ export const pluginRadish: Plugin = {
     /**
      * Decorator for the io/write handler
      *
-     * Adds parser imports to the generated `manifest.ts` module
+     * Adds the required parser imports to the generated `manifest.ts` module
      */
     handlerFor(io.writeFile, (path, content) => {
       if (path !== manifestPath) return Handler.continue(path, content);
@@ -381,6 +375,7 @@ export const pluginRadish: Plugin = {
 
       const otherEntries: WalkEntry[] = [];
       const elementsOrRoutes: (ElementManifest | RouteManifest)[] = [];
+      const layouts: WalkEntry[] = [];
 
       for (const entry of entries) {
         if (entry.isFile && extname(entry.name) === ".html") {
@@ -407,7 +402,22 @@ export const pluginRadish: Plugin = {
             const route = manifestObject.routes[entry.path];
             if (route) {
               elementsOrRoutes.push(route);
+              continue;
             }
+
+            const layout = manifestObject.layouts[entry.path];
+            if (layout) {
+              layouts.push(entry);
+              continue;
+            }
+
+            if (entry.path === appPath) {
+              // _app.html will be handled first among html files
+              layouts.unshift(entry);
+              continue;
+            }
+
+            unreachable(`Entry not handled by sortFiled '${entry.path}'`);
           } else {
             otherEntries.push(entry);
           }
@@ -430,7 +440,7 @@ export const pluginRadish: Plugin = {
           } satisfies WalkEntry;
         });
 
-      return [...otherEntries, ...sorted];
+      return [...otherEntries, ...layouts, ...sorted];
     }),
     handlerFor(manifest.update, async ({ entry, manifestObject }) => {
       manifestObject = Object.assign(
@@ -606,7 +616,7 @@ export const pluginRadish: Plugin = {
           return Handler.continue({ path, content });
         }
 
-        return {
+        return Handler.continue({
           path,
           content: serializeFragments(
             await Promise.all(
@@ -615,17 +625,14 @@ export const pluginRadish: Plugin = {
               ),
             ),
           ),
-        };
+        });
       }
 
       const route = manifestObject.routes[path];
 
       if (!route) return Handler.continue({ path, content });
 
-      let pageHeadContent = `
-      <script type="importmap">
-        ${JSON.stringify(await importmap.get())}
-      </script>`;
+      let pageHeadContent = "";
 
       const { speculationRules } = await config.read();
 
@@ -655,6 +662,7 @@ export const pluginRadish: Plugin = {
       </script>
       `;
       }
+
       // Insert WebSocket script
       if (dev) {
         pageHeadContent += `
@@ -675,26 +683,21 @@ export const pluginRadish: Plugin = {
           </script>`;
       }
 
-      const layouts = Object.values(manifestObject.layouts)
-        .filter((layout) => {
-          return is_parent_path_regex.test(
-            dirname(relative(route.path, layout.path)),
-          );
-        });
+      const layouts: LayoutManifest[] = Object.values(manifestObject.layouts)
+        .filter((layout) => isParent(dirname(layout.path), route.path));
 
       const pageFragments = layouts.map((layout) => layout.templateLoader());
       pageFragments.push(
         await Promise.all(
-          route.templateLoader().map((f) =>
-            applyServerEffects(f, manifestObject)
-          ),
+          route.templateLoader()
+            .map((node) => applyServerEffects(node, manifestObject)),
         ),
       );
 
       const pageGroups = Object.groupBy(
         pageFragments.flat(),
         (node) => {
-          if (node.kind === "NORMAL" && node.tagName === "radish:head") {
+          if (node.kind === "NORMAL" && node.tagName === "head") {
             return "head";
           }
           return "body";
@@ -718,14 +721,15 @@ export const pluginRadish: Plugin = {
         });
       }
 
-      const pageContent = await io.readFile(appPath);
+      const appSkeletonPath = await io.emitTo(appPath);
+      const appSkeleton = await io.readFile(appSkeletonPath);
 
-      return {
+      return Handler.continue({
         path,
-        content: pageContent
+        content: appSkeleton
           .replace("%radish.head%", pageHeadContent)
           .replace("%radish.body%", pageBodyContent),
-      };
+      });
     }),
     handlerFor(hot.update, async ({ event, paths }) => {
       const extension = extname(event.path);

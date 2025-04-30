@@ -200,7 +200,7 @@ const startTag: Parser<MElement> = sequence([
     result([]),
   ),
   regex(/\/?>/),
-]).error("Expected a start tag")
+]).error("Invalid start tag")
   .bind(([_, tagName, attributes, end]) => {
     const selfClosing = end === "/>";
     const kind = elementKind(tagName);

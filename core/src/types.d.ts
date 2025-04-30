@@ -1,5 +1,5 @@
 import type { Handlers } from "./effects/effects.ts";
-import type { ImportMapOptions } from "./plugins/importmap.ts";
+import type { ImportMapOptions } from "./plugins/importmap/importmap.ts";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
 import type { LoadOptions } from "@std/dotenv";
 
