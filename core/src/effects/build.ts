@@ -39,11 +39,10 @@ export const build = async (
     emptyDirSync(buildFolder);
   }
 
-  const entries: WalkEntry[] = (await Promise.all(
-    paths.map(async (p) =>
-      await Array.fromAsync(expandGlobWorkspaceRelative(p))
-    ),
-  )).flat();
+  const entryArrays = await Promise.all(
+    paths.map((p) => Array.fromAsync(expandGlobWorkspaceRelative(p))),
+  );
+  const entries: WalkEntry[] = entryArrays.flat();
   const uniqueEntries = distinctBy(entries, (entry) => entry.path);
   const sortedEntries = await buildPipeline.sortFiles(uniqueEntries);
 
