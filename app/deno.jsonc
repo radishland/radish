@@ -1,5 +1,4 @@
 {
-  "license": "MIT",
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts",
     "generate": "deno run -A start.ts",
