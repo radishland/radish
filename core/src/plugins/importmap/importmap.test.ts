@@ -100,11 +100,11 @@ describe("importmap generation", () => {
   test("transforms index.html files", () => {
     runWith(async () => {
       const input = await Deno.readTextFile(
-        join(moduleDir, "testdata", "importmap.input.html"),
+        join(moduleDir, "testdata", "input.html"),
       );
 
       const output = await Deno.readTextFile(
-        join(moduleDir, "testdata", "importmap.output.nofmt.html"),
+        join(moduleDir, "testdata", "output.nofmt.html"),
       );
 
       const { content } = await io.transformFile({
