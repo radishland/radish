@@ -1,11 +1,14 @@
-import { createEffect } from "./effects.ts";
+import { createEffect, type EffectWithType } from "./effects.ts";
 
 interface Env {
   load: () => void;
   get: (key: string) => unknown;
 }
 
-export const env = {
+export const env: {
+  load: EffectWithType<[], void>;
+  get: EffectWithType<[key: string], unknown>;
+} = {
   /**
    * Makes the environment variables available
    */
