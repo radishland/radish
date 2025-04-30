@@ -1,19 +1,21 @@
-import { extname } from "@std/path";
-import { config, denoConfig } from "../effects/config.ts";
-import { handlerFor } from "../effects/effects.ts";
+import { basename, extname } from "@std/path";
+import { dedent } from "@std/text/unstable-dedent";
+import { config, denoConfig } from "../../effects/config.ts";
+import { handlerFor } from "../../effects/effects.ts";
 import {
   type ImportMap,
   importmap,
   importmapPath,
-} from "../effects/importmap.ts";
-import { io } from "../effects/io.ts";
-import { manifest } from "../effects/manifest.ts";
-import type { ManifestBase, Plugin } from "../types.d.ts";
-import { throwUnlessNotFound } from "../utils/io.ts";
-import { findLongestMatchingPrefix } from "./resolve.ts";
-import { assert, assertExists, unimplemented } from "@std/assert";
-import { ts_extension_regex } from "../constants.ts";
-import { dev } from "../environment.ts";
+} from "../../effects/importmap.ts";
+import { io } from "../../effects/io.ts";
+import { manifest } from "../../effects/manifest.ts";
+import type { ManifestBase, Plugin } from "../../types.d.ts";
+import { throwUnlessNotFound } from "../../utils/io.ts";
+import { findLongestMatchingPrefix } from "../resolve.ts";
+import { assert, assertExists, assertMatch, unimplemented } from "@std/assert";
+import { target_head, ts_extension_regex } from "../../constants.ts";
+import { dev } from "../../environment.ts";
+import { Handler } from "../../effects/handlers.ts";
 
 let importmapObject: ImportMap = {};
 
@@ -31,9 +33,28 @@ export const pluginImportmap: Plugin = {
 
       return importmapObject;
     }),
-
     handlerFor(importmap.write, async () => {
       await io.writeFile(importmapPath, JSON.stringify(importmapObject));
+    }),
+    handlerFor(io.transformFile, async (data) => {
+      let { path, content } = data;
+
+      if (basename(path) === "index.html") {
+        const pageHeadContent = dedent`
+        <script type="importmap">
+          ${JSON.stringify(await importmap.get())}
+        </script>
+        %radish.head%`.split("\n").map((line) => `    ${line}`).join("\n");
+
+        assertMatch(
+          content,
+          target_head,
+          `%radish.head% target not found in file "${path}". Try moving the importmap plugin down the list.`,
+        );
+        content = content.replace(target_head, "\n" + pageHeadContent);
+      }
+
+      return Handler.continue({ path, content });
     }),
   ],
 };

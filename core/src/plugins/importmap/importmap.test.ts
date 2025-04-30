@@ -1,8 +1,13 @@
 import { assertEquals } from "@std/assert/equals";
 import { describe, test } from "@std/testing/bdd";
-import { pureImportMap } from "../src/plugins/importmap.ts";
+import { pluginImportmap, pureImportMap } from "./importmap.ts";
+import { handlerFor, runWith } from "../../effects/effects.ts";
+import { io } from "../../effects/io.ts";
+import { importmapPath } from "../../../exports/mod.ts";
+import { dirname, fromFileUrl, join } from "@std/path";
+import { id } from "../../utils/algebraic-structures.ts";
 
-describe("Importmap", () => {
+describe("pure importmap", () => {
   test("main import", () => {
     const importmap = pureImportMap(
       { imports: { "a": ["kleur"] } },
@@ -86,5 +91,39 @@ describe("Importmap", () => {
     assertEquals(importmap.imports, {
       "$alias": "https://raw.githubusercontent.com/package/module.js",
     });
+  });
+});
+
+const moduleDir = dirname(fromFileUrl(import.meta.url));
+
+describe("importmap generation", () => {
+  test("transforms index.html files", () => {
+    runWith(async () => {
+      const input = await Deno.readTextFile(
+        join(moduleDir, "testdata", "importmap.input.html"),
+      );
+
+      const output = await Deno.readTextFile(
+        join(moduleDir, "testdata", "importmap.output.nofmt.html"),
+      );
+
+      const { content } = await io.transformFile({
+        path: "index.html",
+        content: input,
+      });
+
+      assertEquals(content, output);
+    }, [
+      ...pluginImportmap.handlers,
+      handlerFor(io.readFile, async (path) => {
+        if (path === importmapPath) {
+          return await Deno.readTextFile(
+            join(moduleDir, "testdata", "importmap.json"),
+          );
+        }
+        return "";
+      }),
+      handlerFor(io.transformFile, id),
+    ]);
   });
 });

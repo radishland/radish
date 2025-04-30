@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "my-lib": "https://cdn.com"
+  },
+  "scopes": {}
+}
