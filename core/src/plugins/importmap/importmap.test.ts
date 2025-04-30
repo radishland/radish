@@ -108,7 +108,7 @@ describe("importmap generation", () => {
       );
 
       const { content } = await io.transformFile({
-        path: "index.html",
+        path: "_app.html",
         content: input,
       });
 

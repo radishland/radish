@@ -39,7 +39,7 @@ export const pluginImportmap: Plugin = {
     handlerFor(io.transformFile, async (data) => {
       let { path, content } = data;
 
-      if (basename(path) === "index.html") {
+      if (basename(path) === "_app.html") {
         const pageHeadContent = dedent`
         <script type="importmap">
           ${JSON.stringify(await importmap.get())}
