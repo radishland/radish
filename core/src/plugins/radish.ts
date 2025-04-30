@@ -1,4 +1,3 @@
-import { dev } from "../environment.ts";
 import {
   booleanAttributes,
   fragments,
@@ -9,15 +8,15 @@ import {
   shadowRoot,
   textNode,
 } from "@radish/htmlcrunch";
-import { HandlerRegistry } from "@radish/runtime";
+import type { HandlerRegistry } from "@radish/runtime";
 import { bindingConfig, spaces_sep_by_comma } from "@radish/runtime/utils";
 import {
   type AnyConstructor,
   assert,
   assertArrayIncludes,
   assertExists,
-  assertInstanceOf,
   assertObjectMatch,
+  unreachable,
 } from "@std/assert";
 import type { WalkEntry } from "@std/fs";
 import { basename, dirname, extname, join, relative } from "@std/path";
@@ -31,11 +30,12 @@ import {
 import { buildPipeline } from "../effects/build.ts";
 import { config } from "../effects/config.ts";
 import { handlerFor } from "../effects/effects.ts";
+import { Handler } from "../effects/handlers.ts";
 import { hot } from "../effects/hot-update.ts";
 import { io } from "../effects/io.ts";
 import { manifest, manifestPath } from "../effects/manifest.ts";
+import { dev } from "../environment.ts";
 import type { ManifestBase, Plugin } from "../types.d.ts";
-import { Handler } from "../effects/handlers.ts";
 import { filename, isParent } from "../utils/path.ts";
 import { setScope } from "../utils/stringify.ts";
 import { dependencies } from "../walk.ts";
@@ -78,11 +78,6 @@ const manifestShape = {
   layouts: {},
   routes: {},
 } satisfies Manifest;
-
-/**
- * Ensures a path only consists of parent folders
- */
-const is_parent_path_regex = /^\.\.(\/\.\.)*$/;
 
 const appPath = join(routesFolder, "_app.html");
 
@@ -137,7 +132,6 @@ async function applyServerEffects(
       if (element.classLoader) {
         const ElementClass = await element.classLoader();
         const instance = new ElementClass();
-        assertInstanceOf(instance, HandlerRegistry);
 
         handlerStack.push({ tagName, instance });
       }
@@ -381,6 +375,7 @@ export const pluginRadish: Plugin = {
 
       const otherEntries: WalkEntry[] = [];
       const elementsOrRoutes: (ElementManifest | RouteManifest)[] = [];
+      const layouts: WalkEntry[] = [];
 
       for (const entry of entries) {
         if (entry.isFile && extname(entry.name) === ".html") {
@@ -407,7 +402,22 @@ export const pluginRadish: Plugin = {
             const route = manifestObject.routes[entry.path];
             if (route) {
               elementsOrRoutes.push(route);
+              continue;
             }
+
+            const layout = manifestObject.layouts[entry.path];
+            if (layout) {
+              layouts.push(entry);
+              continue;
+            }
+
+            if (entry.path === appPath) {
+              // _app.html will be handled first among html files
+              layouts.unshift(entry);
+              continue;
+            }
+
+            unreachable(`Entry not handled by sortFiled '${entry.path}'`);
           } else {
             otherEntries.push(entry);
           }
@@ -430,7 +440,7 @@ export const pluginRadish: Plugin = {
           } satisfies WalkEntry;
         });
 
-      return [...otherEntries, ...sorted];
+      return [...otherEntries, ...layouts, ...sorted];
     }),
     handlerFor(manifest.update, async ({ entry, manifestObject }) => {
       manifestObject = Object.assign(
@@ -673,26 +683,21 @@ export const pluginRadish: Plugin = {
           </script>`;
       }
 
-      const layouts = Object.values(manifestObject.layouts)
-        .filter((layout) => {
-          return is_parent_path_regex.test(
-            dirname(relative(route.path, layout.path)),
-          );
-        });
+      const layouts: LayoutManifest[] = Object.values(manifestObject.layouts)
+        .filter((layout) => isParent(dirname(layout.path), route.path));
 
       const pageFragments = layouts.map((layout) => layout.templateLoader());
       pageFragments.push(
         await Promise.all(
-          route.templateLoader().map((f) =>
-            applyServerEffects(f, manifestObject)
-          ),
+          route.templateLoader()
+            .map((node) => applyServerEffects(node, manifestObject)),
         ),
       );
 
       const pageGroups = Object.groupBy(
         pageFragments.flat(),
         (node) => {
-          if (node.kind === "NORMAL" && node.tagName === "radish:head") {
+          if (node.kind === "NORMAL" && node.tagName === "head") {
             return "head";
           }
           return "body";
@@ -716,11 +721,12 @@ export const pluginRadish: Plugin = {
         });
       }
 
-      const pageContent = await io.readFile(appPath);
+      const appSkeletonPath = await io.emitTo(appPath);
+      const appSkeleton = await io.readFile(appSkeletonPath);
 
       return Handler.continue({
         path,
-        content: pageContent
+        content: appSkeleton
           .replace("%radish.head%", pageHeadContent)
           .replace("%radish.body%", pageBodyContent),
       });
