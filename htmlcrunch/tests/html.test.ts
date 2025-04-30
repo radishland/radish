@@ -1,17 +1,23 @@
-import { assertEquals } from "@std/assert";
+import {
+  assertEquals,
+  assertInstanceOf,
+  assertStringIncludes,
+} from "@std/assert";
+import { describe, test } from "@std/testing/bdd";
 import {
   attribute,
   comment,
   commentNode,
+  customElementName,
   doctype,
   element,
   fragments,
   Kind,
   serializeFragments,
   spacesAndComments,
+  tagName,
   textNode,
 } from "../parser.ts";
-import { describe, test } from "@std/testing/bdd";
 
 describe("html parser", () => {
   test("comments:simple", () => {
@@ -208,6 +214,29 @@ describe("html parser", () => {
         ["@on", "mouseenter:handleHover"],
       ],
     });
+  });
+
+  test("custom element names", () => {
+    try {
+      // Must include a dash
+      customElementName.parseOrThrow("abc");
+    } catch (error) {
+      assertInstanceOf(error, Error);
+      assertStringIncludes(error?.message, "Invalid custom element name");
+    }
+
+    try {
+      // Cannot be a forbidden name
+      customElementName.parseOrThrow("annotation-xml");
+    } catch (error) {
+      assertInstanceOf(error, Error);
+      assertStringIncludes(error?.message, "Forbidden custom element name");
+    }
+  });
+
+  test("tag names", () => {
+    const name = tagName.parseOrThrow("Abc-d");
+    assertEquals(name, "abc-d");
   });
 
   test("void element", () => {

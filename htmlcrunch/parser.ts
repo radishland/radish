@@ -9,13 +9,10 @@ import {
   sequence,
   zero,
 } from "@fcrozatier/monarch";
-import {
-  literal,
-  regex,
-  whitespace,
-  whitespaces,
-} from "@fcrozatier/monarch/common";
+import { literal, regex, whitespaces } from "@fcrozatier/monarch/common";
 import { assertExists } from "@std/assert";
+
+export const whitespaces1: Parser<string> = regex(/^\s+/);
 
 /**
  * A comment node
@@ -43,7 +40,7 @@ export type MSpacesAndComments = (MTextNode | MCommentNode)[];
  */
 export type MElement = {
   tagName: string;
-  kind: keyof typeof Kind;
+  kind: Kind;
   attributes: [string, string][];
   parent?: MElement;
   children?: MFragment;
@@ -103,10 +100,11 @@ export const spacesAndComments: Parser<MSpacesAndComments> = sequence(
  */
 export const doctype: Parser<MTextNode> = sequence([
   regex(/^<!DOCTYPE/i),
-  whitespace.skip(whitespaces),
+  whitespaces1,
   regex(/^html/i).skip(whitespaces),
   literal(">"),
-]).map(() => textNode("<!DOCTYPE html>")).error("Expected a valid doctype");
+]).map(() => textNode("<!DOCTYPE html>"))
+  .error("Expected a valid doctype");
 
 const singleQuote = literal("'");
 const doubleQuote = literal('"');
@@ -137,36 +135,82 @@ export const attribute: Parser<[string, string]> = first<[string, string]>(
   attributeName.map((name) => [name, ""]),
 ).skip(whitespaces);
 
+const FORBIDDEN_CUSTOM_ELEMENT_NAMES = [
+  "annotation-xml",
+  "color-profile",
+  "font-face",
+  "font-face-src",
+  "font-face-uri",
+  "font-face-format",
+  "font-face-name",
+  "missing-glyph",
+];
+
 /**
- * Parses a tag name as extended ASCII alphanumeric
- *
+ * https://html.spec.whatwg.org/multipage/custom-elements.html#prod-pcenchar
+ */
+const potentialCustomElementNameChars = regex(
+  /^(?:[-._]|[0-9]|[a-z]|\xB7|[\xC0-\xD6]|[\xD8-\xF6]|[\xF8-\u037D]|[\u037F-\u1FFF]|[\u200C-\u200D]|[\u203F-\u2040]|[\u2070-\u218F]|[\u2C00-\u2FEF]|[\u3001-\uD7FF]|[\uF900-\uFDCF]|[\uFDF0-\uFFFD]|[\u{10000}-\u{EFFFF}])*/ui,
+);
+
+const potentialCustomElementName = sequence([
+  regex(/^[a-z]/i),
+  potentialCustomElementNameChars,
+]).map((value) => value.join("").toLowerCase())
+  .error("Invalid custom element name");
+
+/**
+ * Valid Custom Element names are potential custom element names that are not forbidden
+ * https://html.spec.whatwg.org/multipage/custom-elements.html#valid-custom-element-name
+ */
+export const customElementName: Parser<string> = potentialCustomElementName
+  .bind((name) => {
+    if (FORBIDDEN_CUSTOM_ELEMENT_NAMES.includes(name)) {
+      return zero.error("Forbidden custom element name");
+    }
+    if (!name.includes("-")) {
+      return zero.error("Invalid custom element name (should include a dash)");
+    }
+    return result(name);
+  });
+
+/**
  * HTML tag names are ASCII alphanumeric only
  * https://html.spec.whatwg.org/#syntax-tag-name
+ */
+const htmlTagName = regex(/^[a-z][a-z0-9]*/i)
+  .map((name) => name.toLowerCase())
+  .error("Invalid html tag name");
+
+/**
+ * HTML tag-name state
+ * https://html.spec.whatwg.org/#tag-name-state
  *
- * More generally XML names can have colon, dashes etc.
+ * More generally XML names can have colons, dashes etc.
  * https://www.w3.org/TR/REC-xml/#NT-NameStartChar
  */
-const tagName = regex(/^[a-zA-Z:_][a-zA-Z0-9-:_.]*/)
-  .skip(whitespaces)
-  .map((name) => name.toLowerCase())
-  .error("Invalid tag name");
+export const tagName = first(customElementName, htmlTagName);
 
 // https://html.spec.whatwg.org/#start-tags
-const startTag: Parser<
-  { tagName: string; attributes: [string, string][] }
-> = sequence([
+const startTag: Parser<MElement> = sequence([
   literal("<"),
   tagName,
-  many(attribute),
+  first(
+    whitespaces1.bind(() => many(attribute)),
+    result([]),
+  ),
   regex(/\/?>/),
-]).error("Expected a start tag").bind(([_, tagName, attributes, end]) => {
-  const selfClosing = end === "/>";
-  if (selfClosing && !voidElements.includes(tagName)) {
-    return zero.error("Unexpected self-closing tag on a non-void element");
-  }
+]).error("Expected a start tag")
+  .bind(([_, tagName, attributes, end]) => {
+    const selfClosing = end === "/>";
+    const kind = elementKind(tagName);
 
-  return result({ tagName, attributes });
-});
+    if (selfClosing && kind !== Kind.VOID) {
+      return zero.error("Unexpected self-closing tag on a non-void element");
+    }
+
+    return result({ tagName, kind, attributes });
+  });
 
 /**
  * The element parser
@@ -176,32 +220,22 @@ export const element: Parser<MElement> = createParser((input, position) => {
 
   if (!openTag.success) return openTag;
 
-  const openTagResult = openTag.results[0];
+  const [openTagResult] = openTag.results;
   assertExists(openTagResult);
 
   const {
-    value: { tagName, attributes },
+    value: { tagName, kind, attributes },
     remaining,
     position: openTagPosition,
   } = openTagResult;
 
-  const kind = elementKind(tagName);
-
   if (kind === Kind.VOID || !remaining) {
-    return {
-      success: true,
-      results: [{
-        value: { tagName, kind, attributes } satisfies MElement,
-        remaining,
-        position: openTagPosition,
-      }],
-    };
+    return openTag;
   }
 
   let childrenElementsParser: Parser<MFragment>;
-  const endTagParser = regex(new RegExp(`^</${tagName}>`, "i")).error(
-    `Expected a '</${tagName}>' end tag`,
-  );
+  const endTagParser = regex(new RegExp(`^</${tagName}>`))
+    .error(`Expected a '</${tagName}>' end tag`);
 
   if (
     kind === Kind.RAW_TEXT ||
@@ -209,7 +243,7 @@ export const element: Parser<MElement> = createParser((input, position) => {
   ) {
     // https://html.spec.whatwg.org/#cdata-rcdata-restrictions
     const rawText = regex(
-      new RegExp(`^(?:(?!<\/${tagName}(?:>|\n|\/)).|\n)*`, "i"),
+      new RegExp(`^(?:(?!<\/${tagName}(?:>|\n|\/)).|\n)*`),
     ).map((t) => t.length > 0 ? [textNode(t)] : []);
 
     childrenElementsParser = rawText;
@@ -226,7 +260,7 @@ export const element: Parser<MElement> = createParser((input, position) => {
     return childrenElements;
   }
 
-  const childrenElementsResult = childrenElements.results[0];
+  const [childrenElementsResult] = childrenElements.results;
   assertExists(childrenElementsResult);
 
   const {
@@ -240,7 +274,7 @@ export const element: Parser<MElement> = createParser((input, position) => {
   // End tag omission would be managed here
   if (!res.success) return res;
 
-  const result = res.results[0];
+  const [result] = res.results;
   assertExists(result);
 
   return {
@@ -384,10 +418,12 @@ export const Kind = {
   NORMAL: "NORMAL",
 } as const;
 
+type Kind = keyof typeof Kind;
+
 /**
  * Associate a tag name to its corresponding element kind
  */
-const elementKind = (tag: string): keyof typeof Kind => {
+const elementKind = (tag: string): Kind => {
   if (voidElements.includes(tag)) return Kind.VOID;
   if (rawTextElements.includes(tag)) return Kind.RAW_TEXT;
   if (escapableRawTextElements.includes(tag)) return Kind.ESCAPABLE_RAW_TEXT;
