@@ -17,9 +17,11 @@ To cut a release, follow these steps:
    Note: it will throw a "No target files found" error but this may be in
    prerelease only
 
-1. Review the changes and create a PR
+1. Review the changes and manually update the following version numbers if relevant:
+   - in the README/try-it-out section
+   - in the init/deno.json template file
 
-1. Land the PR
+1. Create and land a PR
 
 1. Tag the main branch with release-YYY-MM-DD (this step can be automated in the
    future):
