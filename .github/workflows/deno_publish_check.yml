@@ -1,0 +1,23 @@
+name: Deno publish check
+
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  dry-run:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+
+      - name: Run deno publish --dry-run
+        run: deno publish --dry-run
