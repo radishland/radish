@@ -1,19 +1,17 @@
 import {
-  booleanAttributes,
   fragments,
+  isCommentNode,
+  isTextNode,
   Kind,
   type MFragment,
   type MNode,
   serializeFragments,
   shadowRoot,
-  textNode,
 } from "@radish/htmlcrunch";
 import type { HandlerRegistry } from "@radish/runtime";
-import { bindingConfig, spaces_sep_by_comma } from "@radish/runtime/utils";
 import {
   type AnyConstructor,
   assert,
-  assertArrayIncludes,
   assertExists,
   assertObjectMatch,
   unreachable,
@@ -34,6 +32,7 @@ import { Handler } from "../../effects/handlers.ts";
 import { hot } from "../../effects/hot-update.ts";
 import { io } from "../../effects/io.ts";
 import { manifest, manifestPath } from "../../effects/manifest.ts";
+import { render } from "../../effects/render.ts";
 import { dev } from "../../environment.ts";
 import type { ManifestBase, Plugin } from "../../types.d.ts";
 import { filename, isParent } from "../../utils/path.ts";
@@ -83,7 +82,7 @@ const appPath = join(routesFolder, "_app.html");
 
 let handlerStack: { tagName: string; instance: HandlerRegistry }[] = [];
 
-const contextLookup = (identifier: string) => {
+export const contextLookup = (identifier: string) => {
   for (let i = handlerStack.length - 1; i >= 0; i--) {
     const instance = handlerStack[i]?.instance;
     if (instance && Object.hasOwn(instance, identifier)) {
@@ -92,41 +91,22 @@ const contextLookup = (identifier: string) => {
   }
 };
 
-const setAttribute = (
-  attributes: [string, string][],
-  attribute: string,
-  value: unknown,
-) => {
-  assertArrayIncludes(
-    ["string", "number", "boolean"],
-    [typeof value],
-    "Can only set primitive values as attributes",
-  );
-
-  if (booleanAttributes.includes(attribute)) {
-    value && attributes.push([attribute, ""]);
-  } else {
-    attributes.push([attribute, `${value}`]);
-  }
-};
-
-const server_attr_directive = /@attr(\|server)?/;
-
 /**
- * Transforms a component tree by applying server-side directives, inserting templates etc
+ * Transforms a node by performing directives, inserting templates etc.
  */
-async function applyServerEffects(
-  element: MNode,
-  manifest: Manifest,
-): Promise<MNode> {
-  if (element.kind === "COMMENT" || element.kind === "TEXT") return element;
+async function applyServerEffects(node: MNode): Promise<MNode> {
+  await render.setCurrentNode(node);
 
-  const { tagName, attributes, children, kind } = element;
+  if (isCommentNode(node) || isTextNode(node)) return node;
+
+  const { tagName, attributes, kind } = node;
+  const _manifest = await manifest.get() as Manifest;
+  assertObjectMatch(_manifest, manifestShape);
 
   let template: MNode[] = [];
 
   if (kind === Kind.CUSTOM) {
-    const element: ElementManifest | undefined = manifest.elements[tagName];
+    const element: ElementManifest | undefined = _manifest.elements[tagName];
     if (element) {
       // component is a custom element
       if (element.classLoader) {
@@ -138,154 +118,24 @@ async function applyServerEffects(
       // component has a shadow root
       if (element.templateLoader) {
         template = await Promise.all(
-          element.templateLoader().map((node) =>
-            applyServerEffects(node, manifest)
-          ),
+          element.templateLoader().map(applyServerEffects),
         );
       }
     }
   }
 
-  let innerHTML: MFragment = [];
-  const textContent = textNode("");
-
   for (const [attrKey, attrValue] of attributes) {
-    if (server_attr_directive.test(attrKey)) {
-      // @attr
-
-      const assignments = attrValue.trim().split(
-        spaces_sep_by_comma,
-      );
-
-      for (const assignment of assignments) {
-        const [attribute, maybeIdentifier] = assignment.split(":");
-        const identifier = maybeIdentifier || attribute;
-
-        if (!identifier) {
-          console.warn("Missing @attr identifier");
-          continue;
-        }
-
-        if (!attribute) {
-          console.warn("Missing @attr attribute");
-          continue;
-        }
-
-        const value = contextLookup(identifier);
-        if (value !== null && value !== undefined) {
-          setAttribute(attributes, attribute, value);
-        }
-      }
-    } else if (attrKey.startsWith("@bind:")) {
-      // @bind
-
-      const property = attrKey.split(
-        ":",
-      )[1] as keyof typeof bindingConfig;
-
-      assert(
-        Object.keys(bindingConfig).includes(property),
-        `${property} is not bindable`,
-      );
-
-      const identifier = attrValue || property;
-      const value = contextLookup(identifier);
-
-      assert(
-        bindingConfig[property].type.includes(typeof value),
-        `@bind:${property}=${identifier} should reference a value of type ${
-          bindingConfig[property].type.join("|")
-        } and "${identifier}" has type ${typeof value}`,
-      );
-
-      setAttribute(attributes, property, value);
-    } else if (attrKey === "@bool") {
-      // @bool
-
-      const booleanAttributes = attrValue.trim().split(
-        spaces_sep_by_comma,
-      );
-
-      for (const booleanAttribute of booleanAttributes) {
-        const [attribute, maybeIdentifier] = booleanAttribute.split(":");
-        const identifier = maybeIdentifier || attribute;
-
-        if (!identifier) {
-          console.warn("Missing @attr identifier");
-          continue;
-        }
-
-        if (!attribute) {
-          console.warn("Missing @attr attribute");
-          continue;
-        }
-
-        const value = contextLookup(identifier);
-
-        if (value) {
-          attributes.push([attribute, ""]);
-        }
-      }
-    } else if (attrKey === "@class") {
-      // @class
-
-      const identifier = attrValue || "class";
-      const value = contextLookup(identifier);
-
-      assert(typeof value === "object", "@class should reference an object");
-
-      const classAttr = attributes.find(([k, _]) => k === "class");
-      let classes = classAttr?.[1] ?? "";
-
-      for (const [k, v] of Object.entries(value)) {
-        if (v?.valueOf()) {
-          classes += ` ${k} `;
-        } else {
-          for (const className of k.split(" ")) {
-            classes.replace(className, "");
-          }
-        }
-      }
-      classes = classes.trim();
-
-      if (classAttr) {
-        classAttr[1] = classes;
-      } else {
-        attributes.push(["class", classes]);
-      }
-    } else if (attrKey === "@text") {
-      // @text
-
-      const identifier = attrValue || "text";
-      const value = contextLookup(identifier);
-
-      assert(kind !== Kind.VOID, "Void elements can't have textContent");
-
-      if (value !== null && value !== undefined) {
-        textContent.text = `${value}`;
-      }
-    } else if (attrKey === "@html") {
-      // @html
-
-      const identifier = attrValue || "html";
-      const value = contextLookup(identifier);
-
-      assert(kind !== Kind.VOID, "Void elements can't have innerHTML");
-
-      if (value !== null && value !== undefined) {
-        innerHTML.push(textNode(`${value}`));
-      }
-    }
+    await render.directive(attrKey, attrValue);
   }
 
-  if (kind === Kind.VOID || !children) {
+  if (kind === Kind.VOID) {
     return { tagName, kind, attributes };
   }
 
-  if (textContent.text === "" && innerHTML.length === 0) {
-    innerHTML = await Promise.all(
-      children.map((child) => applyServerEffects(child, manifest)),
-    );
+  let innerHTML: MFragment = [];
+
+  if (node.children?.length) {
+    innerHTML = await Promise.all(node.children.map(applyServerEffects));
   }
 
   if (kind === Kind.CUSTOM && handlerStack.at(-1)?.tagName === tagName) {
@@ -296,11 +146,7 @@ async function applyServerEffects(
     tagName,
     kind,
     attributes,
-    children: textContent.text !== ""
-      ? template.length ? [...template, textContent] : [textContent]
-      : template.length
-      ? [...template, ...innerHTML]
-      : innerHTML,
+    children: [...template, ...innerHTML],
   };
 }
 
@@ -353,8 +199,8 @@ const sortComponents = <T extends ElementManifest | RouteManifest>(
   return sorted.concat(components);
 };
 
-export const pluginRadish: Plugin = {
-  name: "plugin-radish",
+export const pluginRender: Plugin = {
+  name: "plugin-render",
   handlers: [
     /**
      * Decorator for the io/write handler
@@ -619,11 +465,7 @@ export const pluginRadish: Plugin = {
         return Handler.continue({
           path,
           content: serializeFragments(
-            await Promise.all(
-              element.templateLoader().map((f) =>
-                applyServerEffects(f, manifestObject)
-              ),
-            ),
+            await Promise.all(element.templateLoader().map(applyServerEffects)),
           ),
         });
       }
@@ -688,10 +530,7 @@ export const pluginRadish: Plugin = {
 
       const pageFragments = layouts.map((layout) => layout.templateLoader());
       pageFragments.push(
-        await Promise.all(
-          route.templateLoader()
-            .map((node) => applyServerEffects(node, manifestObject)),
-        ),
+        await Promise.all(route.templateLoader().map(applyServerEffects)),
       );
 
       const pageGroups = Object.groupBy(
