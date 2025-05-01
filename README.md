@@ -317,7 +317,7 @@ We perform an effect operation by awaiting it. Calling effects without handlers 
   <summary>Advanced note</summary>
   <hr>
   <p>
-   Effects are often sequenced in pipelines like read -> transform -> write, hinting at their monadic<sup><a href="#ref-monad">4</a></sup> nature.
+    Effects are often sequenced in pipelines like read -> transform -> write, hinting at their <a href="https://www.sciencedirect.com/science/article/pii/0890540191900524">monadic</a> nature.
   </p>
   <p>
    In Radish, handlers interpret the `Effect&ltT&gt` monad into the `Promise&ltT&gt` monad letting us <code>await</code> for clean, direct sequencing.
@@ -924,12 +924,3 @@ The [importmap](#importmap) lets the browser resolve dependencies (and higher-or
 [^ui-react]: 2015 blog post describing [UI as a function of state](https://www.kn8.lt/blog/ui-is-a-function-of-data/)
 
 [^ui-overreacted]: Overreacted blog post describing the UI=f(state, data) formula. https://overreacted.io/the-two-reacts/
-
-<li id="ref-monads">
-<p>
-  4. Moggi, E. (1991). Notions of Computation and Monads. Information and Computation, 93(1), 55–92. <a href="https://www.sciencedirect.com/science/article/pii/0890540191900524">DOI: 10.1016/0890-5401(91)90052-4</a>
-  <a href="#ref-4"
-  data-footnote-backref=""
-  aria-label="Back to reference 4" class="data-footnote-backref">↩</a>
-</p>
-</li>
