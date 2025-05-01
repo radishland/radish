@@ -1,7 +1,6 @@
 import {
   fragments,
-  isCommentNode,
-  isTextNode,
+  isElementNode,
   Kind,
   type MFragment,
   type MNode,
@@ -9,14 +8,7 @@ import {
   shadowRoot,
 } from "@radish/htmlcrunch";
 import type { HandlerRegistry } from "@radish/runtime";
-import {
-  type AnyConstructor,
-  assert,
-  assertExists,
-  assertObjectMatch,
-  unreachable,
-} from "@std/assert";
-import type { WalkEntry } from "@std/fs";
+import { type AnyConstructor, assert, assertObjectMatch } from "@std/assert";
 import { basename, dirname, extname, join, relative } from "@std/path";
 import { toPascalCase } from "@std/text";
 import {
@@ -25,7 +17,6 @@ import {
   routesFolder,
   ts_extension_regex,
 } from "../../constants.ts";
-import { buildPipeline } from "../../effects/build.ts";
 import { config } from "../../effects/config.ts";
 import { handlerFor } from "../../effects/effects.ts";
 import { Handler } from "../../effects/handlers.ts";
@@ -39,6 +30,7 @@ import { filename, isParent } from "../../utils/path.ts";
 import { setScope } from "../../utils/stringify.ts";
 import { dependencies } from "../../walk.ts";
 import { updateManifest } from "../manifest.ts";
+import { handleSort } from "./sort.ts";
 
 export type ElementManifest = {
   kind: "element";
@@ -71,14 +63,14 @@ export type Manifest = ManifestBase & {
   layouts: Record<string, LayoutManifest>;
 };
 
-const manifestShape = {
+export const manifestShape = {
   elements: {},
   imports: {},
   layouts: {},
   routes: {},
 } satisfies Manifest;
 
-const appPath = join(routesFolder, "_app.html");
+export const appPath = join(routesFolder, "_app.html");
 
 let handlerStack: { tagName: string; instance: HandlerRegistry }[] = [];
 
@@ -97,7 +89,7 @@ export const contextLookup = (identifier: string) => {
 async function applyServerEffects(node: MNode): Promise<MNode> {
   await render.setCurrentNode(node);
 
-  if (isCommentNode(node) || isTextNode(node)) return node;
+  if (!isElementNode(node)) return node;
 
   const { tagName, attributes, kind } = node;
   const _manifest = await manifest.get() as Manifest;
@@ -150,55 +142,6 @@ async function applyServerEffects(node: MNode): Promise<MNode> {
   };
 }
 
-/**
- * Return the build order of a list of components, taking their relative dependencies into
- * account
- */
-const sortComponents = <T extends ElementManifest | RouteManifest>(
-  components: T[],
-): T[] => {
-  const ids = new Set<string>();
-
-  let sorted: T[] = [];
-
-  let prevLength = components.length;
-  while (components.length > 0) {
-    // Find the leafs
-    // TODO restrict the search of leafs to paths and names in the `components` array
-    const { leafNodes, interiorNodes } = Object.groupBy(components, (c) => {
-      return c.dependencies?.every((d) => ids.has(d))
-        ? "leafNodes"
-        : "interiorNodes";
-    });
-
-    if (leafNodes) {
-      sorted = sorted.concat(leafNodes);
-
-      for (const leave of leafNodes) {
-        if ("tagName" in leave) {
-          ids.add(leave.tagName);
-        }
-      }
-    }
-
-    if (interiorNodes) {
-      // Update remaining components
-      components = interiorNodes;
-    } else {
-      components = [];
-    }
-
-    if (prevLength === components.length) {
-      // In case the dependency graph is not a tree (recursive components?)
-      break;
-    }
-
-    prevLength = components.length;
-  }
-
-  return sorted.concat(components);
-};
-
 export const pluginRender: Plugin = {
   name: "plugin-render",
   handlers: [
@@ -215,79 +158,7 @@ export const pluginRender: Plugin = {
 
       return Handler.continue(path, content);
     }),
-    handlerFor(buildPipeline.sortFiles, async (entries) => {
-      const manifestObject = await manifest.get() as Manifest;
-      assertObjectMatch(manifestObject, manifestShape);
-
-      const otherEntries: WalkEntry[] = [];
-      const elementsOrRoutes: (ElementManifest | RouteManifest)[] = [];
-      const layouts: WalkEntry[] = [];
-
-      for (const entry of entries) {
-        if (entry.isFile && extname(entry.name) === ".html") {
-          if (isParent(elementsFolder, entry.path)) {
-            const tagName = filename(entry.name);
-            const elementOrRoute = manifestObject.elements[tagName];
-
-            if (elementOrRoute) {
-              elementsOrRoutes.push(elementOrRoute);
-            }
-
-            elementsOrRoutes.push(
-              ...Object.values(
-                manifestObject.elements,
-              ).filter((element) => element.dependencies?.includes(tagName)),
-            );
-
-            elementsOrRoutes.push(
-              ...Object.values(
-                manifestObject.routes,
-              ).filter((element) => element.dependencies?.includes(tagName)),
-            );
-          } else if (isParent(routesFolder, entry.path)) {
-            const route = manifestObject.routes[entry.path];
-            if (route) {
-              elementsOrRoutes.push(route);
-              continue;
-            }
-
-            const layout = manifestObject.layouts[entry.path];
-            if (layout) {
-              layouts.push(entry);
-              continue;
-            }
-
-            if (entry.path === appPath) {
-              // _app.html will be handled first among html files
-              layouts.unshift(entry);
-              continue;
-            }
-
-            unreachable(`Entry not handled by sortFiled '${entry.path}'`);
-          } else {
-            otherEntries.push(entry);
-          }
-        } else {
-          otherEntries.push(entry);
-        }
-      }
-
-      const sorted = sortComponents(Array.from(new Set(elementsOrRoutes)))
-        .map((c) => {
-          const path = c.files.find((f) => f.endsWith(".html"));
-          assertExists(path);
-
-          return {
-            isDirectory: false,
-            isFile: true,
-            isSymlink: false,
-            name: basename(c.path),
-            path,
-          } satisfies WalkEntry;
-        });
-
-      return [...otherEntries, ...layouts, ...sorted];
-    }),
+    handleSort,
     handlerFor(manifest.update, async ({ entry, manifestObject }) => {
       manifestObject = Object.assign(
         manifestShape,
