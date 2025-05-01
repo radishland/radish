@@ -6,7 +6,7 @@ import { insertTemplates } from "./insert_templates.ts";
 
 const baseHandler = handlerFor(render.transformNode, id);
 
-export const handleTransforms = [
+export const handleTransformNode = [
   applyDirectives,
   insertTemplates,
   baseHandler,

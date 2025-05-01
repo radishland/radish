@@ -15,13 +15,13 @@ import { handleManifest, manifestShape } from "./manifest.ts";
 import { handleComponentsAndRoutes } from "./routes_and_components/mod.ts";
 import { handleSort } from "./sort.ts";
 import { assertEmptyHandlerRegistryStack, handleRenderState } from "./state.ts";
-import { handleTransforms } from "./transform/mod.ts";
+import { handleTransformNode } from "./transform/mod.ts";
 
 export const pluginRender: Plugin = {
   name: "plugin-render",
   handlers: [
     handleSort,
-    ...handleTransforms,
+    ...handleTransformNode,
     ...handleDirectives,
     ...handleRenderState,
     ...handleManifest,
