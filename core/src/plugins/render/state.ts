@@ -2,8 +2,7 @@ import type { MNode } from "@radish/htmlcrunch";
 import { assertEquals, assertExists } from "@std/assert";
 import type { HandlerRegistry } from "../../../../runtime/src/handler-registry.ts";
 import { handlerFor } from "../../effects/effects.ts";
-import { render } from "../../effects/render.ts";
-import type { ElementManifest } from "./render.ts";
+import { type ElementManifest, render } from "../../effects/render.ts";
 
 let currentNode: MNode | undefined;
 
