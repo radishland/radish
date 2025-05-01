@@ -6,7 +6,7 @@ import {
   pluginImportmap,
   pluginIO,
   pluginManifest,
-  pluginRadish,
+  pluginRender,
   pluginStripTypes,
 } from "@radish/core/plugins";
 import type { Config } from "@radish/core/types";
@@ -34,7 +34,7 @@ const config: Config = {
   },
   router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
   plugins: [
-    pluginRadish,
+    pluginRender,
     {
       name: "plugin-rewrite-importmap-imports",
       handlers: [
