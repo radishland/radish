@@ -3,5 +3,5 @@ export { pluginEnv } from "../src/plugins/env.ts";
 export { pluginImportmap } from "../src/plugins/importmap/importmap.ts";
 export { pluginIO } from "../src/plugins/io.ts";
 export { pluginManifest, updateManifest } from "../src/plugins/manifest.ts";
-export { pluginRadish } from "../src/plugins/render/radish.ts";
+export { pluginRadish } from "../src/plugins/render/render.ts";
 export { pluginStripTypes } from "../src/plugins/strip-types.ts";
