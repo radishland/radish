@@ -7,7 +7,6 @@ import {
   serializeFragments,
   shadowRoot,
 } from "@radish/htmlcrunch";
-import type { HandlerRegistry } from "@radish/runtime";
 import { type AnyConstructor, assert, assertObjectMatch } from "@std/assert";
 import { basename, dirname, extname, join, relative } from "@std/path";
 import { toPascalCase } from "@std/text";
@@ -31,6 +30,10 @@ import { setScope } from "../../utils/stringify.ts";
 import { dependencies } from "../../walk.ts";
 import { updateManifest } from "../manifest.ts";
 import { handleSort } from "./sort.ts";
+import {
+  assertEmptyHandlerRegistryStack,
+  mountHandlerRegistry,
+} from "./state.ts";
 
 export type ElementManifest = {
   kind: "element";
@@ -72,17 +75,6 @@ export const manifestShape = {
 
 export const appPath = join(routesFolder, "_app.html");
 
-let handlerStack: { tagName: string; instance: HandlerRegistry }[] = [];
-
-export const contextLookup = (identifier: string) => {
-  for (let i = handlerStack.length - 1; i >= 0; i--) {
-    const instance = handlerStack[i]?.instance;
-    if (instance && Object.hasOwn(instance, identifier)) {
-      return instance.lookup(identifier)?.valueOf(); // runs the getter and returns the property or method value
-    }
-  }
-};
-
 /**
  * Transforms a node by performing directives, inserting templates etc.
  */
@@ -95,25 +87,15 @@ async function applyServerEffects(node: MNode): Promise<MNode> {
   const _manifest = await manifest.get() as Manifest;
   assertObjectMatch(_manifest, manifestShape);
 
+  const element = _manifest.elements[tagName];
+  using _ = await mountHandlerRegistry(tagName, element);
+
   let template: MNode[] = [];
 
-  if (kind === Kind.CUSTOM) {
-    const element: ElementManifest | undefined = _manifest.elements[tagName];
-    if (element) {
-      // component is a custom element
-      if (element.classLoader) {
-        const ElementClass = await element.classLoader();
-        const instance = new ElementClass();
-
-        handlerStack.push({ tagName, instance });
-      }
-      // component has a shadow root
-      if (element.templateLoader) {
-        template = await Promise.all(
-          element.templateLoader().map(applyServerEffects),
-        );
-      }
-    }
+  if (element?.templateLoader) {
+    template = await Promise.all(
+      element.templateLoader().map(applyServerEffects),
+    );
   }
 
   for (const [attrKey, attrValue] of attributes) {
@@ -128,10 +110,6 @@ async function applyServerEffects(node: MNode): Promise<MNode> {
 
   if (node.children?.length) {
     innerHTML = await Promise.all(node.children.map(applyServerEffects));
-  }
-
-  if (kind === Kind.CUSTOM && handlerStack.at(-1)?.tagName === tagName) {
-    handlerStack.pop();
   }
 
   return {
@@ -323,8 +301,7 @@ export const pluginRender: Plugin = {
 
       const manifestObject = await manifest.get() as Manifest;
       assertObjectMatch(manifestObject, manifestShape);
-
-      handlerStack = [];
+      assertEmptyHandlerRegistryStack();
 
       if (isParent(elementsFolder, path)) {
         const element = manifestObject.elements[filename(path)];

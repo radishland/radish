@@ -3,7 +3,7 @@ import { assert, assertExists } from "@std/assert";
 import { Handler, handlerFor } from "../../../../exports/effects.ts";
 import { render } from "../../../effects/render.ts";
 import { setAttribute } from "../common.ts";
-import { contextLookup } from "../render.ts";
+import { contextLookup } from "../state.ts";
 
 export const handleBoolDirective = handlerFor(
   render.directive,

@@ -3,7 +3,7 @@ import { bindingConfig } from "../../../../../runtime/src/utils.ts";
 import { Handler } from "../../../../exports/effects.ts";
 import { handlerFor } from "../../../effects/effects.ts";
 import { render } from "../../../effects/render.ts";
-import { contextLookup } from "../render.ts";
+import { contextLookup } from "../state.ts";
 import { isElementNode } from "@radish/htmlcrunch";
 import { setAttribute } from "../common.ts";
 
