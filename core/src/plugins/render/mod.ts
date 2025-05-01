@@ -5,34 +5,21 @@ import { handlerFor } from "../../effects/effects.ts";
 import { Handler } from "../../effects/handlers.ts";
 import { hot } from "../../effects/hot-update.ts";
 import { io } from "../../effects/io.ts";
-import { manifest, manifestPath } from "../../effects/manifest.ts";
+import { manifest } from "../../effects/manifest.ts";
 import { type Manifest, render } from "../../effects/render.ts";
-import type { Plugin } from "../../types.js";
+import type { Plugin } from "../../types.d.ts";
 import { filename, isParent } from "../../utils/path.ts";
 import { updateManifest } from "../manifest.ts";
-import { handleSort } from "./sort.ts";
-import { assertEmptyHandlerRegistryStack } from "./state.ts";
 import { handleManifest, manifestShape } from "./manifest.ts";
 import { handleComponentsAndRoutes } from "./routes_and_components/mod.ts";
+import { handleSort } from "./sort.ts";
+import { assertEmptyHandlerRegistryStack } from "./state.ts";
 
 export const pluginRender: Plugin = {
   name: "plugin-render",
   handlers: [
-    /**
-     * Decorator for the io/write handler
-     *
-     * Adds the required parser imports to the generated `manifest.ts` module
-     */
-    handlerFor(io.writeFile, (path, content) => {
-      if (path !== manifestPath) return Handler.continue(path, content);
-
-      content =
-        `import { fragments, shadowRoot } from "@radish/core/parser";\n\n${content}`;
-
-      return Handler.continue(path, content);
-    }),
     handleSort,
-    handleManifest,
+    ...handleManifest,
     ...handleComponentsAndRoutes,
     handlerFor(io.transformFile, async ({ path, content }) => {
       if (extname(path) !== ".html") return Handler.continue({ path, content });

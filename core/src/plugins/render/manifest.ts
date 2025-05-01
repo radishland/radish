@@ -1,6 +1,6 @@
 import { basename, dirname, extname, relative } from "@std/path";
 import { handlerFor } from "../../effects/effects.ts";
-import { manifest } from "../../effects/manifest.ts";
+import { manifest, manifestPath } from "../../effects/manifest.ts";
 import type { ElementManifest, Manifest } from "../../effects/render.ts";
 import { Handler } from "../../../exports/effects.ts";
 import { filename, isParent } from "../../utils/path.ts";
@@ -23,165 +23,180 @@ export const manifestShape = {
   routes: {},
 } satisfies Manifest;
 
-export const handleManifest = handlerFor(
-  manifest.update,
-  async ({ entry, manifestObject }) => {
-    manifestObject = Object.assign(
-      manifestShape,
-      manifestObject,
-    ) satisfies Manifest;
+export const handleManifest = [
+  /**
+   * Decorator for the io/write handler
+   *
+   * Adds the required parser imports to the generated `manifest.ts` module
+   */
+  handlerFor(io.writeFile, (path, content) => {
+    if (path !== manifestPath) return Handler.continue(path, content);
 
-    const extension = extname(entry.name);
+    content =
+      `import { fragments, shadowRoot } from "@radish/core/parser";\n\n${content}`;
 
-    if (!entry.isFile || ![".html", ".js", ".ts"].includes(extension)) {
-      return Handler.continue({ entry, manifestObject });
-    }
+    return Handler.continue(path, content);
+  }),
+  handlerFor(
+    manifest.update,
+    async ({ entry, manifestObject }) => {
+      manifestObject = Object.assign(
+        manifestShape,
+        manifestObject,
+      ) satisfies Manifest;
 
-    if (isParent(elementsFolder, entry.path)) {
-      /**
-       * Elements
-       */
+      const extension = extname(entry.name);
 
-      const parentFolder = basename(dirname(entry.path));
-      const elementName = filename(entry.name);
-
-      if (parentFolder !== elementName) {
-        console.warn(
-          `By convention an element file has the same name as its parent folder. Skipping file ${entry.path}`,
-        );
+      if (!entry.isFile || ![".html", ".js", ".ts"].includes(extension)) {
         return Handler.continue({ entry, manifestObject });
       }
 
-      assert(
-        elementName.includes("-"),
-        `An element file name must include a dash.\n\nIn: ${entry.path}`,
-      );
+      if (isParent(elementsFolder, entry.path)) {
+        /**
+         * Elements
+         */
 
-      const elementMetaData: ElementManifest =
-        manifestObject.elements[elementName] ?? {
-          kind: "element",
-          tagName: elementName,
-          path: parentFolder,
-          files: [],
-        };
+        const parentFolder = basename(dirname(entry.path));
+        const elementName = filename(entry.name);
 
-      switch (extension) {
-        case ".html":
-          {
-            if (!elementMetaData.files.includes(entry.path)) {
-              elementMetaData.files.push(entry.path);
+        if (parentFolder !== elementName) {
+          console.warn(
+            `By convention an element file has the same name as its parent folder. Skipping file ${entry.path}`,
+          );
+          return Handler.continue({ entry, manifestObject });
+        }
+
+        assert(
+          elementName.includes("-"),
+          `An element file name must include a dash.\n\nIn: ${entry.path}`,
+        );
+
+        const elementMetaData: ElementManifest =
+          manifestObject.elements[elementName] ?? {
+            kind: "element",
+            tagName: elementName,
+            path: parentFolder,
+            files: [],
+          };
+
+        switch (extension) {
+          case ".html":
+            {
+              if (!elementMetaData.files.includes(entry.path)) {
+                elementMetaData.files.push(entry.path);
+              }
+
+              let fragment;
+              try {
+                const content = await io.readFile(entry.path);
+                fragment = shadowRoot.parseOrThrow(content);
+              } catch (error) {
+                console.error(
+                  `Something went wrong while parsing ${entry.path}`,
+                );
+                throw error;
+              }
+
+              elementMetaData.dependencies = dependencies(fragment);
+
+              const path = entry.path;
+              elementMetaData.templateLoader = () => {
+                return shadowRoot.parseOrThrow(
+                  Deno.readTextFileSync(path),
+                );
+              };
+              setScope(elementMetaData.templateLoader, { path });
             }
+            break;
 
-            let fragment;
-            try {
-              const content = await io.readFile(entry.path);
-              fragment = shadowRoot.parseOrThrow(content);
-            } catch (error) {
-              console.error(
-                `Something went wrong while parsing ${entry.path}`,
-              );
-              throw error;
+          case ".js":
+          case ".ts":
+            {
+              const className = toPascalCase(elementName);
+              const importPath = relative(generatedFolder, entry.path);
+
+              elementMetaData.classLoader = async () => {
+                return (await import(importPath))[className];
+              };
+              setScope(elementMetaData.classLoader, {
+                importPath,
+                className,
+              });
+
+              if (!elementMetaData.files.includes(entry.path)) {
+                elementMetaData.files.push(entry.path);
+              }
             }
+            break;
+        }
 
-            elementMetaData.dependencies = dependencies(fragment);
+        manifestObject.elements[elementName] = elementMetaData;
+      } else if (isParent(routesFolder, entry.path)) {
+        /**
+         * Routes
+         */
 
-            const path = entry.path;
-            elementMetaData.templateLoader = () => {
-              return shadowRoot.parseOrThrow(
-                Deno.readTextFileSync(path),
-              );
-            };
-            setScope(elementMetaData.templateLoader, { path });
+        if (extname(entry.name) === ".html") {
+          let fragment;
+          try {
+            const content = await io.readFile(entry.path);
+            fragment = fragments.parseOrThrow(content);
+          } catch (error) {
+            console.error(`Something went wrong while parsing ${entry.path}`);
+            throw error;
           }
-          break;
 
-        case ".js":
-        case ".ts":
-          {
-            const className = toPascalCase(elementName);
+          const path = entry.path;
+          const templateLoader = () => {
+            return fragments.parseOrThrow(
+              Deno.readTextFileSync(path),
+            );
+          };
+          setScope(templateLoader, { path });
+
+          if (entry.name === "_layout.html") {
+            // Layout
+
+            manifestObject.layouts[path] = {
+              kind: "layout",
+              path: path,
+              dependencies: dependencies(fragment),
+              templateLoader,
+            };
+          } else if (entry.name === "index.html") {
+            // Route
+            manifestObject.routes[path] = {
+              kind: "route",
+              path: path,
+              files: [path],
+              templateLoader,
+              dependencies: dependencies(fragment),
+            };
+          }
+        } else {
+          // The extension is .js or .ts
+
+          if (entry.name.includes("-")) {
+            const tagName = filename(entry.path);
+            const className = toPascalCase(tagName);
             const importPath = relative(generatedFolder, entry.path);
 
-            elementMetaData.classLoader = async () => {
+            const classLoader = async () => {
               return (await import(importPath))[className];
             };
-            setScope(elementMetaData.classLoader, {
-              importPath,
-              className,
-            });
+            setScope(classLoader, { importPath, className });
 
-            if (!elementMetaData.files.includes(entry.path)) {
-              elementMetaData.files.push(entry.path);
-            }
+            manifestObject.elements[tagName] = {
+              kind: "element",
+              tagName,
+              path: entry.path,
+              files: [entry.path],
+              classLoader,
+            };
           }
-          break;
-      }
-
-      manifestObject.elements[elementName] = elementMetaData;
-    } else if (isParent(routesFolder, entry.path)) {
-      /**
-       * Routes
-       */
-
-      if (extname(entry.name) === ".html") {
-        let fragment;
-        try {
-          const content = await io.readFile(entry.path);
-          fragment = fragments.parseOrThrow(content);
-        } catch (error) {
-          console.error(`Something went wrong while parsing ${entry.path}`);
-          throw error;
-        }
-
-        const path = entry.path;
-        const templateLoader = () => {
-          return fragments.parseOrThrow(
-            Deno.readTextFileSync(path),
-          );
-        };
-        setScope(templateLoader, { path });
-
-        if (entry.name === "_layout.html") {
-          // Layout
-
-          manifestObject.layouts[path] = {
-            kind: "layout",
-            path: path,
-            dependencies: dependencies(fragment),
-            templateLoader,
-          };
-        } else if (entry.name === "index.html") {
-          // Route
-          manifestObject.routes[path] = {
-            kind: "route",
-            path: path,
-            files: [path],
-            templateLoader,
-            dependencies: dependencies(fragment),
-          };
-        }
-      } else {
-        // The extension is .js or .ts
-
-        if (entry.name.includes("-")) {
-          const tagName = filename(entry.path);
-          const className = toPascalCase(tagName);
-          const importPath = relative(generatedFolder, entry.path);
-
-          const classLoader = async () => {
-            return (await import(importPath))[className];
-          };
-          setScope(classLoader, { importPath, className });
-
-          manifestObject.elements[tagName] = {
-            kind: "element",
-            tagName,
-            path: entry.path,
-            files: [entry.path],
-            classLoader,
-          };
         }
       }
-    }
-    return Handler.continue({ entry, manifestObject });
-  },
-);
+      return Handler.continue({ entry, manifestObject });
+    },
+  ),
+];
