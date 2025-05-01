@@ -10,15 +10,20 @@ import { type Manifest, render } from "../../effects/render.ts";
 import type { Plugin } from "../../types.d.ts";
 import { filename, isParent } from "../../utils/path.ts";
 import { updateManifest } from "../manifest.ts";
+import { handleDirectives } from "./directives/mod.ts";
 import { handleManifest, manifestShape } from "./manifest.ts";
 import { handleComponentsAndRoutes } from "./routes_and_components/mod.ts";
 import { handleSort } from "./sort.ts";
-import { assertEmptyHandlerRegistryStack } from "./state.ts";
+import { assertEmptyHandlerRegistryStack, handleRenderState } from "./state.ts";
+import { handleTransforms } from "./transform/mod.ts";
 
 export const pluginRender: Plugin = {
   name: "plugin-render",
   handlers: [
     handleSort,
+    ...handleTransforms,
+    ...handleDirectives,
+    ...handleRenderState,
     ...handleManifest,
     ...handleComponentsAndRoutes,
     handlerFor(io.transformFile, async ({ path, content }) => {

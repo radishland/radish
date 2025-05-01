@@ -35,6 +35,7 @@ export type Manifest = ManifestBase & {
 };
 
 interface RenderOperations {
+  transformNode: (node: MNode) => MNode;
   component: (element: ElementManifest) => string | undefined;
   route: (
     route: RouteManifest,
@@ -47,6 +48,12 @@ interface RenderOperations {
 }
 
 export const render = {
+  /**
+   * Prepares a node to be serialized
+   */
+  transformNode: createEffect<RenderOperations["transformNode"]>(
+    "render/transformNode",
+  ),
   component: createEffect<RenderOperations["component"]>("render/component"),
   route: createEffect<RenderOperations["route"]>("render/route"),
   /**

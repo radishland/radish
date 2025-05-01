@@ -1,5 +1,5 @@
 import { serializeFragments } from "@radish/htmlcrunch";
-import { reifyNode } from "./common.ts";
+import { transformNode } from "../transform/transform_node.ts";
 import { assertObjectMatch } from "@std/assert";
 import { dirname } from "@std/path";
 import { Handler } from "../../../../exports/effects.ts";
@@ -25,7 +25,7 @@ export const handleRouteLayoutsAndHeadElements = handlerFor(
 
     const pageFragments = layouts.map((layout) => layout.templateLoader());
     pageFragments.push(
-      await Promise.all(route.templateLoader().map(reifyNode)),
+      await Promise.all(route.templateLoader().map(transformNode)),
     );
 
     const pageGroups = Object.groupBy(
