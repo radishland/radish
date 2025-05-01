@@ -26,20 +26,20 @@ import {
   generatedFolder,
   routesFolder,
   ts_extension_regex,
-} from "../constants.ts";
-import { buildPipeline } from "../effects/build.ts";
-import { config } from "../effects/config.ts";
-import { handlerFor } from "../effects/effects.ts";
-import { Handler } from "../effects/handlers.ts";
-import { hot } from "../effects/hot-update.ts";
-import { io } from "../effects/io.ts";
-import { manifest, manifestPath } from "../effects/manifest.ts";
-import { dev } from "../environment.ts";
-import type { ManifestBase, Plugin } from "../types.d.ts";
-import { filename, isParent } from "../utils/path.ts";
-import { setScope } from "../utils/stringify.ts";
-import { dependencies } from "../walk.ts";
-import { updateManifest } from "./manifest.ts";
+} from "../../constants.ts";
+import { buildPipeline } from "../../effects/build.ts";
+import { config } from "../../effects/config.ts";
+import { handlerFor } from "../../effects/effects.ts";
+import { Handler } from "../../effects/handlers.ts";
+import { hot } from "../../effects/hot-update.ts";
+import { io } from "../../effects/io.ts";
+import { manifest, manifestPath } from "../../effects/manifest.ts";
+import { dev } from "../../environment.ts";
+import type { ManifestBase, Plugin } from "../../types.d.ts";
+import { filename, isParent } from "../../utils/path.ts";
+import { setScope } from "../../utils/stringify.ts";
+import { dependencies } from "../../walk.ts";
+import { updateManifest } from "../manifest.ts";
 
 export type ElementManifest = {
   kind: "element";
