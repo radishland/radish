@@ -42,9 +42,7 @@ interface RenderOperations {
     insertHead: string,
     insertBody: string,
   ) => string;
-  directive: (key: string, value: string) => void;
-  getCurrentNode: () => MNode;
-  setCurrentNode: (node: MNode) => void;
+  directive: (node: MNode, key: string, value: string) => void;
 }
 
 export const render = {
@@ -60,17 +58,4 @@ export const render = {
    * Asks for the interpretation of element attribute directives
    */
   directive: createEffect<RenderOperations["directive"]>("render/directive"),
-  /**
-   * Rendering is stateful and this hook allows other effects like directives to know which node
-   * is currently being rendered
-   */
-  getCurrentNode: createEffect<RenderOperations["getCurrentNode"]>(
-    "render/getCurrentNode",
-  ),
-  /**
-   * Sets the current node being rendered
-   */
-  setCurrentNode: createEffect<RenderOperations["setCurrentNode"]>(
-    "render/setCurrentNode",
-  ),
 };

@@ -1,21 +1,6 @@
-import type { MNode } from "@radish/htmlcrunch";
-import { assertEquals, assertExists } from "@std/assert";
+import { assertEquals } from "@std/assert";
 import type { HandlerRegistry } from "../../../../runtime/src/handler-registry.ts";
-import { handlerFor } from "../../effects/effects.ts";
-import { type ElementManifest, render } from "../../effects/render.ts";
-
-let currentNode: MNode | undefined;
-
-export const handleRenderState = [
-  handlerFor(render.setCurrentNode, (node) => {
-    currentNode = node;
-  }),
-
-  handlerFor(render.getCurrentNode, () => {
-    assertExists(currentNode);
-    return currentNode;
-  }),
-];
+import type { ElementManifest } from "../../effects/render.ts";
 
 const handlerRegistryStack: { tagName: string; instance: HandlerRegistry }[] =
   [];

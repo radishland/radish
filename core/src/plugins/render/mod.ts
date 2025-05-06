@@ -13,7 +13,6 @@ import { handleDirectives } from "./directives/mod.ts";
 import { handleManifest, manifestShape } from "./manifest.ts";
 import { handleComponentsAndRoutes } from "./routes_and_components/mod.ts";
 import { handleSort } from "./sort.ts";
-import { handleRenderState } from "./state.ts";
 import { handleTransformNode } from "./transform_node/mod.ts";
 import { handleTransformFile } from "./transformFile.ts";
 
@@ -24,7 +23,6 @@ export const pluginRender: Plugin = {
     handleTransformFile,
     ...handleTransformNode,
     ...handleDirectives,
-    ...handleRenderState,
     ...handleManifest,
     ...handleComponentsAndRoutes,
     handlerFor(hot.update, async ({ event, paths }) => {
