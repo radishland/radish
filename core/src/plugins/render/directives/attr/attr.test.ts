@@ -10,9 +10,9 @@ import { manifest } from "../../../../effects/manifest.ts";
 import { id } from "../../../../utils/algebraic-structures.ts";
 import { manifestShape } from "../../manifest.ts";
 import { handleComponent } from "../../routes_and_components/component.ts";
+import { handleTransformFile } from "../../transformFile.ts";
 import { handleApplyDirectivesTransform } from "../../transforms/apply_directives.ts";
 import { handleTransformBase } from "../../transforms/mod.ts";
-import { handleTransformFile } from "../../transformFile.ts";
 import { handleDirectiveBase } from "../mod.ts";
 import { handleAttrDirective } from "./attr.ts";
 
