@@ -1,5 +1,5 @@
 import { assertExists } from "@std/assert";
-import { type BaseHandler, Handler } from "./handlers.ts";
+import { type BaseHandler, Continue, Handler } from "./handlers.ts";
 
 // Effects and handlers are parametrized by the 'type' property
 
@@ -126,10 +126,12 @@ class EffectHandlerScope {
   async handle<P extends any[], R>(type: string, ...payload: P): Promise<R> {
     if (this.#handlers.has(type)) {
       const handlers: Handler<P, R>[] = this.#handlers.get(type)!;
-      const result = await Handler.fold(handlers).run(...payload);
+      const result: R | Continue<P> = await Handler.fold(handlers).run(
+        ...payload,
+      );
 
-      if (result.isDone()) {
-        return result.getValue();
+      if (!(result instanceof Continue)) {
+        return result;
       }
 
       if (this.#parent) {
