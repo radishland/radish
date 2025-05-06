@@ -1,6 +1,6 @@
 import { assertGreater } from "@std/assert";
 
-export class TtlCache<K, V> extends Map<K, V> {
+export class TtlCache<K, V> extends Map<K, V> implements Disposable {
   /**
    * TTL in ms
    */

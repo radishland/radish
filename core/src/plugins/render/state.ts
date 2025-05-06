@@ -46,7 +46,7 @@ export const mountHandlerRegistry = async (
         handlerRegistryStack.pop();
       }
     },
-  };
+  } satisfies Disposable;
 };
 
 export const assertEmptyHandlerRegistryStack = () => {
