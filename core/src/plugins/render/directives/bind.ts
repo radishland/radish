@@ -1,15 +1,15 @@
+import { isElementNode } from "@radish/htmlcrunch";
 import { assert } from "@std/assert";
 import { bindingConfig } from "../../../../../runtime/src/utils.ts";
 import { Handler } from "../../../../exports/effects.ts";
 import { handlerFor } from "../../../effects/effects.ts";
 import { render } from "../../../effects/render.ts";
-import { contextLookup } from "../state.ts";
-import { isElementNode } from "@radish/htmlcrunch";
 import { setAttribute } from "../common.ts";
+import { contextLookup } from "../state.ts";
 
 export const handleBindDirective = handlerFor(
   render.directive,
-  async (attrKey: string, attrValue: string) => {
+  (node, attrKey, attrValue) => {
     if (attrKey.startsWith("bind:")) {
       const property = attrKey.split(":")[1] as keyof typeof bindingConfig;
 
@@ -28,12 +28,10 @@ export const handleBindDirective = handlerFor(
         } and "${identifier}" has type ${typeof value}`,
       );
 
-      const node = await render.getCurrentNode();
       assert(isElementNode(node));
-
       setAttribute(node.attributes, property, value);
     }
 
-    return Handler.continue(attrKey, attrValue);
+    return Handler.continue(node, attrKey, attrValue);
   },
 );

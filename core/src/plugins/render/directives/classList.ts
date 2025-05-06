@@ -7,14 +7,12 @@ import { contextLookup } from "../state.ts";
 
 export const handleClassListDirective = handlerFor(
   render.directive,
-  async (attrKey: string, attrValue: string) => {
+  (node, attrKey, attrValue) => {
     if (attrKey === "classList") {
       const identifier = attrValue || attrKey;
       const value = contextLookup(identifier);
 
       assert(typeof value === "object", "classList should reference an object");
-
-      const node = await render.getCurrentNode();
       assert(isElementNode(node));
 
       const classAttr = node.attributes.find(([k, _]) => k === "class");
@@ -38,6 +36,6 @@ export const handleClassListDirective = handlerFor(
       }
     }
 
-    return Handler.continue(attrKey, attrValue);
+    return Handler.continue(node, attrKey, attrValue);
   },
 );

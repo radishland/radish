@@ -9,8 +9,6 @@ import { mountHandlerRegistry } from "../state.ts";
  * Transforms a node by performing server directives and inserting templates
  */
 export async function transformNode(node: MNode): Promise<MNode> {
-  await render.setCurrentNode(node);
-
   if (!isElementNode(node)) return node;
 
   const { tagName } = node;

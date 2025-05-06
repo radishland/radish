@@ -7,11 +7,10 @@ import { contextLookup } from "../state.ts";
 
 export const handleHtmlDirective = handlerFor(
   render.directive,
-  async (attrKey: string, attrValue: string) => {
+  (node, attrKey, attrValue) => {
     if (attrKey === "html") {
       const identifier = attrValue || attrKey;
       const value = contextLookup(identifier);
-      const node = await render.getCurrentNode();
 
       assert(isElementNode(node));
       assert(node.kind !== Kind.VOID, "Void elements can't have innerHTML");
@@ -21,6 +20,6 @@ export const handleHtmlDirective = handlerFor(
       }
     }
 
-    return Handler.continue(attrKey, attrValue);
+    return Handler.continue(node, attrKey, attrValue);
   },
 );

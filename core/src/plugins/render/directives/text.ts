@@ -7,11 +7,10 @@ import { contextLookup } from "../state.ts";
 
 export const handleTextDirective = handlerFor(
   render.directive,
-  async (attrKey: string, attrValue: string) => {
+  (node, attrKey: string, attrValue: string) => {
     if (attrKey === "text") {
       const identifier = attrValue || attrKey;
       const value = contextLookup(identifier);
-      const node = await render.getCurrentNode();
 
       assert(isElementNode(node));
       assert(node.kind !== Kind.VOID, "Void elements can't have textContent");
@@ -21,6 +20,6 @@ export const handleTextDirective = handlerFor(
       }
     }
 
-    return Handler.continue(attrKey, attrValue);
+    return Handler.continue(node, attrKey, attrValue);
   },
 );

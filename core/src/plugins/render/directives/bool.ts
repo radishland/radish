@@ -7,7 +7,7 @@ import { contextLookup } from "../state.ts";
 
 export const handleBoolDirective = handlerFor(
   render.directive,
-  async (attrKey: string, attrValue: string) => {
+  (node, attrKey, attrValue) => {
     if (attrKey.startsWith("bool:")) {
       const [_, attribute] = attrKey.split(":");
       const identifier = attrValue || attribute;
@@ -16,12 +16,11 @@ export const handleBoolDirective = handlerFor(
       assertExists(identifier, "Missing bool: identifier");
 
       const value = contextLookup(identifier);
-      const node = await render.getCurrentNode();
-      assert(isElementNode(node));
 
+      assert(isElementNode(node));
       setAttribute(node.attributes, attribute, value);
     }
 
-    return Handler.continue(attrKey, attrValue);
+    return Handler.continue(node, attrKey, attrValue);
   },
 );

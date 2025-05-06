@@ -8,8 +8,9 @@ export const applyDirectives = handlerFor(
   async (node) => {
     if (!isElementNode(node)) return Handler.continue(node);
 
-    for (const [attrKey, attrValue] of node.attributes) {
-      await render.directive(attrKey, attrValue);
+    const attributesCopy = [...node.attributes];
+    for (const [attrKey, attrValue] of attributesCopy) {
+      await render.directive(node, attrKey, attrValue);
     }
 
     return Handler.continue(node);
