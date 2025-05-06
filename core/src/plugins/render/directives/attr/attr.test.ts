@@ -13,7 +13,7 @@ import { handleComponent } from "../../routes_and_components/component.ts";
 import { applyDirectives } from "../../transform_node/apply_directives.ts";
 import { baseTransformNodeHandler } from "../../transform_node/mod.ts";
 import { handleTransformFile } from "../../transformFile.ts";
-import { baseDirectiveHandler } from "../mod.ts";
+import { handleDirectiveBase } from "../mod.ts";
 import { handleAttrDirective } from "./attr.ts";
 
 const moduleDir = dirname(fromFileUrl(import.meta.url));
@@ -40,7 +40,7 @@ describe("attr directive", () => {
       applyDirectives,
       baseTransformNodeHandler,
       handleAttrDirective,
-      baseDirectiveHandler,
+      handleDirectiveBase,
       handlerFor(manifest.get, () => {
         return {
           ...manifestShape,

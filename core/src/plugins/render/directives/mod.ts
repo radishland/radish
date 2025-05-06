@@ -1,21 +1,25 @@
-import { assert } from "@std/assert";
+import { isElementNode } from "../../../../../htmlcrunch/mod.ts";
 import { handlerFor } from "../../../../exports/effects.ts";
 import { render } from "../../../effects/render.ts";
-import { handleAttrDirective } from "./attr.ts";
+import { setAttribute } from "../common.ts";
+import { handleAttrDirective } from "./attr/attr.ts";
 import { handleBindDirective } from "./bind.ts";
 import { handleBoolDirective } from "./bool.ts";
 import { handleClassListDirective } from "./classList.ts";
 import { handleHtmlDirective } from "./html.ts";
 import { handleTextDirective } from "./text.ts";
-import { isElementNode } from "../../../../../htmlcrunch/mod.ts";
-import { setAttribute } from "../common.ts";
 
-const baseHandler = handlerFor(
+export const handleDirectiveBase = handlerFor(
   render.directive,
-  async (attrKey, attrValue) => {
-    const node = await render.getCurrentNode();
-    assert(isElementNode(node));
-    setAttribute(node.attributes, attrKey, attrValue);
+  (node, attrKey, attrValue) => {
+    if (
+      isElementNode(node) &&
+      node.attributes.filter(([k, v]) => k === attrKey && v === attrValue)
+          .length === 0
+    ) {
+      setAttribute(node.attributes, attrKey, attrValue);
+    }
+
     return;
   },
 );
@@ -27,5 +31,5 @@ export const handleDirectives = [
   handleClassListDirective,
   handleHtmlDirective,
   handleTextDirective,
-  baseHandler,
+  handleDirectiveBase,
 ];
