@@ -3,7 +3,7 @@ import { handlerFor } from "../../../effects/effects.ts";
 import { Handler } from "../../../effects/handlers.ts";
 import { render } from "../../../effects/render.ts";
 
-export const applyDirectives = handlerFor(
+export const handleApplyDirectivesTransform = handlerFor(
   render.transformNode,
   async (node) => {
     if (!isElementNode(node)) return Handler.continue(node);

@@ -10,8 +10,8 @@ import { manifest } from "../../../../effects/manifest.ts";
 import { id } from "../../../../utils/algebraic-structures.ts";
 import { manifestShape } from "../../manifest.ts";
 import { handleComponent } from "../../routes_and_components/component.ts";
-import { applyDirectives } from "../../transform_node/apply_directives.ts";
-import { baseTransformNodeHandler } from "../../transform_node/mod.ts";
+import { handleApplyDirectivesTransform } from "../../transform_node/apply_directives.ts";
+import { handleTransformBase } from "../../transform_node/mod.ts";
 import { handleTransformFile } from "../../transformFile.ts";
 import { handleDirectiveBase } from "../mod.ts";
 import { handleAttrDirective } from "./attr.ts";
@@ -37,8 +37,8 @@ describe("attr directive", () => {
       handleTransformFile,
       handlerFor(io.transformFile, id),
       handleComponent,
-      applyDirectives,
-      baseTransformNodeHandler,
+      handleApplyDirectivesTransform,
+      handleTransformBase,
       handleAttrDirective,
       handleDirectiveBase,
       handlerFor(manifest.get, () => {

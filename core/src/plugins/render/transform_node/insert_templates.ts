@@ -7,7 +7,7 @@ import { type Manifest, render } from "../../../effects/render.ts";
 import { manifestShape } from "../manifest.ts";
 import { transformNode } from "./transform_node.ts";
 
-export const insertTemplates = handlerFor(
+export const handleInsertTemplatesTransform = handlerFor(
   render.transformNode,
   async (node) => {
     if (!isElementNode(node)) return Handler.continue(node);
