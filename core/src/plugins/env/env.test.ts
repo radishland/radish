@@ -1,9 +1,9 @@
 import { assertEquals } from "@std/assert";
-import { config } from "../effects/config.ts";
-import { handlerFor, runWith } from "../effects/effects.ts";
-import { env } from "../effects/env.ts";
-import { io } from "../effects/io.ts";
-import { pluginEnv } from "./env.ts";
+import { config } from "../../effects/config.ts";
+import { handlerFor, runWith } from "../../effects/effects.ts";
+import { env } from "../../effects/env.ts";
+import { io } from "../../effects/io.ts";
+import { pluginEnv } from "../env/env.ts";
 
 const handlers = [
   handlerFor(
@@ -15,7 +15,7 @@ const handlers = [
         env: true,
         importmap: false,
         manifest: false,
-        start: false,
+        server: false,
       },
     }),
   ),
