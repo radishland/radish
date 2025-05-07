@@ -127,28 +127,25 @@ const hydrateElement = (element: Element) => {
     element.dispatchEvent(onRequest);
   }
 
-  const props = element.getAttribute("@prop")
-    ?.trim().split(spaces_sep_by_comma);
+  const props = attributes.filter((a) => a.localName.startsWith("prop:"));
 
-  if (props) {
-    for (const prop of props) {
-      const [key, value] = prop.split(":");
+  for (const prop of props) {
+    const [_, key] = prop.localName.split(":");
 
-      assertExists(key);
+    assertExists(key);
 
-      const propRequest = new CustomEvent("@prop-request", {
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-        detail: {
-          property: key,
-          identifier: value || key,
-          target: element,
-        } satisfies PropRequestDetail,
-      });
+    const propRequest = new CustomEvent("rad::prop", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      detail: {
+        property: key,
+        identifier: prop.value || key,
+        target: element,
+      } satisfies PropRequestDetail,
+    });
 
-      element.dispatchEvent(propRequest);
-    }
+    element.dispatchEvent(propRequest);
   }
 
   const text = element.getAttribute("@text");

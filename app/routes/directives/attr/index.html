@@ -22,7 +22,7 @@
 
   <label>
     is red
-    <input type="checkbox" readonly attr:checked @prop="checked">
+    <input type="checkbox" readonly attr:checked prop:checked>
   </label>
 
   <button on:click="toggle">
@@ -38,7 +38,7 @@
     attribute on the checkbox with attr:checked.
   </p>
   <p>
-    Since <code>checked</code> is non-reflected the @prop directive is used to
+    Since <code>checked</code> is non-reflected the prop directive is used to
     display the up to date value of the checked state
   </p>
 </handle-attr>
