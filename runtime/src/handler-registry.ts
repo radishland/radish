@@ -225,14 +225,14 @@ export class HandlerRegistry extends HTMLElement
     const { signal } = this.abortController;
 
     this.addEventListener("rad::attr", this.#handleAttr, { signal });
-    this.addEventListener("@bool-request", this.#handleBool, { signal });
-    this.addEventListener("@class-request", this.#handleClass, { signal });
-    this.addEventListener("@on-request", this.#handleOn, { signal });
-    this.addEventListener("@use-request", this.#handleUse, { signal });
-    this.addEventListener("@prop-request", this.#handleProp, { signal });
-    this.addEventListener("@html-request", this.#handleHTML, { signal });
-    this.addEventListener("@text-request", this.#handleText, { signal });
-    this.addEventListener("@bind-request", this.#handleBind, { signal });
+    this.addEventListener("rad::bool", this.#handleBool, { signal });
+    this.addEventListener("rad::class", this.#handleClass, { signal });
+    this.addEventListener("rad::on", this.#handleOn, { signal });
+    this.addEventListener("rad::use", this.#handleUse, { signal });
+    this.addEventListener("rad::prop", this.#handleProp, { signal });
+    this.addEventListener("rad::html", this.#handleHTML, { signal });
+    this.addEventListener("rad::text", this.#handleText, { signal });
+    this.addEventListener("rad::bind", this.#handleBind, { signal });
   }
 
   disconnectedCallback() {

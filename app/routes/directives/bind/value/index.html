@@ -1,12 +1,12 @@
 <head>
-  <title>The @bind:value directive</title>
+  <title>The bind:value directive</title>
 </head>
 
 <handle-bind-value>
   <section>
     <h2>Value</h2>
     <h3>Input of type text</h3>
-    <input type="text" @bind:value="text">
+    <input type="text" bind:value="text">
     <button @on="click:inspectText">inspect</button>
     <button @on="click:clearText">clear</button>
     <button @on="click:fillText">fill</button>
@@ -17,7 +17,7 @@
 
   <section>
     <h3>Input of type number</h3>
-    <input type="number" @bind:value="number">
+    <input type="number" bind:value="number">
     <button @on="click:inspectNumber">inspect</button>
     <button @on="click:incrementNumber">increment</button>
     <button @on="click:decrementNumber">decrement</button>
@@ -28,7 +28,7 @@
 
   <section>
     <h3>Input of type range</h3>
-    <input type="range" min="0" max="10" @bind:value="range">
+    <input type="range" min="0" max="10" bind:value="range">
     <button @on="click:inspectRange">inspect</button>
     <button @on="click:incrementRange">increment</button>
     <button @on="click:decrementRange">decrement</button>
@@ -39,7 +39,7 @@
 
   <section>
     <h3>Input of type date</h3>
-    <input type="date" @bind:value="date">
+    <input type="date" bind:value="date">
     <button @on="click:inspectDate">inspect</button>
     <p>
       the date value is: <span @text="date"></span>
@@ -48,7 +48,7 @@
 
   <section>
     <h3>Input of type color</h3>
-    <input type="color" @bind:value="color">
+    <input type="color" bind:value="color">
     <button @on="click:inspectColor">inspect</button>
     <p>
       the color value is: <span @text="color"></span>
@@ -57,7 +57,7 @@
 
   <section>
     <h3>Textarea</h3>
-    <textarea @bind:value="textarea"></textarea>
+    <textarea bind:value="textarea"></textarea>
     <button @on="click:inspectTextarea">inspect</button>
     <p>
       the textarea value is: <span @text="textarea"></span>

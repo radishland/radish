@@ -34,11 +34,11 @@ const hydrateElement = (element: Element) => {
   }
 
   for (const property of Object.keys(bindingConfig)) {
-    if (element.hasAttribute(`@bind:${property}`)) {
-      const identifier = element.getAttribute(`@bind:${property}`)?.trim() ||
+    if (element.hasAttribute(`bind:${property}`)) {
+      const identifier = element.getAttribute(`bind:${property}`)?.trim() ||
         property;
 
-      const bindRequest = new CustomEvent("@bind-request", {
+      const bindRequest = new CustomEvent("rad::bind", {
         bubbles: true,
         cancelable: true,
         composed: true,
