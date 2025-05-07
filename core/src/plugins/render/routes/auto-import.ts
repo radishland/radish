@@ -10,7 +10,7 @@ import { manifestShape } from "../hooks/manifest.ts";
 import { ts_extension_regex } from "../../../constants.ts";
 import { Handler } from "../../../effects/handlers.ts";
 
-export const handleAutoImportComponents = handlerFor(
+export const handleAutoImport = handlerFor(
   render.route,
   async (route, insertHead, insertBody) => {
     const _manifest = await manifest.get() as Manifest;
