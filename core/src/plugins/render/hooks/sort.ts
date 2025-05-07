@@ -2,7 +2,7 @@ import { assertExists, assertObjectMatch, unreachable } from "@std/assert";
 import type { WalkEntry } from "@std/fs";
 import { basename, extname } from "@std/path";
 import { appPath, elementsFolder, routesFolder } from "../../../constants.ts";
-import { buildPipeline } from "../../../effects/build.ts";
+import { build } from "../../../effects/build.ts";
 import { handlerFor } from "../../../effects/effects.ts";
 import { manifest } from "../../../effects/manifest.ts";
 import { filename, isParent } from "../../../utils/path.ts";
@@ -63,7 +63,7 @@ const sortComponents = <T extends ElementManifest | RouteManifest>(
 };
 
 export const handleSort = handlerFor(
-  buildPipeline.sortFiles,
+  build.sort,
   async (entries) => {
     const manifestObject = await manifest.get() as Manifest;
     assertObjectMatch(manifestObject, manifestShape);

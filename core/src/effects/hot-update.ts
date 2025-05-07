@@ -1,11 +1,11 @@
 import { extname, relative } from "@std/path";
+import { build } from "../effects/build.ts";
 import {
   elementsFolder,
   libFolder,
   routesFolder,
   staticFolder,
 } from "../constants.ts";
-import { build } from "./build.ts";
 import { manifest } from "./manifest.ts";
 import type { HmrEvent } from "../types.d.ts";
 import { TtlCache } from "../utils/cache.ts";
@@ -86,7 +86,7 @@ const hotUpdatePipeline = async (event: HmrEvent) => {
   await manifest.write();
   await manifest.load();
   await generateImportmap();
-  await build(paths, { incremental: true });
+  await build.start(paths, { incremental: true });
 
   console.log("Hot-Reloading...");
   ws.send("reload");

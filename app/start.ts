@@ -1,6 +1,7 @@
 import { importmapPath, manifestPath, startApp } from "@radish/core";
 import { handlerFor, importmap, io } from "@radish/core/effects";
 import {
+  pluginBuild,
   pluginConfig,
   pluginEnv,
   pluginImportmap,
@@ -57,6 +58,7 @@ const config: Config = {
         }),
       ],
     },
+    pluginBuild,
     pluginImportmap,
     pluginManifest,
     pluginStripTypes,
