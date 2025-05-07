@@ -7,7 +7,7 @@ import type {
   OnRequestDetail,
   PropRequestDetail,
 } from "./types.d.ts";
-import { bindingConfig, spaces_sep_by_comma } from "./utils.ts";
+import { bindingConfig } from "./utils.ts";
 
 const hydrateElement = (element: Element) => {
   const attributes = [...element.attributes];
@@ -164,23 +164,24 @@ const hydrateElement = (element: Element) => {
     element.dispatchEvent(textRequest);
   }
 
-  const hooks = element.getAttribute("@use")
-    ?.trim().split(spaces_sep_by_comma);
+  const hooks = attributes.filter((a) => a.localName.startsWith("use:"));
 
-  if (hooks) {
-    for (const hook of hooks) {
-      const useRequest = new CustomEvent("@use-request", {
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-        detail: {
-          identifier: hook,
-          target: element,
-        } satisfies HandleRequestDetail,
-      });
+  for (const hook of hooks) {
+    const [_, value] = hook.localName.split(":");
 
-      element.dispatchEvent(useRequest);
-    }
+    assertExists(value);
+
+    const useRequest = new CustomEvent("rad::use", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      detail: {
+        identifier: value,
+        target: element,
+      } satisfies HandleRequestDetail,
+    });
+
+    element.dispatchEvent(useRequest);
   }
 };
 
