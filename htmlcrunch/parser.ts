@@ -117,7 +117,6 @@ const rawText = regex(/^[^<]+/).map(textNode);
  */
 const attributeName = regex(/^[^\s="'>\/\p{Noncharacter_Code_Point}]+/u)
   .skip(whitespaces)
-  .map((name) => name.toLowerCase())
   .error("Expected a valid attribute name");
 
 const attributeValue = first(
