@@ -38,8 +38,7 @@ export const workspaceRelative = (path: string) => {
  * @throws {AssertionError} if the parent path is not a directory
  */
 export const isParent = (parent: string, child: string): boolean => {
-  const parentInfo = Deno.statSync(parent);
-  assert(parentInfo.isDirectory);
+  assert(extname(parent) === "");
 
   const resolvedParent = resolve(parent);
   const resolvedChild = resolve(child);

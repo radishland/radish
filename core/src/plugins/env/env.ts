@@ -1,14 +1,14 @@
 import { parse } from "@std/dotenv";
 import { join } from "@std/path";
-import { generatedFolder } from "../constants.ts";
-import { config } from "../effects/config.ts";
-import { handlerFor } from "../effects/effects.ts";
-import { env } from "../effects/env.ts";
-import { Handler } from "../effects/handlers.ts";
-import { hot } from "../effects/hot-update.ts";
-import { io } from "../effects/io.ts";
-import type { Plugin } from "../types.d.ts";
-import { stringifyObject } from "../utils/stringify.ts";
+import { generatedFolder } from "../../constants.ts";
+import { config } from "../../effects/config.ts";
+import { handlerFor } from "../../effects/effects.ts";
+import { env } from "../../effects/env.ts";
+import { Handler } from "../../effects/handlers.ts";
+import { hot } from "../../effects/hot-update.ts";
+import { io } from "../../effects/io.ts";
+import type { Plugin } from "../../types.d.ts";
+import { stringifyObject } from "../../utils/stringify.ts";
 
 /**
  * This module implements the {@linkcode env} effect

@@ -78,7 +78,11 @@ export async function startApp(
     }
 
     if (cliArgs.build) {
-      await build();
+      await build.start([
+        `${libFolder}/**`,
+        `${elementsFolder}/**`,
+        `${routesFolder}/**`,
+      ]);
     }
   }
 
