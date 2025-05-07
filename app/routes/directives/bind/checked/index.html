@@ -10,9 +10,9 @@
       @prop="ariaChecked:checked"
       bind:checked
     >
-    <button @on="click:inspectChecked">inspect</button>
-    <button @on="click:turnOn">turn on</button>
-    <button @on="click:turnOff">turn off</button>
+    <button on:click="inspectChecked">inspect</button>
+    <button on:click="turnOn">turn on</button>
+    <button on:click="turnOff">turn off</button>
     <p>
       the checkbox is checked: <span @text="checked"></span>
     </p>

@@ -7,9 +7,9 @@
     <h2>Value</h2>
     <h3>Input of type text</h3>
     <input type="text" bind:value="text">
-    <button @on="click:inspectText">inspect</button>
-    <button @on="click:clearText">clear</button>
-    <button @on="click:fillText">fill</button>
+    <button on:click="inspectText">inspect</button>
+    <button on:click="clearText">clear</button>
+    <button on:click="fillText">fill</button>
     <p>
       the text value is: <span @text="text"></span>
     </p>
@@ -18,9 +18,9 @@
   <section>
     <h3>Input of type number</h3>
     <input type="number" bind:value="number">
-    <button @on="click:inspectNumber">inspect</button>
-    <button @on="click:incrementNumber">increment</button>
-    <button @on="click:decrementNumber">decrement</button>
+    <button on:click="inspectNumber">inspect</button>
+    <button on:click="incrementNumber">increment</button>
+    <button on:click="decrementNumber">decrement</button>
     <p>
       the number value is: <span @text="number"></span>
     </p>
@@ -29,9 +29,9 @@
   <section>
     <h3>Input of type range</h3>
     <input type="range" min="0" max="10" bind:value="range">
-    <button @on="click:inspectRange">inspect</button>
-    <button @on="click:incrementRange">increment</button>
-    <button @on="click:decrementRange">decrement</button>
+    <button on:click="inspectRange">inspect</button>
+    <button on:click="incrementRange">increment</button>
+    <button on:click="decrementRange">decrement</button>
     <p>
       the range value is: <span @text="range"></span>
     </p>
@@ -40,7 +40,7 @@
   <section>
     <h3>Input of type date</h3>
     <input type="date" bind:value="date">
-    <button @on="click:inspectDate">inspect</button>
+    <button on:click="inspectDate">inspect</button>
     <p>
       the date value is: <span @text="date"></span>
     </p>
@@ -49,7 +49,7 @@
   <section>
     <h3>Input of type color</h3>
     <input type="color" bind:value="color">
-    <button @on="click:inspectColor">inspect</button>
+    <button on:click="inspectColor">inspect</button>
     <p>
       the color value is: <span @text="color"></span>
     </p>
@@ -58,7 +58,7 @@
   <section>
     <h3>Textarea</h3>
     <textarea bind:value="textarea"></textarea>
-    <button @on="click:inspectTextarea">inspect</button>
+    <button on:click="inspectTextarea">inspect</button>
     <p>
       the textarea value is: <span @text="textarea"></span>
     </p>

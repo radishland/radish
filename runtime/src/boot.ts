@@ -106,28 +106,25 @@ const hydrateElement = (element: Element) => {
     element.dispatchEvent(htmlRequest);
   }
 
-  const events = element.getAttribute("@on")
-    ?.trim().split(spaces_sep_by_comma);
+  const events = attributes.filter((a) => a.localName.startsWith("on:"));
 
-  if (events) {
-    for (const event of events) {
-      const [type, handler] = event.split(":");
+  for (const event of events) {
+    const [_, type] = event.localName.split(":");
 
-      assertExists(type);
+    assertExists(type);
 
-      const onRequest = new CustomEvent("@on-request", {
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-        detail: {
-          type,
-          identifier: handler || type,
-          target: element,
-        } satisfies OnRequestDetail,
-      });
+    const onRequest = new CustomEvent("rad::on", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      detail: {
+        type,
+        identifier: event.value || type,
+        target: element,
+      } satisfies OnRequestDetail,
+    });
 
-      element.dispatchEvent(onRequest);
-    }
+    element.dispatchEvent(onRequest);
   }
 
   const props = element.getAttribute("@prop")
