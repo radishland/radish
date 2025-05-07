@@ -53,28 +53,25 @@ const hydrateElement = (element: Element) => {
     }
   }
 
-  const booleanAttributes = element.getAttribute("@bool")
-    ?.trim().split(spaces_sep_by_comma);
+  const bools = attributes.filter((a) => a.localName.startsWith("bool:"));
 
-  if (booleanAttributes) {
-    for (const bool of booleanAttributes) {
-      const [key, value] = bool.split(":");
+  for (const bool of bools) {
+    const [_, key] = bool.localName.split(":");
 
-      assertExists(key);
+    assertExists(key);
 
-      element.dispatchEvent(
-        new CustomEvent("@bool-request", {
-          bubbles: true,
-          cancelable: true,
-          composed: true,
-          detail: {
-            attribute: key,
-            identifier: value || key,
-            target: element,
-          } satisfies AttrRequestDetail,
-        }),
-      );
-    }
+    element.dispatchEvent(
+      new CustomEvent("rad::bool", {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        detail: {
+          attribute: key,
+          identifier: bool.value || key,
+          target: element,
+        } satisfies AttrRequestDetail,
+      }),
+    );
   }
 
   const classList = element.getAttribute("@class");
