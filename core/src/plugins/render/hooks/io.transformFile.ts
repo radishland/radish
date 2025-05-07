@@ -24,7 +24,7 @@ export const handleTransformFile = handlerFor(
       const tagName = filename(path);
       const element = manifestObject.elements[tagName];
 
-      if (!element) return Handler.continue({ path, content });
+      if (!element?.templateLoader) return Handler.continue({ path, content });
 
       const rendered = await render.component(element);
       return Handler.continue({ path, content: rendered });
