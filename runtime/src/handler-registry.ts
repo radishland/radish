@@ -226,7 +226,7 @@ export class HandlerRegistry extends HTMLElement
 
     this.addEventListener("rad::attr", this.#handleAttr, { signal });
     this.addEventListener("rad::bool", this.#handleBool, { signal });
-    this.addEventListener("rad::class", this.#handleClass, { signal });
+    this.addEventListener("rad::classlist", this.#handleClass, { signal });
     this.addEventListener("rad::on", this.#handleOn, { signal });
     this.addEventListener("rad::use", this.#handleUse, { signal });
     this.addEventListener("rad::prop", this.#handleProp, { signal });

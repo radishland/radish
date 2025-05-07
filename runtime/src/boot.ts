@@ -74,10 +74,10 @@ const hydrateElement = (element: Element) => {
     );
   }
 
-  const classList = element.getAttribute("@class");
+  const classList = element.getAttribute("classlist");
 
   if (classList) {
-    const classRequest = new CustomEvent("@class-request", {
+    const classRequest = new CustomEvent("rad::classlist", {
       bubbles: true,
       cancelable: true,
       composed: true,
