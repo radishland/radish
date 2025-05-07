@@ -204,14 +204,25 @@ describe("html parser", () => {
     });
 
     const allowDuplicateAttributes = element.parseOrThrow(
-      `<input @on="click:handleClick" @on="mouseenter:handleHover">`,
+      `<input on:click="handleClick" on:click="log">`,
     );
     assertEquals(allowDuplicateAttributes, {
       tagName: "input",
       kind: Kind.VOID,
       attributes: [
-        ["@on", "click:handleClick"],
-        ["@on", "mouseenter:handleHover"],
+        ["on:click", "handleClick"],
+        ["on:click", "log"],
+      ],
+    });
+
+    const keepAttributesCasing = element.parseOrThrow(
+      `<input prop:ariaChecked="checked">`,
+    );
+    assertEquals(keepAttributesCasing, {
+      tagName: "input",
+      kind: Kind.VOID,
+      attributes: [
+        ["prop:ariaChecked", "checked"],
       ],
     });
   });
