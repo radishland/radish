@@ -1,4 +1,3 @@
-import { assertExists } from "@std/assert";
 import type {
   AttrRequestDetail,
   BindableProperty,
@@ -17,7 +16,7 @@ const hydrateElement = (element: Element) => {
   for (const attribute of attr) {
     const [_, key] = attribute.localName.split(":");
 
-    assertExists(key);
+    if (!key) throw new Error("Missing <key> in attr:<key>");
 
     const attrRequest = new CustomEvent("rad::attr", {
       bubbles: true,
@@ -58,7 +57,7 @@ const hydrateElement = (element: Element) => {
   for (const bool of bools) {
     const [_, key] = bool.localName.split(":");
 
-    assertExists(key);
+    if (!key) throw new Error("Missing <key> in bool:<key>");
 
     element.dispatchEvent(
       new CustomEvent("rad::bool", {
@@ -111,7 +110,7 @@ const hydrateElement = (element: Element) => {
   for (const event of events) {
     const [_, type] = event.localName.split(":");
 
-    assertExists(type);
+    if (!type) throw new Error("Missing <type> in on:<type>");
 
     const onRequest = new CustomEvent("rad::on", {
       bubbles: true,
@@ -132,7 +131,7 @@ const hydrateElement = (element: Element) => {
   for (const prop of props) {
     const [_, key] = prop.localName.split(":");
 
-    assertExists(key);
+    if (!key) throw new Error("Missing <key> in prop:<key>");
 
     const propRequest = new CustomEvent("rad::prop", {
       bubbles: true,
@@ -167,16 +166,16 @@ const hydrateElement = (element: Element) => {
   const hooks = attributes.filter((a) => a.localName.startsWith("use:"));
 
   for (const hook of hooks) {
-    const [_, value] = hook.localName.split(":");
+    const [_, identifier] = hook.localName.split(":");
 
-    assertExists(value);
+    if (!identifier) throw new Error("Missing <id> in use:<id>");
 
     const useRequest = new CustomEvent("rad::use", {
       bubbles: true,
       cancelable: true,
       composed: true,
       detail: {
-        identifier: value,
+        identifier,
         target: element,
       } satisfies HandleRequestDetail,
     });
