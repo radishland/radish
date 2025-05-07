@@ -13,8 +13,8 @@
     <input type="text" bind:value="text">
   </label>
 
-  <p>rounded value: <output @text="rounded"></output></p>
-  <p>to snake case: <output @text="snaked"></output></p>
+  <p>rounded value: <output text="rounded"></output></p>
+  <p>to snake case: <output text="snaked"></output></p>
 
   <p>
     A helper library is used to round a number to 1 decimal place, and the
@@ -35,5 +35,5 @@
     <code>deno task generate --importmap</code>
   </p>
 
-  <pre @text="importmap"></pre>
+  <pre text="importmap"></pre>
 </handle-input>

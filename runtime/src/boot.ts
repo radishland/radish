@@ -148,10 +148,10 @@ const hydrateElement = (element: Element) => {
     element.dispatchEvent(propRequest);
   }
 
-  const text = element.getAttribute("@text");
+  const text = element.getAttribute("text");
 
   if (text) {
-    const textRequest = new CustomEvent("@text-request", {
+    const textRequest = new CustomEvent("rad::text", {
       bubbles: true,
       cancelable: true,
       composed: true,

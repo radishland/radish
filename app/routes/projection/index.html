@@ -7,7 +7,7 @@
     <rad-projection>
       <my-article>
         <span slot="title">the title</span>
-        <span slot="subtitle">the <span @text="h2"></span></span>
+        <span slot="subtitle">the <span text="h2"></span></span>
         <section>
           <p>the article</p>
           <rad-unknown></rad-unknown>
@@ -15,7 +15,7 @@
         <p>
           Testing declarative shadow root slot projection in template elements
         </p>
-        <button on:click="toggle">toggle <span @text="h2"></span></button>
+        <button on:click="toggle">toggle <span text="h2"></span></button>
       </my-article>
     </rad-projection>
   </main>
