@@ -11,10 +11,11 @@ import { filename, isParent } from "../../utils/path.ts";
 import { updateManifest } from "../manifest.ts";
 import { handleDirectives } from "./directives/mod.ts";
 import { handleManifest, manifestShape } from "./manifest.ts";
-import { handleComponentsAndRoutes } from "./routes_and_components/mod.ts";
+import { handleRoutes } from "./routes/mod.ts";
 import { handleSort } from "./sort.ts";
 import { handleTransformNode } from "./transforms/mod.ts";
 import { handleTransformFile } from "./transformFile.ts";
+import { handleComponents } from "./components/component.ts";
 
 export const pluginRender: Plugin = {
   name: "plugin-render",
@@ -24,7 +25,8 @@ export const pluginRender: Plugin = {
     ...handleTransformNode,
     ...handleDirectives,
     ...handleManifest,
-    ...handleComponentsAndRoutes,
+    handleComponents,
+    ...handleRoutes,
     handlerFor(hot.update, async ({ event, paths }) => {
       const extension = extname(event.path);
       const _manifest = await manifest.get() as Manifest;

@@ -1,5 +1,5 @@
 import { serializeFragments } from "@radish/htmlcrunch";
-import { transformNode } from "../transform_node/transform_node.ts";
+import { transformNode } from "../transforms/transform_node.ts";
 import { assertObjectMatch } from "@std/assert";
 import { dirname } from "@std/path";
 import { Handler } from "../../../../exports/effects.ts";
