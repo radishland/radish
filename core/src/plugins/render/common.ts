@@ -12,8 +12,8 @@ export const setAttribute = (
     "Can only set primitive values as attributes",
   );
 
-  if (booleanAttributes.includes(attribute)) {
-    value && attributes.push([attribute, ""]);
+  if (booleanAttributes.includes(attribute) && value) {
+    attributes.push([attribute, ""]);
   } else {
     attributes.push([attribute, `${value}`]);
   }
