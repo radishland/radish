@@ -12,7 +12,7 @@ import {
 } from "../../../effects/render.ts";
 import { dev } from "../../../environment.ts";
 import { isParent } from "../../../utils/path.ts";
-import { manifestShape } from "../manifest.ts";
+import { manifestShape } from "../hooks/manifest.ts";
 
 export const handleRouteLayoutsAndHeadElements = handlerFor(
   render.route,

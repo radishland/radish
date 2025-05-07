@@ -1,14 +1,14 @@
 import { extname } from "@std/path";
-import { handlerFor } from "../../effects/effects.ts";
-import { Handler } from "../../effects/handlers.ts";
-import { io } from "../../effects/io.ts";
-import { type Manifest, render } from "../../effects/render.ts";
-import { manifest } from "../../effects/manifest.ts";
+import { handlerFor } from "../../../effects/effects.ts";
+import { Handler } from "../../../effects/handlers.ts";
+import { io } from "../../../effects/io.ts";
+import { type Manifest, render } from "../../../effects/render.ts";
+import { manifest } from "../../../effects/manifest.ts";
 import { manifestShape } from "./manifest.ts";
 import { assertObjectMatch } from "@std/assert";
-import { assertEmptyHandlerRegistryStack } from "./state.ts";
-import { filename, isParent } from "../../utils/path.ts";
-import { elementsFolder, routesFolder } from "../../constants.ts";
+import { assertEmptyHandlerRegistryStack } from "../state.ts";
+import { filename, isParent } from "../../../utils/path.ts";
+import { elementsFolder, routesFolder } from "../../../constants.ts";
 
 export const handleTransformFile = handlerFor(
   io.transformFile,

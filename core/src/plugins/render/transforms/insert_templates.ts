@@ -4,7 +4,7 @@ import { handlerFor } from "../../../effects/effects.ts";
 import { Handler } from "../../../effects/handlers.ts";
 import { manifest } from "../../../effects/manifest.ts";
 import { type Manifest, render } from "../../../effects/render.ts";
-import { manifestShape } from "../manifest.ts";
+import { manifestShape } from "../hooks/manifest.ts";
 import { transformNode } from "./transform_node.ts";
 
 export const handleInsertTemplatesTransform = handlerFor(

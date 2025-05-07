@@ -1,16 +1,16 @@
 import { assertExists, assertObjectMatch, unreachable } from "@std/assert";
 import type { WalkEntry } from "@std/fs";
 import { basename, extname } from "@std/path";
-import { appPath, elementsFolder, routesFolder } from "../../constants.ts";
-import { buildPipeline } from "../../effects/build.ts";
-import { handlerFor } from "../../effects/effects.ts";
-import { manifest } from "../../effects/manifest.ts";
-import { filename, isParent } from "../../utils/path.ts";
+import { appPath, elementsFolder, routesFolder } from "../../../constants.ts";
+import { buildPipeline } from "../../../effects/build.ts";
+import { handlerFor } from "../../../effects/effects.ts";
+import { manifest } from "../../../effects/manifest.ts";
+import { filename, isParent } from "../../../utils/path.ts";
 import type {
   ElementManifest,
   Manifest,
   RouteManifest,
-} from "../../effects/render.ts";
+} from "../../../effects/render.ts";
 import { manifestShape } from "./manifest.ts";
 
 /**

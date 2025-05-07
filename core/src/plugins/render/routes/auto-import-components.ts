@@ -6,7 +6,7 @@ import {
   type Manifest,
   render,
 } from "../../../effects/render.ts";
-import { manifestShape } from "../manifest.ts";
+import { manifestShape } from "../hooks/manifest.ts";
 import { ts_extension_regex } from "../../../constants.ts";
 import { Handler } from "../../../effects/handlers.ts";
 

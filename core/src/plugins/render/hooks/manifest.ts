@@ -1,19 +1,19 @@
 import { basename, dirname, extname, relative } from "@std/path";
-import { handlerFor } from "../../effects/effects.ts";
-import { manifest, manifestPath } from "../../effects/manifest.ts";
-import type { ElementManifest, Manifest } from "../../effects/render.ts";
-import { Handler } from "../../../exports/effects.ts";
-import { filename, isParent } from "../../utils/path.ts";
+import { handlerFor } from "../../../effects/effects.ts";
+import { manifest, manifestPath } from "../../../effects/manifest.ts";
+import type { ElementManifest, Manifest } from "../../../effects/render.ts";
+import { Handler } from "../../../../exports/effects.ts";
+import { filename, isParent } from "../../../utils/path.ts";
 import {
   elementsFolder,
   generatedFolder,
   routesFolder,
-} from "../../constants.ts";
+} from "../../../constants.ts";
 import { assert } from "@std/assert";
-import { io } from "../../effects/io.ts";
+import { io } from "../../../effects/io.ts";
 import { fragments, shadowRoot } from "@radish/htmlcrunch";
-import { dependencies } from "../../walk.ts";
-import { setScope } from "../../utils/stringify.ts";
+import { dependencies } from "../../../walk.ts";
+import { setScope } from "../../../utils/stringify.ts";
 import { toPascalCase } from "@std/text";
 
 export const manifestShape = {

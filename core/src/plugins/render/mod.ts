@@ -10,11 +10,11 @@ import type { Plugin } from "../../types.d.ts";
 import { filename, isParent } from "../../utils/path.ts";
 import { updateManifest } from "../manifest.ts";
 import { handleDirectives } from "./directives/mod.ts";
-import { handleManifest, manifestShape } from "./manifest.ts";
+import { handleManifest, manifestShape } from "./hooks/manifest.ts";
 import { handleRoutes } from "./routes/mod.ts";
-import { handleSort } from "./sort.ts";
+import { handleSort } from "./hooks/sort.ts";
 import { handleTransformNode } from "./transforms/mod.ts";
-import { handleTransformFile } from "./transformFile.ts";
+import { handleTransformFile } from "./hooks/transformFile.ts";
 import { handleComponents } from "./components/component.ts";
 
 export const pluginRender: Plugin = {
