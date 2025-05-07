@@ -17,7 +17,7 @@ export const contextLookup = (identifier: string) => {
 export const mountHandlerRegistry = async (
   tagName: string,
   element: ElementManifest | undefined,
-) => {
+): Promise<Disposable> => {
   if (element?.classLoader) {
     const ElementClass = await element.classLoader();
     const instance = new ElementClass();
@@ -31,7 +31,7 @@ export const mountHandlerRegistry = async (
         handlerRegistryStack.pop();
       }
     },
-  } satisfies Disposable;
+  };
 };
 
 export const assertEmptyHandlerRegistryStack = () => {
