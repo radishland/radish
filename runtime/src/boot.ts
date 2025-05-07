@@ -10,23 +10,22 @@ import type {
 import { bindingConfig, spaces_sep_by_comma } from "./utils.ts";
 
 const hydrateElement = (element: Element) => {
-  const attributes = ["@attr", "@attr|client"]
-    .map((item) => element?.getAttribute(item))
-    .filter((attr) => attr !== null && attr !== undefined)
-    .flatMap((attr) => attr.trim().split(spaces_sep_by_comma));
+  const attributes = [...element.attributes];
 
-  for (const attribute of attributes) {
-    const [key, value] = attribute.split(":");
+  const attr = attributes.filter((a) => a.localName.startsWith("attr:"));
+
+  for (const attribute of attr) {
+    const [_, key] = attribute.localName.split(":");
 
     assertExists(key);
 
-    const attrRequest = new CustomEvent("@attr-request", {
+    const attrRequest = new CustomEvent("rad::attr", {
       bubbles: true,
       cancelable: true,
       composed: true,
       detail: {
         attribute: key,
-        identifier: value || key,
+        identifier: attribute.value || key,
         target: element,
       } satisfies AttrRequestDetail,
     });

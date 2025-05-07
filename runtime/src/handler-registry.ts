@@ -224,7 +224,7 @@ export class HandlerRegistry extends HTMLElement
     console.log(`${this.tagName} connected`);
     const { signal } = this.abortController;
 
-    this.addEventListener("@attr-request", this.#handleAttr, { signal });
+    this.addEventListener("rad::attr", this.#handleAttr, { signal });
     this.addEventListener("@bool-request", this.#handleBool, { signal });
     this.addEventListener("@class-request", this.#handleClass, { signal });
     this.addEventListener("@on-request", this.#handleOn, { signal });

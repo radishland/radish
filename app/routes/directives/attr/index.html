@@ -1,5 +1,5 @@
 <head>
-  <title>The @attr directive</title>
+  <title>The attr directive</title>
 </head>
 
 <style>
@@ -18,11 +18,11 @@
 </style>
 
 <handle-attr>
-  <div class="box" @attr="id:state"></div>
+  <div class="box" attr:id="state"></div>
 
   <label>
     is red
-    <input type="checkbox" readonly @attr|server="checked" @prop="checked">
+    <input type="checkbox" readonly attr:checked @prop="checked">
   </label>
 
   <button @on="click:toggle">
@@ -30,12 +30,12 @@
   </button>
 
   <p>
-    The @attr directive toggles the <code>id</code> attribute between #red and
+    The attr directive toggles the <code>id</code> attribute between #red and
     #green when the button is clicked.
   </p>
   <p>
     It's also used here to set the non-reflected boolean <code>checked</code>
-    attribute on the checkbox with @attr|server.
+    attribute on the checkbox with attr:checked.
   </p>
   <p>
     Since <code>checked</code> is non-reflected the @prop directive is used to
