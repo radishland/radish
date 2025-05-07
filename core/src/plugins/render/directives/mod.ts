@@ -3,7 +3,7 @@ import { handlerFor } from "../../../../exports/effects.ts";
 import { render } from "../../../effects/render.ts";
 import { setAttribute } from "../common.ts";
 import { handleAttrDirective } from "./attr/attr.ts";
-import { handleBindDirective } from "./bind.ts";
+import { handleBindDirective } from "./bind/bind.ts";
 import { handleBoolDirective } from "./bool/bool.ts";
 import { handleClassListDirective } from "./classList.ts";
 import { handleHtmlDirective } from "./html.ts";
