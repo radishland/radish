@@ -1,7 +1,7 @@
 import { serializeFragments } from "@radish/htmlcrunch";
 import { handlerFor } from "../../../effects/effects.ts";
 import { render } from "../../../effects/render.ts";
-import { transformNode } from "../transforms/transform_node.ts";
+import { transformNode } from "../transforms/transform-node.ts";
 
 export const handleComponents = handlerFor(
   render.component,

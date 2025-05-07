@@ -11,7 +11,7 @@ import { id } from "../../../../utils/algebraic-structures.ts";
 import { manifestShape } from "../../hooks/manifest.ts";
 import { handleComponents } from "../../components/component.ts";
 import { handleTransformFile } from "../../hooks/transformFile.ts";
-import { handleApplyDirectivesTransform } from "../../transforms/apply_directives.ts";
+import { handleApplyDirectivesTransform } from "../../transforms/apply-directives.ts";
 import { handleTransformBase } from "../../transforms/mod.ts";
 import { handleDirectiveBase } from "../mod.ts";
 import { handleTextDirective } from "./text.ts";
