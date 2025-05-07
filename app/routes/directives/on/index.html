@@ -1,15 +1,17 @@
 <head>
-  <title>The @on directive</title>
+  <title>The on directive</title>
 </head>
 
 <p>
-  You can declare multiple event handlers with the `@on` directive
+  You can declare multiple event handlers with the on directive
 </p>
 <handle-keys>
   <handle-events>
     <button
-      @on="click:clickHandler, click:logEvent, keydown:handleKey"
-      @use="hook1"
+      on:click="clickHandler"
+      on:click="logEvent"
+      on:keydown="handleKey"
+      use:hook1
     >
       I will emit an event on click and keydown
     </button>

@@ -1,5 +1,5 @@
 <head>
-  <title>The @class directive</title>
+  <title>The classlist directive</title>
 </head>
 
 <style>
@@ -21,7 +21,7 @@
 </style>
 
 <handle-class>
-  <h2>@class</h2>
+  <h2>classlist</h2>
   <p>
     The class directive takes an object with string keys and booleanish values
     or reactive booleanish values, allowing the object to be updated directly in
@@ -30,18 +30,18 @@
   </p>
   <p>
     Example with an object updated directly
-    <button class="btn" @class="state" @on="click:toggleStateColor">
+    <button class="btn" classlist="state" on:click="toggleStateColor">
       toggle color
     </button>
   </p>
 
   <p>
     Example with a reactive object updated directly
-    <button class="btn" @class="object" @on="click:toggleObjectColor">
+    <button class="btn" classlist="object" on:click="toggleObjectColor">
       toggle color
     </button>
   </p>
   <p>
-    <button class="btn" @on="click:toggleOutline">toggle outline</button>
+    <button class="btn" on:click="toggleOutline">toggle outline</button>
   </p>
 </handle-class>

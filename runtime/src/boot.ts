@@ -1,4 +1,3 @@
-import { assertExists } from "@std/assert";
 import type {
   AttrRequestDetail,
   BindableProperty,
@@ -7,26 +6,25 @@ import type {
   OnRequestDetail,
   PropRequestDetail,
 } from "./types.d.ts";
-import { bindingConfig, spaces_sep_by_comma } from "./utils.ts";
+import { bindingConfig } from "./utils.ts";
 
 const hydrateElement = (element: Element) => {
-  const attributes = ["@attr", "@attr|client"]
-    .map((item) => element?.getAttribute(item))
-    .filter((attr) => attr !== null && attr !== undefined)
-    .flatMap((attr) => attr.trim().split(spaces_sep_by_comma));
+  const attributes = [...element.attributes];
 
-  for (const attribute of attributes) {
-    const [key, value] = attribute.split(":");
+  const attr = attributes.filter((a) => a.localName.startsWith("attr:"));
 
-    assertExists(key);
+  for (const attribute of attr) {
+    const [_, key] = attribute.localName.split(":");
 
-    const attrRequest = new CustomEvent("@attr-request", {
+    if (!key) throw new Error("Missing <key> in attr:<key>");
+
+    const attrRequest = new CustomEvent("rad::attr", {
       bubbles: true,
       cancelable: true,
       composed: true,
       detail: {
         attribute: key,
-        identifier: value || key,
+        identifier: attribute.value || key,
         target: element,
       } satisfies AttrRequestDetail,
     });
@@ -35,11 +33,11 @@ const hydrateElement = (element: Element) => {
   }
 
   for (const property of Object.keys(bindingConfig)) {
-    if (element.hasAttribute(`@bind:${property}`)) {
-      const identifier = element.getAttribute(`@bind:${property}`)?.trim() ||
+    if (element.hasAttribute(`bind:${property}`)) {
+      const identifier = element.getAttribute(`bind:${property}`)?.trim() ||
         property;
 
-      const bindRequest = new CustomEvent("@bind-request", {
+      const bindRequest = new CustomEvent("rad::bind", {
         bubbles: true,
         cancelable: true,
         composed: true,
@@ -54,34 +52,31 @@ const hydrateElement = (element: Element) => {
     }
   }
 
-  const booleanAttributes = element.getAttribute("@bool")
-    ?.trim().split(spaces_sep_by_comma);
+  const bools = attributes.filter((a) => a.localName.startsWith("bool:"));
 
-  if (booleanAttributes) {
-    for (const bool of booleanAttributes) {
-      const [key, value] = bool.split(":");
+  for (const bool of bools) {
+    const [_, key] = bool.localName.split(":");
 
-      assertExists(key);
+    if (!key) throw new Error("Missing <key> in bool:<key>");
 
-      element.dispatchEvent(
-        new CustomEvent("@bool-request", {
-          bubbles: true,
-          cancelable: true,
-          composed: true,
-          detail: {
-            attribute: key,
-            identifier: value || key,
-            target: element,
-          } satisfies AttrRequestDetail,
-        }),
-      );
-    }
+    element.dispatchEvent(
+      new CustomEvent("rad::bool", {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        detail: {
+          attribute: key,
+          identifier: bool.value || key,
+          target: element,
+        } satisfies AttrRequestDetail,
+      }),
+    );
   }
 
-  const classList = element.getAttribute("@class");
+  const classList = element.getAttribute("classlist");
 
   if (classList) {
-    const classRequest = new CustomEvent("@class-request", {
+    const classRequest = new CustomEvent("rad::classlist", {
       bubbles: true,
       cancelable: true,
       composed: true,
@@ -94,10 +89,10 @@ const hydrateElement = (element: Element) => {
     element.dispatchEvent(classRequest);
   }
 
-  const html = element.getAttribute("@html");
+  const html = element.getAttribute("html");
 
   if (html) {
-    const htmlRequest = new CustomEvent("@html-request", {
+    const htmlRequest = new CustomEvent("rad::html", {
       bubbles: true,
       cancelable: true,
       composed: true,
@@ -110,58 +105,52 @@ const hydrateElement = (element: Element) => {
     element.dispatchEvent(htmlRequest);
   }
 
-  const events = element.getAttribute("@on")
-    ?.trim().split(spaces_sep_by_comma);
+  const events = attributes.filter((a) => a.localName.startsWith("on:"));
 
-  if (events) {
-    for (const event of events) {
-      const [type, handler] = event.split(":");
+  for (const event of events) {
+    const [_, type] = event.localName.split(":");
 
-      assertExists(type);
+    if (!type) throw new Error("Missing <type> in on:<type>");
 
-      const onRequest = new CustomEvent("@on-request", {
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-        detail: {
-          type,
-          identifier: handler || type,
-          target: element,
-        } satisfies OnRequestDetail,
-      });
+    const onRequest = new CustomEvent("rad::on", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      detail: {
+        type,
+        identifier: event.value || type,
+        target: element,
+      } satisfies OnRequestDetail,
+    });
 
-      element.dispatchEvent(onRequest);
-    }
+    element.dispatchEvent(onRequest);
   }
 
-  const props = element.getAttribute("@prop")
-    ?.trim().split(spaces_sep_by_comma);
+  const props = attributes.filter((a) => a.localName.startsWith("prop:"));
 
-  if (props) {
-    for (const prop of props) {
-      const [key, value] = prop.split(":");
+  for (const prop of props) {
+    const [_, key] = prop.localName.split(":");
 
-      assertExists(key);
+    if (!key) throw new Error("Missing <key> in prop:<key>");
 
-      const propRequest = new CustomEvent("@prop-request", {
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-        detail: {
-          property: key,
-          identifier: value || key,
-          target: element,
-        } satisfies PropRequestDetail,
-      });
+    const propRequest = new CustomEvent("rad::prop", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      detail: {
+        property: key,
+        identifier: prop.value || key,
+        target: element,
+      } satisfies PropRequestDetail,
+    });
 
-      element.dispatchEvent(propRequest);
-    }
+    element.dispatchEvent(propRequest);
   }
 
-  const text = element.getAttribute("@text");
+  const text = element.getAttribute("text");
 
   if (text) {
-    const textRequest = new CustomEvent("@text-request", {
+    const textRequest = new CustomEvent("rad::text", {
       bubbles: true,
       cancelable: true,
       composed: true,
@@ -174,23 +163,24 @@ const hydrateElement = (element: Element) => {
     element.dispatchEvent(textRequest);
   }
 
-  const hooks = element.getAttribute("@use")
-    ?.trim().split(spaces_sep_by_comma);
+  const hooks = attributes.filter((a) => a.localName.startsWith("use:"));
 
-  if (hooks) {
-    for (const hook of hooks) {
-      const useRequest = new CustomEvent("@use-request", {
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-        detail: {
-          identifier: hook,
-          target: element,
-        } satisfies HandleRequestDetail,
-      });
+  for (const hook of hooks) {
+    const [_, identifier] = hook.localName.split(":");
 
-      element.dispatchEvent(useRequest);
-    }
+    if (!identifier) throw new Error("Missing <id> in use:<id>");
+
+    const useRequest = new CustomEvent("rad::use", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      detail: {
+        identifier,
+        target: element,
+      } satisfies HandleRequestDetail,
+    });
+
+    element.dispatchEvent(useRequest);
   }
 };
 

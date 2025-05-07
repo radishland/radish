@@ -11,16 +11,16 @@
 
 <handle-bool>
   <label>
-    loading <input type="checkbox" name="loading" @bind:checked="loading">
+    loading <input type="checkbox" name="loading" bind:checked="loading">
   </label>
   <label>
-    pill <input type="checkbox" name="pill" @bind:checked="pill">
+    pill <input type="checkbox" name="pill" bind:checked="pill">
   </label>
   <label>
-    circle <input type="checkbox" name="circle" @bind:checked="circle">
+    circle <input type="checkbox" name="circle" bind:checked="circle">
   </label>
 
-  <sl-button variant="default" size="medium" @bool="loading, pill, circle">
+  <sl-button variant="default" size="medium" bool:loading bool:pill bool:circle>
     <sl-icon name="gear" label="Settings"></sl-icon>
   </sl-button>
 

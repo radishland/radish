@@ -15,42 +15,44 @@
   <div>
     <label>
       Rating maximum value
-      <input type="number" @bind:value="max">
+      <input type="number" bind:value="max">
     </label>
   </div>
   <div>
     <label>
       Rating precision
-      <input type="number" @bind:value="precision" step="0.1">
+      <input type="number" bind:value="precision" step="0.1">
     </label>
   </div>
   <div>
     <label>
       Readonly
-      <input type="checkbox" @bind:checked="readonly">
+      <input type="checkbox" bind:checked="readonly">
     </label>
   </div>
   <div>
     <label>
       Disabled
-      <input type="checkbox" @bind:checked="disabled">
+      <input type="checkbox" bind:checked="disabled">
     </label>
   </div>
   <div>
     <label>
       Value
-      <input type="number" @bind:value>
+      <input type="number" bind:value>
     </label>
   </div>
 
   <sl-rating
     label="Rating"
-    @attr="max, precision"
-    @bool="readonly, disabled"
-    @bind:value
-    @on="sl-hover:hover"
+    attr="max"
+    attr="precision"
+    bool:readonly
+    bool:disabled
+    bind:value
+    on:sl-hover="hover"
   ></sl-rating>
-  <span @text="value"></span>
+  <span text="value"></span>
 </handle-sl>
 
 <style>

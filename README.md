@@ -62,7 +62,7 @@ customElements.define("handle-input-demo", HandleInputDemo);
 
 ```html
 <demo-bind>
-  <input type="checkbox" @bind:checked="isChecked" />
+  <input type="checkbox" bind:checked="isChecked" />
 </demo-bind>
 ```
 
@@ -113,15 +113,15 @@ my-rad-project/
   - [Scoped Handler Registry](#scoped-handler-registry)
   - [Reactivity](#reactivity)
   - [Directives](#directives)
-    - [@attr directive](#attr-directive)
-    - [@bind directive: declarative two-way bindings](#bind-directive-declarative-two-way-bindings)
-    - [@bool directive](#bool-directive)
-    - [@class directive](#class-directive)
-    - [@html directive](#html-directive)
-    - [@text directive](#text-directive)
-    - [@on directive: declarative event handlers](#on-directive-declarative-event-handlers)
-    - [@prop directive](#prop-directive)
-    - [@use directive: declarative hooks](#use-directive-declarative-hooks)
+    - [attr directive](#attr-directive)
+    - [bind directive: declarative two-way bindings](#bind-directive-declarative-two-way-bindings)
+    - [bool directive](#bool-directive)
+    - [classList directive](#classlist-directive)
+    - [html directive](#html-directive)
+    - [text directive](#text-directive)
+    - [on directive: declarative event handlers](#on-directive-declarative-event-handlers)
+    - [prop directive](#prop-directive)
+    - [use directive: declarative hooks](#use-directive-declarative-hooks)
   - [Special elements](#special-elements)
     - [head](#head)
   - [Build](#build)
@@ -223,8 +223,8 @@ customElements.define("handle-input-demo", HandleInputDemo);
 ```html
 <!-- ...The handler can handle effects in the subtree of elements it wraps -->
 <handle-input-demo>
-  <input type="text" @bind:value="content">
-  <span @text="content"></span> <!-- This span contains our (SSRd) reactive input content -->
+  <input type="text" bind:value="content">
+  <span text="content"></span> <!-- This span contains our (SSRd) reactive input content -->
 </handle-input-demo>
 ```
 
@@ -251,7 +251,7 @@ customElements.define("other-handler", OtherHandler);
   <!-- `handle-input-demo` doesn't handle the declarative click  -->
   <handle-input-demo>
     ...
-    <input type="text" @bind:value="content" @on="click:log">
+    <input type="text" bind:value="content" on="click:log">
   </handle-input-demo>
 </other-handler>
 ```
@@ -640,7 +640,7 @@ In this example, the `handle-hover` custom element implements the `showTooltip` 
   ...
   <handle-click>
     ...
-    <button @on="click:handleClick, mouseover:showTooltip">click or hover me</button>
+    <button on:click="handleClick" on:mouseover="showTooltip">click or hover me</button>
   <handle-click>
 <handle-hover>
 ```
@@ -656,7 +656,7 @@ The reactivity module is built around `@preact/signals-core` and provides the fo
 Example: given the field `name = signal("Radish")` in a parent handler, we can reference it directly:
 ```html
 <parent-handler>
-  <span @text="name"></span>
+  <span text="name"></span>
 </parent-handler>
 ```
 
@@ -676,46 +676,45 @@ console.log(a) // 2
 
 ## Directives
 
-The following directives are available:
-- [@attr](#attr-directive)
-- [@bind](#bind-directive-declarative-two-way-bindings)
-- [@bool](#bool-directive)
-- [@class](#class-directive)
-- [@html](#html-directive)
-- [@on](#on-directive-declarative-event-handlers)
-- [@prop](#prop-directive)
-- [@text](#text-directive)
-- [@use](#use-directive-declarative-hooks)
+- [`attr`](#attr-directive)
+- [`bind`](#bind-directive-declarative-two-way-bindings)
+- [`bool`](#bool-directive)
+- [`classList`](#classList-directive)
+- [`html`](#html-directive)
+- [`on`](#on-directive-declarative-event-handlers)
+- [`prop`](#prop-directive)
+- [`text`](#text-directive)
+- [`use`](#use-directive-declarative-hooks)
 
-@on, @prop and @use only have client semantics while the other directives are universal: they have both server and client semantics and can be restricted with `|server` and `|client`.
+`on`, `prop` and `use` only have client semantics while the other directives are universal: they have both client and server semantics
 
-### @attr directive
+### attr directive
 
-The @attr directive allows to set attributes on an element to the value of a given identifier. If the identifier is a signal, then the assignment is reactive
+The `attr` directive sets an attribute on an element to the value referenced by a given identifier. If the identifier is a signal, then the assignment is reactive
 
 ```html
-<input type="checkbox" @attr="disabled:isDisabled" />
+<input type="checkbox" attr:disabled="isDisabled" />
 ```
 
 If the attribute and the identifier have the same name we can use a shorthand notation:
 
 ```html
 <!-- these are equivalent -->
-<input type="checkbox" @attr="checked" />
-<input type="checkbox" @attr="checked:checked" />
+<input type="checkbox" attr:id />
+<input type="checkbox" attr:id="id" />
 ```
 
-The `checked` attribute of the input is bound to the `value` property of its handling registry. Global boolean attributes are handled automatically by @attr. If you want to bind a custom boolean attribute on your custom element, you may want to reach for @bool.
+In the previous example, the `id` attribute of the input is bound to the `id` property of its surrounding handler.
 
-### @bind directive: declarative two-way bindings
+### bind directive: declarative two-way bindings
 
-The `@bind` directive declares a two-way reactive binding between an element stateful property and a reactive signal.
+The `bind` directive declares a two-way binding between an element stateful property and a reactive signal.
 
 For example to bind the `checked` property of an `input` to the `isChecked` signal of a surrounding handler:
 
 ```html
 <demo-bind>
-  <input type="checkbox" @bind:checked="isChecked" />
+  <input type="checkbox" bind:checked="isChecked" />
 </demo-bind>
 ```
 
@@ -730,25 +729,25 @@ If the property and the value have the same name you can use the following short
 
 ```html
 <!-- these are equivalent -->
-<input type="checkbox" @bind:checked="checked" />
-<input type="checkbox" @bind:checked />
+<input type="checkbox" bind:checked="checked" />
+<input type="checkbox" bind:checked />
 ```
 
-The `@bind` directive is a universal directive: it has both server and client semantics:
+The `bind` directive is a universal directive, with both client and server semantics:
 
-- On the server, it is equivalent to an `@attr|server` effect and sets the attribute to the given value.
-- On the client, `@bind` performs an extended `@prop` effect with a twist: the signal value is first resumed to the value of the HTML state, in case the user interacted before js was ready. Then an event listener manages the html -> js updates and a `@prop` effect handles state synchronization.
+- On the server, it is equivalent to `attr` and sets the attribute to the given value.
+- On the client, `bind` is similar to `prop`, with the signal value first resumed to the value of the HTML state, in case the user interacted before js was ready. Then the prop and state are kept in sync.
 
-The resumability of the state on the client prevents janky hydration and provides instant interactivity in the case of slow networks. And as a bonus, focus is not lost after the state is resumed.
+The resumability of the state on the client prevents janky hydration with slow networks. And focus is not lost in the process.
 
-Also, the `@bind` directive allows cross-component bindings at any filiation level: parents, grand-parents, grand-grand-parents etc.
+Also, the `bind` directive allows cross-component bindings at any filiation level: parents, grand-parents, grand-grand-parents etc.
 
-You can use this directive on your web components too. For example the following `my-rating` element and the `input` are correlated via the `value` signal of their common handler:
+You can use this directive on web components too. For example the following `my-rating` element and the `input` are correlated via the `value` signal of their common handler:
 
 ```html
 <bind-custom-element>
-  <input type="number" @bind:value>
-  <my-rating label="Rating" @bind:value></my-rating>
+  <input type="number" bind:value>
+  <my-rating label="Rating" bind:value></my-rating>
 <bind-custom-element>
 ```
 
@@ -758,17 +757,17 @@ class BindCustomElement extends HandlerRegistry {
 }
 ```
 
-### @bool directive
+### bool directive
 
-The @bool directive handles custom boolean attribute bindings.
+The `bool` directive handles custom boolean attribute bindings.
 
 ```html
 <demo-bool>
   <label>
-    loading <input type="checkbox" name="circle" @bind:checked="loading">
+    loading <input type="checkbox" name="circle" bind:checked="loading">
   </label>
 
-  <sl-button size="medium" @bool="loading">
+  <sl-button size="medium" bool:loading>
     <sl-icon name="gear" label="Settings"></sl-icon>
   </sl-button>
 </demo-bool>
@@ -782,11 +781,11 @@ class DemoBool extends HandlerRegistry {
 
 Toggling the checkbox will add or remove the <code>loading</code> boolean attribute on the <code>sl-button</code> web component.
 
-Global boolean attributes like <code>disabled</code>, <code>checked</code> etc. can also be handled by the @attr directive.
+Global boolean attributes like <code>disabled</code>, <code>checked</code> etc. can also be handled by the `attr` and `prop` directives.
 
-### @class directive
+### classList directive
 
-The @class directive accepts a reactive object where keys are strings of space separated class names and values are boolean values or signals.
+The `classList` directive accepts a reactive object where keys are strings of space separated class names and values are boolean values or signals.
 
 Example:
 
@@ -810,58 +809,64 @@ export class HandleClass extends HandlerRegistry {
 
 ```html
 <handle-class>
-  <p @class="classes">I have reactive classes</p>
+  <p classList="classes">I have reactive classes</p>
 
-  <button @on="click:toggleColor">toggle color</button>
-  <button @on="click:toggleOutline">toggle outline</button>
+  <button on:click="toggleColor">toggle color</button>
+  <button on:click="toggleOutline">toggle outline</button>
 </handle-class>
 ```
 
-### @html directive
+In this example clicking the buttons toggles the `.red` and `.outline` classes on the paragraph element
 
-The @html directive sets the `innerHTML` property of an element, and runs on the server.
+### html directive
 
-### @text directive
+The `html` directive sets the `innerHTML` property of an element. On the server it parses the provided html string and inserts the resulting nodes as children of the element.
 
-The @text directive sets the `textContent` property of an element, and runs on the server.
+### text directive
 
-### @on directive: declarative event handlers
+The `text` directive sets the `textContent` property of an element. On the server it creates a child text node inside on the element.
 
-The `@on` directive allows to declaratively add event-handlers to any element in your markup. It accepts a comma separated list of `<event type>:<handler name>`:
+### on directive: declarative event handlers
+
+The `on` directive allows to declaratively add event-handlers to any element:
 
 ```html
-<button @on="click:handleClick, mouseover:handleMouseOver">click or hover me</button>
+<button on:click="handleClick" on:mouseover="handleMouseOver">click or hover me</button>
 ```
 
-You can add multiple event handlers, even with the same event type, as under the hood `@on` is a declarative way to `addEventListener`. For example, this button has two click event handlers:
+You can add multiple event handlers, even with the same event type, as `on` is a declarative way to `addEventListener`. For example, this button has two click event handlers:
 
 ```html
-<button @on="click:handleClick, click:log">click me</button>
+<button on:click="handleClick" on:click="log">click me</button>
 ```
 
-### @prop directive
+### prop directive
 
-The @prop directive sets an element properties on the client.
+The `prop` directive sets an element properties on the client.
 
-It also gives fine grained control when you want to make sure js is available like when toggling an aria property. In case js is not available the `@prop` effect doesn't run, so the property is not set and the element doesn't end-up stuck in the wrong accessibility state.
+It also gives fine grained control when you want to make sure js is available like when toggling an aria property. In case js is not available the `prop` effect doesn't run, so the property is not set and the element doesn't end-up stuck in the wrong accessibility state.
 
-### @use directive: declarative hooks
+### use directive: declarative hooks
 
-The `@use` directive lets you declare a lifecycle hook on any element.
+The `use` directive runs a lifecycle hook on an element.
 
 ```html
-<span @use="hook">I'm hooked</span>
+<handle-hook>
+  <span use="hook">I'm hooked</span>
+</handle-hook>
 ```
 
 The closest handlers registry implementing the `hook` method will handle it
 
-```js
-hook(element: Element){
-  element.style.color = "red";
+```ts
+export class HandleHook extends HandlerRegistry {
+  hook(element: Element){
+    element.style.color = "red";
 
-  element.addEventListener("pointerover", ()=>{
-    element.style.color = "green";
-  })
+    element.addEventListener("pointerover", () => {
+      element.style.color = "green";
+    })
+  }
 }
 ```
 

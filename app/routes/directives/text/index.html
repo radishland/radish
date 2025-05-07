@@ -4,14 +4,14 @@
 
 <handle-text>
   <div>
-    <button @on="click:toggle" @prop="ariaPressed:pressed">
+    <button on:click="toggle" prop:ariaPressed="pressed">
       Toggle with / without
     </button>
     <p>
       Shorthand true/false: <span @text></span>
     </p>
     <p>
-      Longhand true/false: <span @text="text"></span>
+      Longhand true/false: <span text="text"></span>
     </p>
   </div>
   <p>

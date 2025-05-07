@@ -1,13 +1,13 @@
 <head>
-  <title>The @prop directive</title>
+  <title>The prop directive</title>
 </head>
 
 <handle-prop>
   <div>
-    <button @on="click:toggleColor" @prop="ariaPressed:pressed">
+    <button on:click="toggleColor" prop:ariaPressed="pressed">
       toggle
     </button>
-    <span @use="manageColor">hello</span>
+    <span use:manageColor>hello</span>
   </div>
   <p>
     The toggle button has a client-side reactive ariaPressed property and the

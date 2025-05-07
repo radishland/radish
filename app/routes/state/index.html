@@ -4,26 +4,27 @@
 
 <handle-state id="component">
   <p>
-    <span @text="count"></span>
+    <span text="count"></span>
     <input
       type="checkbox"
-      @prop="checked, disabled:checked"
+      prop:checked
+      prop:disabled="checked"
     >
   </p>
   <p>
-    <button @on="click:increment">increment</button>
+    <button on:click="increment">increment</button>
   </p>
   <p>
     <input
       type="text"
-      @on="input"
-      @attr="value:input_value"
-      @prop="value:input_value"
+      on:input
+      attr:value="input_value"
+      prop:value="input_value"
     />
-    <span @text="input_value"></span>
+    <span text="input_value"></span>
   </p>
   <p>
-    <span @text="interval" @use="hookInterval"></span>
+    <span text="interval" use:hookInterval></span>
   </p>
 
   <button id="rm">remove component</button>
