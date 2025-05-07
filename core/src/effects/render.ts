@@ -36,7 +36,7 @@ export type Manifest = ManifestBase & {
 
 interface RenderOperations {
   transformNode: (node: MNode) => MNode;
-  component: (element: ElementManifest) => string | undefined;
+  component: (element: ElementManifest) => string;
   route: (
     route: RouteManifest,
     insertHead: string,

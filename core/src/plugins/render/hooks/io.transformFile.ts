@@ -27,7 +27,7 @@ export const handleTransformFile = handlerFor(
       if (!element) return Handler.continue({ path, content });
 
       const rendered = await render.component(element);
-      return Handler.continue({ path, content: rendered || content });
+      return Handler.continue({ path, content: rendered });
     }
 
     if (isParent(routesFolder, path)) {
