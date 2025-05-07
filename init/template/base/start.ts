@@ -1,10 +1,12 @@
 import { manifestPath, startApp } from "@radish/core";
 import {
+  pluginBuild,
   pluginConfig,
+  pluginEnv,
   pluginImportmap,
   pluginIO,
   pluginManifest,
-  pluginRadish,
+  pluginRender,
   pluginStripTypes,
 } from "@radish/core/plugins";
 import type { Config } from "@radish/core/types";
@@ -20,11 +22,13 @@ const config: Config = {
     ],
   },
   plugins: [
-    pluginRadish,
+    pluginRender,
+    pluginBuild,
     pluginImportmap,
     pluginManifest,
     pluginStripTypes,
     pluginConfig,
+    pluginEnv,
     pluginIO,
   ],
   // speculationRules: {
