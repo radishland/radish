@@ -90,10 +90,10 @@ const hydrateElement = (element: Element) => {
     element.dispatchEvent(classRequest);
   }
 
-  const html = element.getAttribute("@html");
+  const html = element.getAttribute("html");
 
   if (html) {
-    const htmlRequest = new CustomEvent("@html-request", {
+    const htmlRequest = new CustomEvent("rad::html", {
       bubbles: true,
       cancelable: true,
       composed: true,
