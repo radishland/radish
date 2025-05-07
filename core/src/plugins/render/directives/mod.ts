@@ -7,7 +7,7 @@ import { handleBindDirective } from "./bind/bind.ts";
 import { handleBoolDirective } from "./bool/bool.ts";
 import { handleClassListDirective } from "./classList/classList.ts";
 import { handleHtmlDirective } from "./html/html.ts";
-import { handleTextDirective } from "./text.ts";
+import { handleTextDirective } from "./text/text.ts";
 
 export const handleDirectiveBase = handlerFor(
   render.directive,
