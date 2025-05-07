@@ -1,9 +1,8 @@
 import { isElementNode } from "@radish/htmlcrunch";
 import { assert, assertExists } from "@std/assert";
-import { Handler, handlerFor } from "../../../../exports/effects.ts";
-import { render } from "../../../effects/render.ts";
-import { setAttribute } from "../common.ts";
-import { contextLookup } from "../state.ts";
+import { Handler, handlerFor } from "../../../../../exports/effects.ts";
+import { render } from "../../../../effects/render.ts";
+import { contextLookup } from "../../state.ts";
 
 export const handleBoolDirective = handlerFor(
   render.directive,
@@ -18,7 +17,7 @@ export const handleBoolDirective = handlerFor(
       const value = contextLookup(identifier);
 
       assert(isElementNode(node));
-      setAttribute(node.attributes, attribute, value);
+      value && node.attributes.push([attribute, ""]);
     }
 
     return Handler.continue(node, attrKey, attrValue);
