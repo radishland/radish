@@ -431,6 +431,18 @@ const elementKind = (tag: string): Kind => {
   return Kind.NORMAL;
 };
 
+export const isCommentNode = (node: MNode): node is MCommentNode => {
+  return node.kind === "COMMENT";
+};
+
+export const isTextNode = (node: MNode): node is MTextNode => {
+  return node.kind === "TEXT";
+};
+
+export const isElementNode = (node: MNode): node is MElement => {
+  return node.kind !== "COMMENT" && node.kind !== "TEXT";
+};
+
 const voidElements = [
   "area",
   "base",
