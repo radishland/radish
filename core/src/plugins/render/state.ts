@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import type { HandlerRegistry } from "../../../../runtime/src/handler-registry.ts";
+import type { HandlerRegistry } from "@radish/runtime";
 import type { ElementManifest } from "../../effects/render.ts";
 
 const handlerRegistryStack: { tagName: string; instance: HandlerRegistry }[] =
