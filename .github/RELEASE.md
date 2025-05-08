@@ -24,6 +24,7 @@ To cut a release, follow these steps:
    relevant:
    - in the README/try-it-out section
    - in the init/deno.json template file
+   - in the runtime/package.json
 
 1. Create and land a PR
 
