@@ -1,6 +1,6 @@
 import { isElementNode } from "@radish/htmlcrunch";
 import { assert } from "@std/assert";
-import { bindingConfig } from "../../../../../../runtime/src/utils.ts";
+import { bindingConfig } from "@radish/runtime/utils";
 import { Handler } from "../../../../../exports/effects.ts";
 import { handlerFor } from "../../../../effects/effects.ts";
 import { render } from "../../../../effects/render.ts";
