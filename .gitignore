@@ -8,3 +8,4 @@ _generated/
 node_modules/
 build/
 runtime/client/
+coverage/
