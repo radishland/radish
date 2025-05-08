@@ -1,3 +1,19 @@
+### 2025.05.08
+
+#### @radish/core 1.0.0-alpha.38 (prerelease) 
+- BREAKING(core): render effect (#65)
+- chore(core): update preview importmap (#70)
+
+#### @radish/htmlcrunch 1.2.0 (minor) 
+- feat(htmlcrunch): node guard helpers
+- fix(htmlcrunch): fix attributes casing (#69)
+
+#### @radish/init 1.0.0-alpha.23 (prerelease) 
+- chore(init): update init plugins (#67)
+
+#### @radish/runtime 0.3.0 (minor) 
+- BREAKING(runtime): unprefixed directives (#68)
+
 ### 2025.04.30
 
 #### @radish/core 1.0.0-alpha.37 (prerelease)
