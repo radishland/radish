@@ -7,6 +7,9 @@ To cut a release, follow these steps:
 
 1. Fix any lint error (slow-types etc.) preventing publishing:
    ```sh
+   deno fmt --check
+   deno lint
+   deno check
    deno publish --dry-run
    ```
 
@@ -17,13 +20,15 @@ To cut a release, follow these steps:
    Note: it will throw a "No target files found" error but this may be in
    prerelease only
 
-1. Review the changes and manually update the following version numbers if relevant:
+1. Review the changes and manually update the following version numbers if
+   relevant:
    - in the README/try-it-out section
    - in the init/deno.json template file
 
 1. Create and land a PR
 
-1. Switch back to the main branch, pull the changes and delete the release branch
+1. Switch back to the main branch, pull the changes and delete the release
+   branch
 
 1. Tag the main branch with release-YYY-MM-DD (this step can be automated in the
    future):
