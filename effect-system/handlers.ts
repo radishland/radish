@@ -1,5 +1,15 @@
+/**
+ * @internal
+ */
 type MaybePromise<T> = T | Promise<T>;
 
+/**
+ * Type of base handlers used in {@linkcode handlerFor}
+ *
+ * A `BaseHandler` can be synchronous, asynchronous, partial or total
+ *
+ * @see {@linkcode handlerFor}
+ */
 export type BaseHandler<P extends any[], R> = (...payload: P) => MaybePromise<
   R | Continue<P>
 >;
@@ -7,20 +17,31 @@ export type BaseHandler<P extends any[], R> = (...payload: P) => MaybePromise<
 type HandlerResult<P extends any[], R> = ReturnType<BaseHandler<P, R>>;
 
 /**
- * Lifts a {@linkcode BaseHandler} into the Handler class
+ * This class implements the monadic sequencing of handlers with {@linkcode flatMap} and {@linkcode fold}
+ *
+ * Developer-facing code will primarily interact with this class through the {@linkcode continue} method
  */
 export class Handler<P extends any[], R> {
   #handle: BaseHandler<P, R>;
 
+  /**
+   * Lifts a {@linkcode BaseHandler} into the monadic `Handler` class
+   */
   constructor(handle: BaseHandler<P, R>) {
     this.#handle = handle;
   }
 
+  /**
+   * Runs a handler synchronous or asynchronously with `Promise.try`
+   */
   async run(...payload: P): Promise<R | Continue<P>> {
     // @ts-ignore Promise.try
     return await Promise.try(this.#handle, ...payload);
   }
 
+  /**
+   * The monadic binding of handlers, where {@linkcode BaseHandler BaseHandlers} actually are Keisli arrows
+   */
   flatMap(f: BaseHandler<P, R>): Handler<P, R> {
     return new Handler(async (...payload: P) => {
       const result = await this.run(...payload);
@@ -30,12 +51,18 @@ export class Handler<P extends any[], R> {
     });
   }
 
+  /**
+   * Turns a list of handlers into a single handler by sequencing them with {@linkcode flatMap}
+   */
   static fold<P extends any[], R>(handlers: Handler<P, R>[]): Handler<P, R> {
     return handlers.reduce((acc, curr) =>
       acc.flatMap((...args) => curr.run(...args))
     );
   }
 
+  /**
+   * This methods lets a handler delegate work to other handlers of the same effect
+   */
   static continue<P extends any[]>(...payload: P): Continue<P> {
     return new Continue(...payload);
   }
@@ -46,6 +73,9 @@ abstract class BaseContinue<P extends any[], R> {
   abstract flatMap(f: BaseHandler<P, R>): HandlerResult<P, R>;
 }
 
+/**
+ * @internal
+ */
 export class Continue<P extends any[]> extends BaseContinue<P, any> {
   #payload: P;
 

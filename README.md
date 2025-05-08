@@ -334,7 +334,7 @@ We perform an effect operation by awaiting it. Calling effects without handlers 
 Use `handlerFor` to implement an effect operation:
 
 ```ts
-import { handlerFor } from "radish/effects";
+import { handlerFor } from "@radish/effect-system";
 
 // Let's log every time we read a file
 const IOReadHandler = handlerFor(io.read, async (path: string) => {
