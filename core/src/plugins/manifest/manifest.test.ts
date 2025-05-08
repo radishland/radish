@@ -1,13 +1,13 @@
+import { io } from "$effects/io.ts";
+import { manifest } from "$effects/manifest.ts";
+import type { ElementManifest } from "$effects/render.ts";
+import { Handler, handlerFor, runWith } from "@radish/effect-system";
 import { assertEquals, assertExists } from "@std/assert";
 import type { WalkEntry } from "@std/fs";
 import { basename, extname, relative } from "@std/path";
-import { io } from "../exports/effects.ts";
-import { Handler, handlerFor, runWith } from "@radish/effect-system";
-import { manifest } from "../src/effects/manifest.ts";
-import type { ManifestBase } from "../src/types.d.ts";
-import { id } from "../src/utils/algebraic-structures.ts";
-import { extractImports } from "../src/utils/parse.ts";
-import type { ElementManifest } from "../src/effects/render.ts";
+import type { ManifestBase } from "../../types.d.ts";
+import { id } from "../../utils/algebraic-structures.ts";
+import { extractImports } from "../../utils/parse.ts";
 
 const files: Record<string, string> = {
   "lib/a.ts": `import a from "b.ts";`,

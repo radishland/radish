@@ -1,3 +1,8 @@
+import { build } from "$effects/build.ts";
+import { env } from "$effects/env.ts";
+import { importmap } from "$effects/importmap.ts";
+import { manifest } from "$effects/manifest.ts";
+import * as effects from "@radish/effect-system";
 import { parseArgs } from "@std/cli/parse-args";
 import { UserAgent } from "@std/http";
 import {
@@ -7,16 +12,11 @@ import {
   routesFolder,
 } from "./constants.ts";
 import { config as configEffect } from "./effects/config.ts";
-import * as effects from "@radish/effect-system";
-import { manifest } from "./effects/manifest.ts";
-import { build } from "./effects/build.ts";
+import { dev } from "./environment.ts";
+import { generateImportmap } from "./plugins/importmap/importmap.ts";
+import { updateManifest } from "./plugins/manifest/manifest.ts";
 import { createApp, type Handle } from "./server/app.ts";
 import type { CLIArgs, Config, ResolvedConfig } from "./types.d.ts";
-import { updateManifest } from "./plugins/manifest.ts";
-import { generateImportmap } from "./plugins/importmap/importmap.ts";
-import { importmap } from "./effects/importmap.ts";
-import { env } from "./effects/env.ts";
-import { dev } from "./environment.ts";
 
 const cliArgs: CLIArgs = Object.freeze(parseArgs(Deno.args, {
   boolean: ["dev", "env", "importmap", "manifest", "build", "server"],

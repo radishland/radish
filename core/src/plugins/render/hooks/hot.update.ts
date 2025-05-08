@@ -7,7 +7,7 @@ import { manifest } from "$effects/manifest.ts";
 import type { Manifest } from "$effects/render.ts";
 import { filename, isParent } from "../../../utils/path.ts";
 import { manifestShape } from "./manifest.ts";
-import { updateManifest } from "../../manifest.ts";
+import { updateManifest } from "../../manifest/manifest.ts";
 
 export const handleHotUpdate = handlerFor(
   hot.update,
