@@ -1,4 +1,4 @@
-import { createEffect, type EffectWithType } from "@radish/effect-system";
+import { createEffect, type EffectWithId } from "@radish/effect-system";
 
 type FileTransformParam = { path: string; content: string };
 
@@ -10,13 +10,13 @@ interface IO {
 }
 
 export const io: {
-  readFile: EffectWithType<[path: string], string>;
-  transformFile: EffectWithType<
+  readFile: EffectWithId<[path: string], string>;
+  transformFile: EffectWithId<
     [option: FileTransformParam],
     FileTransformParam
   >;
-  emitTo: EffectWithType<[path: string], string>;
-  writeFile: EffectWithType<[path: string, content: string], void>;
+  emitTo: EffectWithId<[path: string], string>;
+  writeFile: EffectWithId<[path: string, content: string], void>;
 } = {
   readFile: createEffect<IO["readFile"]>("io/read"),
   transformFile: createEffect<IO["transformFile"]>("io/transform"),

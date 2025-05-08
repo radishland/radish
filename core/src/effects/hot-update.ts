@@ -11,7 +11,7 @@ import type { HmrEvent } from "../types.d.ts";
 import { TtlCache } from "../utils/cache.ts";
 import { ws } from "../server/ws.ts";
 import { generateImportmap } from "../plugins/importmap/importmap.ts";
-import { createEffect, type EffectWithType } from "@radish/effect-system";
+import { createEffect, type EffectWithId } from "@radish/effect-system";
 
 type HotUpdateParam = {
   event: HmrEvent;
@@ -27,7 +27,7 @@ interface Hot {
 }
 
 export const hot: {
-  update: EffectWithType<[param: HotUpdateParam], HotUpdateParam>;
+  update: EffectWithId<[param: HotUpdateParam], HotUpdateParam>;
 } = {
   /**
    * Triggers the hot update transform

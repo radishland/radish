@@ -1,21 +1,23 @@
 import { assertExists } from "@std/assert";
-import { type BaseHandler, Continue, Handler } from "./handlers.ts";
+import {
+  type BaseHandler,
+  Continue,
+  Handler,
+  type Handlers,
+} from "./handlers.ts";
 
 /**
- * Effects and handlers are parametrized by the 'type' property
+ * `EffectWithId` describes an effect runner and its corresponding id, as returned by {@linkcode createEffect}
  */
-interface HandlerWithType<P extends any[], R> extends Handler<P, R> {
-  readonly type: string;
-}
-
-/**
- * An array of handlers
- */
-export type Handlers = (HandlerWithType<any, any>)[];
-
-export interface EffectWithType<P extends any[], R> {
+export interface EffectWithId<P extends any[], R> {
+  /**
+   * The effect runner
+   */
   (...payload: P): Effect<R>;
-  readonly type: string;
+  /**
+   * The unique `id` the the effect
+   */
+  readonly id: string;
 }
 
 const effectScopes: EffectHandlerScope[] = [];
@@ -88,35 +90,31 @@ export class Effect<A> implements PromiseLike<A> {
  * }
  * ```
  *
- * @param {string} type The type of the effect. Must be **unique** among effects as this
- * is used to know which handlers run when an effect is performed.
+ * @param {string} id The unique id of the effect. Must be **unique** among effects as indicates which handlers run when an effect is performed.
  *
  * @typeParam Op The operation signature. This is the effect-free contract for handlers implementing this effect with {@linkcode handlerFor}. In particular a handler can perform any other effect, be synchronous, asynchronous, partial or total.
  *
  * @see {@linkcode handlerFor}
  */
 export function createEffect<Op extends (...payload: any[]) => any>(
-  type: string,
-): EffectWithType<Parameters<Op>, ReturnType<Op>> {
+  id: string,
+): EffectWithId<Parameters<Op>, ReturnType<Op>> {
   const effect = (...payload: Parameters<Op>): Effect<ReturnType<Op>> => {
-    return new Effect(() => perform(type, ...payload));
+    return new Effect(() => perform(id, ...payload));
   };
 
-  Object.defineProperty(effect, "type", { value: type, writable: false });
+  Object.defineProperty(effect, "id", { value: id, writable: false });
 
-  return effect as EffectWithType<Parameters<Op>, ReturnType<Op>>;
+  return effect as EffectWithId<Parameters<Op>, ReturnType<Op>>;
 }
 
-const perform = <P extends any[], R>(
-  type: string,
-  ...payload: P
-): Promise<R> => {
+const perform = <P extends any[], R>(id: string, ...payload: P): Promise<R> => {
   const currentScope = effectScopes.at(-1);
   assertExists(
     currentScope,
-    `Effect "${type}" should run inside a handler scope. Use runWith`,
+    `Effect "${id}" should run inside a handler scope. Use runWith`,
   );
-  return currentScope.handle<P, R>(type, ...payload);
+  return currentScope.handle<P, R>(id, ...payload);
 };
 
 /**
@@ -223,13 +221,11 @@ const perform = <P extends any[], R>(
  * @param handler The handler implementation
  */
 export const handlerFor = <P extends any[], R>(
-  effect: EffectWithType<P, R>,
+  effect: EffectWithId<P, R>,
   handler: NoInfer<BaseHandler<P, R>>,
-): HandlerWithType<P, R> => {
-  const { type } = effect;
-  const lifted = new Handler(handler);
-  Object.defineProperty(lifted, "type", { value: type, writable: false });
-  return lifted as HandlerWithType<P, R>;
+): Handler<P, R> => {
+  const { id } = effect;
+  return new Handler(id, handler);
 };
 
 /**
@@ -237,56 +233,52 @@ export const handlerFor = <P extends any[], R>(
  */
 class EffectHandlerScope {
   #parent: EffectHandlerScope | undefined;
-  #handlers = new Map<string, Handler<any, any>[]>();
+  #handlers = new Map<string, Handler<any, any>>();
 
   constructor(parent?: EffectHandlerScope) {
     this.#parent = parent;
   }
 
-  addHandlers(handlers: Handlers = []) {
-    if (handlers.length === 0) return;
-
-    const handlersByType = Object.groupBy(handlers, ({ type }) => type);
-    const handlersEntries = Object.entries(handlersByType)
+  addHandlers(handlers: Handlers) {
+    const handlersById = Object.groupBy(handlers, ({ id }) => id);
+    const handlersEntries = Object.entries(handlersById)
       .filter(([_k, v]) => v !== undefined)
-      .map(([key, handler]): [string, Handler<any, any>[]] => {
-        return [key, handler!];
+      .map(([key, _handlers]): [string, Handler<any, any>[]] => {
+        return [key, _handlers!];
       });
 
-    for (const [type, handlers] of handlersEntries) {
-      const currentHandlers = this.#handlers.get(type) ?? [];
-      this.#handlers.set(
-        type,
-        currentHandlers.concat(handlers),
-      );
+    for (let [id, _handlers] of handlersEntries) {
+      const currentHandler = this.#handlers.get(id);
+      _handlers = currentHandler ? [currentHandler, ..._handlers] : _handlers;
+
+      const newHandler = Handler.fold(_handlers);
+      this.#handlers.set(id, newHandler);
     }
   }
 
-  async handle<P extends any[], R>(type: string, ...payload: P): Promise<R> {
-    if (this.#handlers.has(type)) {
-      const handlers: Handler<P, R>[] = this.#handlers.get(type)!;
-      const result: R | Continue<P> = await Handler.fold(handlers).run(
-        ...payload,
-      );
+  async handle<P extends any[], R>(id: string, ...payload: P): Promise<R> {
+    if (this.#handlers.has(id)) {
+      const handler: Handler<P, R> = this.#handlers.get(id)!;
+      const result: R | Continue<P> = await handler.run(...payload);
 
       if (!(result instanceof Continue)) {
         return result;
       }
 
       if (this.#parent) {
-        return this.#parent.handle(type, ...result.getPayload());
+        return this.#parent.handle(id, ...result.getPayload());
       }
 
       throw new Error(
-        `The handling of the "${type}" returned a \`Continue\`. Use \`return\` to terminate the handlers sequence`,
+        `Handling the "${id}" effect returned a \`Continue\`. Use \`return\` to terminate the handlers sequence`,
       );
     }
 
     if (this.#parent) {
-      return this.#parent.handle(type, ...payload);
+      return this.#parent.handle(id, ...payload);
     }
 
-    throw new UnhandledEffectError(type);
+    throw new UnhandledEffectError(id);
   }
 }
 
@@ -351,16 +343,13 @@ export const addHandlers = (handlers: Handlers): void => {
  * @internal
  */
 export class UnhandledEffectError extends Error {
-  type: string;
+  id: string;
 
-  constructor(
-    type: string,
-    ...params: ConstructorParameters<typeof Error>
-  ) {
+  constructor(id: string, ...params: ConstructorParameters<typeof Error>) {
     super(...params);
-    this.type = type;
+    this.id = id;
     this.name = this.constructor.name;
-    this.message = `Unhandled effect "${type}"`;
+    this.message = `Unhandled effect "${id}"`;
 
     Error.captureStackTrace(this, UnhandledEffectError);
   }

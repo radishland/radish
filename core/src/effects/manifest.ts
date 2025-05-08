@@ -2,7 +2,7 @@ import type { WalkEntry } from "@std/fs";
 import { join } from "@std/path";
 import { generatedFolder } from "../constants.ts";
 import type { ManifestBase } from "../types.d.ts";
-import { createEffect, type EffectWithType } from "@radish/effect-system";
+import { createEffect, type EffectWithId } from "@radish/effect-system";
 
 /**
  * The path to the manifest file
@@ -23,11 +23,11 @@ interface ManifestOperations {
  * The manifest effect
  */
 export const manifest: {
-  setLoader: EffectWithType<[loader: () => Promise<ManifestBase>], void>;
-  load: EffectWithType<[], void>;
-  get: EffectWithType<[], ManifestBase>;
-  update: EffectWithType<[param: UpdateManifestParam], UpdateManifestParam>;
-  write: EffectWithType<[], void>;
+  setLoader: EffectWithId<[loader: () => Promise<ManifestBase>], void>;
+  load: EffectWithId<[], void>;
+  get: EffectWithId<[], ManifestBase>;
+  update: EffectWithId<[param: UpdateManifestParam], UpdateManifestParam>;
+  write: EffectWithId<[], void>;
 } = {
   /**
    * Sets the loader function used by `manifest/load`

@@ -1,5 +1,5 @@
 import type { Config, ResolvedConfig } from "../types.d.ts";
-import { createEffect, type EffectWithType } from "@radish/effect-system";
+import { createEffect, type EffectWithId } from "@radish/effect-system";
 
 interface ConfigEffect {
   read: () => ResolvedConfig;
@@ -7,8 +7,8 @@ interface ConfigEffect {
 }
 
 export const config: {
-  read: EffectWithType<[], ResolvedConfig>;
-  transform: EffectWithType<[config: Config], Config>;
+  read: EffectWithId<[], ResolvedConfig>;
+  transform: EffectWithId<[config: Config], Config>;
 } = {
   /**
    * Returns the resolved config object
@@ -23,7 +23,7 @@ export const config: {
 };
 
 export const denoConfig: {
-  read: EffectWithType<[], Record<string, any>>;
+  read: EffectWithId<[], Record<string, any>>;
 } = {
   /**
    * Returns the parsed deno config and throws if it can't find it
