@@ -64,7 +64,9 @@ Deno.test("reactive array", () => {
 });
 
 Deno.test("deep reactive arrays", () => {
-  const matrices = reactive([[[0, 1], [2, 3]]]);
+  const matrices = reactive([[[0, 1], [2, 3]]]) as [
+    [[number, number], [number, number]],
+  ];
 
   let calls = 0;
   const first = computed(() => {

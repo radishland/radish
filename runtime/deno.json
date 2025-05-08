@@ -1,15 +1,22 @@
 {
   "name": "@radish/runtime",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts",
     "build": "pnpm build"
   },
   "fmt": {
-    "exclude": ["**/*.md"]
+    "exclude": [
+      "**/*.md"
+    ]
   },
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "dom.asynciterable",
+      "deno.ns"
+    ],
     "checkJs": true,
     "noImplicitOverride": true
   },
