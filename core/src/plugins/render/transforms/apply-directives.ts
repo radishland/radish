@@ -1,4 +1,4 @@
-import { isElementNode } from "../../../../../htmlcrunch/parser.ts";
+import { isElementNode } from "@radish/htmlcrunch";
 import { handlerFor } from "../../../effects/effects.ts";
 import { Handler } from "../../../effects/handlers.ts";
 import { render } from "../../../effects/render.ts";
