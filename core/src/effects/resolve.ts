@@ -1,4 +1,4 @@
-import { createEffect } from "./effects.ts";
+import { createEffect } from "@radish/effect-system";
 
 type ResolvedSpecifier =
   | {

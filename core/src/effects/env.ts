@@ -1,4 +1,4 @@
-import { createEffect, type EffectWithType } from "./effects.ts";
+import { createEffect, type EffectWithId } from "@radish/effect-system";
 
 interface Env {
   load: () => void;
@@ -6,8 +6,8 @@ interface Env {
 }
 
 export const env: {
-  load: EffectWithType<[], void>;
-  get: EffectWithType<[key: string], unknown>;
+  load: EffectWithId<[], void>;
+  get: EffectWithId<[key: string], unknown>;
 } = {
   /**
    * Makes the environment variables available

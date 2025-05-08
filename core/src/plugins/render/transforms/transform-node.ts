@@ -1,7 +1,7 @@
 import { isElementNode, type MNode } from "@radish/htmlcrunch";
 import { assertObjectMatch } from "@std/assert";
-import { manifest } from "../../../effects/manifest.ts";
-import { type Manifest, render } from "../../../effects/render.ts";
+import { manifest } from "$effects/manifest.ts";
+import { type Manifest, render } from "$effects/render.ts";
 import { manifestShape } from "../hooks/manifest.ts";
 import { mountHandlerRegistry } from "../state.ts";
 

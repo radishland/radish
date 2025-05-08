@@ -1,8 +1,8 @@
 import { isElementNode } from "@radish/htmlcrunch";
 import { assert } from "@std/assert";
-import { Handler } from "../../../../../exports/effects.ts";
-import { handlerFor } from "../../../../effects/effects.ts";
-import { render } from "../../../../effects/render.ts";
+
+import { Handler, handlerFor } from "@radish/effect-system";
+import { render } from "$effects/render.ts";
 import { contextLookup } from "../../state.ts";
 
 export const handleClassListDirective = handlerFor(

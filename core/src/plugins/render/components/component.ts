@@ -1,6 +1,6 @@
 import { serializeFragments } from "@radish/htmlcrunch";
-import { handlerFor } from "../../../effects/effects.ts";
-import { render } from "../../../effects/render.ts";
+import { handlerFor } from "@radish/effect-system";
+import { render } from "$effects/render.ts";
 import { transformNode } from "../transforms/transform-node.ts";
 import { assertExists } from "@std/assert";
 

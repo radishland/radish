@@ -1,0 +1,84 @@
+/**
+ * Structuring code with the Radish effect system provides several benefits:
+ *
+ * - **Testability**: Swap handlers in a testing environment to easily mock a deep side-effect
+ * - **Simplicity**: Avoid passing context or callbacks just for testability makes code simpler and more focused (single responsibility) with a thinner API.
+ * - **Modularity**: Thinner APIs implies more reuseable and composable code
+ * - **Extendability**: Define your own effects and handlers.
+ * - **Flexibility**: Handlers can re-interpret built-in effects, giving a high level of control and customizability.
+ *
+ * Use {@linkcode createEffect} to define an effect, and {@linkcode handlerFor} to implement a handler.
+ *
+ * To run effectful code with handlers in scope use {@linkcode runWith}.
+ *
+ * Handlers can also be added dynamically to a running programming with {@linkcode addHandlers}
+ *
+ * @example Defining effects
+ *
+ * ```ts
+ * import { createEffect } from "@radish/effect-system";
+ *
+ * const io = {
+ *   transform: createEffect<(content: string)=> string>('io/transform'),
+ * }
+ * ```
+ *
+ * @example Using effects
+ *
+ * When an effect is defined, we can use it in code type-safely without providing an implementation yet. This cleanly separates definition from implementation.
+ *
+ * To perform an effect operation we _await_ it. This allows the sequencing of effects in direct style.
+ *
+ * At runtime, performing an effect with no handler in scope will throw an "Unhandled effect" error.
+ *
+ * ```ts
+ * // await to perform an effect
+ * const transformed: string = await io.transform("some content");
+ * ```
+ *
+ * @example Handling effects
+ *
+ * {@linkcode handlerFor} creates a new handler for an effect
+ *
+ * ```ts
+ * import { handlerFor } from "@radish/effect-system";
+ *
+ * const handleIOTransform = handlerFor(io.transform, (content: string) => {
+ *   return content;
+ * });
+ * ```
+ *
+ * @example Running code with effects and handlers
+ *
+ * {@linkcode runWith} takes an effectful program to run and a list of handlers
+ *
+ * ```ts
+ * import { runWith } from "@radish/effect-system";
+ *
+ * runWith(async () => {
+ *   const transformed: string = await io.transform("some content");
+ *   console.log(transformed);
+ * }, [handleIOTransform]);
+ *
+ * ```
+ *
+ * @module
+ */
+
+export * from "./handlers.ts";
+export * from "./effects.ts";
+
+/**
+ * The polymorphic identity
+ *
+ * Useful for implementing trivial handlers for transform effects
+ *
+ * @example
+ *
+ * ```ts
+ * import { handlerFor } from "@radish/effect-system";
+ *
+ * const trivialHandler = handlerFor(io.transformFile, id);
+ * ```
+ */
+export const id = <T>(value: T): T => value;

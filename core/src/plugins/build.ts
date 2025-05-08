@@ -1,9 +1,9 @@
 import { distinctBy } from "@std/collections";
 import { emptyDirSync, ensureDirSync, type WalkEntry } from "@std/fs";
 import { buildFolder } from "../constants.ts";
-import { build } from "../effects/build.ts";
-import { handlerFor } from "../effects/effects.ts";
-import { io } from "../effects/io.ts";
+import { build } from "$effects/build.ts";
+import { handlerFor } from "@radish/effect-system";
+import { io } from "$effects/io.ts";
 import type { Plugin } from "../types.d.ts";
 import { expandGlobWorkspaceRelative } from "../utils/fs.ts";
 import { id } from "../utils/algebraic-structures.ts";

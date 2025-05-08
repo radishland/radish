@@ -2,20 +2,6 @@
   "name": "@radish/core",
   "version": "1.0.0-alpha.38",
   "license": "MIT",
-  "tasks": {
-    "check": "deno fmt --check && deno lint && deno check **/*.ts",
-    "load-env": "deno run -A scripts/load-env.ts",
-    "css": "deno run -A scripts/css.ts",
-    "make-init-tar": "deno fmt init/template/ && tar -C init/template -czf init/template/vscode.tar.gz .vscode && tar -C init/template/base -czf init/template/base.tar.gz .",
-    "create": "deno run -A scripts/create.ts",
-    "dev": {
-      "command": "deno run -A src/start.ts",
-      "dependencies": [
-        "load-env",
-        "build"
-      ]
-    }
-  },
   "exports": {
     ".": "./exports/mod.ts",
     "./parser": "./exports/parser.ts",
@@ -30,17 +16,8 @@
       "**/*.md"
     ]
   },
-  "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "dom.asynciterable",
-      "deno.ns"
-    ],
-    "checkJs": true,
-    "noImplicitOverride": true
-  },
   "imports": {
+    "$effects/": "./src/effects/",
     "@fcrozatier/type-strip": "jsr:@fcrozatier/type-strip@^1.2.0"
   }
 }

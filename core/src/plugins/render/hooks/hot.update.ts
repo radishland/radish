@@ -1,14 +1,13 @@
 import { assertObjectMatch } from "@std/assert";
 import { extname } from "@std/path";
 import { elementsFolder, routesFolder } from "../../../constants.ts";
-import { handlerFor } from "../../../effects/effects.ts";
-import { Handler } from "../../../effects/handlers.ts";
-import { hot } from "../../../effects/hot-update.ts";
-import { manifest } from "../../../effects/manifest.ts";
-import type { Manifest } from "../../../effects/render.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
+import { hot } from "$effects/hot-update.ts";
+import { manifest } from "$effects/manifest.ts";
+import type { Manifest } from "$effects/render.ts";
 import { filename, isParent } from "../../../utils/path.ts";
 import { manifestShape } from "./manifest.ts";
-import { updateManifest } from "../../manifest.ts";
+import { updateManifest } from "../../manifest/manifest.ts";
 
 export const handleHotUpdate = handlerFor(
   hot.update,

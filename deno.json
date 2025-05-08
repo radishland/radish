@@ -1,5 +1,12 @@
 {
-  "workspace": ["./core", "./init", "./runtime", "./app", "./htmlcrunch"],
+  "workspace": [
+    "./core",
+    "./effect-system",
+    "./init",
+    "./runtime",
+    "./app",
+    "./htmlcrunch"
+  ],
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts",
     "test": "deno test -A --no-check",

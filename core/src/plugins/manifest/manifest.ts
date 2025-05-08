@@ -1,16 +1,15 @@
 import { assertExists } from "@std/assert";
 import { ensureDirSync, type ExpandGlobOptions } from "@std/fs";
 import { extname } from "@std/path";
-import { generatedFolder } from "../constants.ts";
-import { handlerFor } from "../effects/effects.ts";
-import { hot } from "../effects/hot-update.ts";
-import { io } from "../effects/io.ts";
-import { manifest, manifestPath } from "../effects/manifest.ts";
-import type { ManifestBase, Plugin } from "../types.d.ts";
-import { expandGlobWorkspaceRelative } from "../utils/fs.ts";
-import { extractImports } from "../utils/parse.ts";
-import { stringifyObject } from "../utils/stringify.ts";
-import { Handler } from "../effects/handlers.ts";
+import { generatedFolder } from "../../constants.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
+import { hot } from "$effects/hot-update.ts";
+import { io } from "$effects/io.ts";
+import { manifest, manifestPath } from "$effects/manifest.ts";
+import type { ManifestBase, Plugin } from "../../types.d.ts";
+import { expandGlobWorkspaceRelative } from "../../utils/fs.ts";
+import { extractImports } from "../../utils/parse.ts";
+import { stringifyObject } from "../../utils/stringify.ts";
 
 let loader: (() => Promise<ManifestBase>) | undefined;
 

@@ -1,9 +1,9 @@
 import { assertEquals } from "@std/assert/equals";
 import { assertGreaterOrEqual } from "@std/assert/greater-or-equal";
 import { assertLessOrEqual } from "@std/assert/less-or-equal";
-import { createEffect, handlerFor, runWith } from "../src/effects/effects.ts";
-import { id } from "../src/utils/algebraic-structures.ts";
-import { Handler } from "../src/effects/handlers.ts";
+import { createEffect, handlerFor, runWith } from "./effects.ts";
+import { id } from "./mod.ts";
+import { Handler } from "./handlers.ts";
 
 /**
  * Effect definitions

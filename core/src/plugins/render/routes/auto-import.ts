@@ -1,14 +1,13 @@
 import { assertObjectMatch } from "@std/assert";
-import { handlerFor } from "../../../effects/effects.ts";
-import { manifest } from "../../../effects/manifest.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
+import { manifest } from "$effects/manifest.ts";
 import {
   type ElementManifest,
   type Manifest,
   render,
-} from "../../../effects/render.ts";
+} from "$effects/render.ts";
 import { manifestShape } from "../hooks/manifest.ts";
 import { ts_extension_regex } from "../../../constants.ts";
-import { Handler } from "../../../effects/handlers.ts";
 
 export const handleAutoImport = handlerFor(
   render.route,

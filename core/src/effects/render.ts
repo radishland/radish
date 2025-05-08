@@ -1,5 +1,5 @@
 import type { MFragment, MNode } from "@radish/htmlcrunch";
-import { createEffect } from "./effects.ts";
+import { createEffect } from "@radish/effect-system";
 import type { ManifestBase } from "../types.d.ts";
 import type { AnyConstructor } from "@std/assert";
 
