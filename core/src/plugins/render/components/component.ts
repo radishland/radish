@@ -2,7 +2,7 @@ import { serializeFragments } from "@radish/htmlcrunch";
 import { handlerFor } from "../../../effects/effects.ts";
 import { render } from "../../../effects/render.ts";
 import { transformNode } from "../transforms/transform-node.ts";
-import { assertExists } from "@std/assert/exists";
+import { assertExists } from "@std/assert";
 
 export const handleComponents = handlerFor(
   render.component,
