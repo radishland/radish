@@ -1,6 +1,6 @@
 import { isElementNode } from "@radish/htmlcrunch";
 import { Handler, handlerFor } from "@radish/effect-system";
-import { render } from "../../../effects/render.ts";
+import { render } from "$effects/render.ts";
 
 export const handleApplyDirectivesTransform = handlerFor(
   render.transformNode,

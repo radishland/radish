@@ -1,5 +1,5 @@
 import { Handler, handlerFor } from "@radish/effect-system";
-import { render } from "../../../effects/render.ts";
+import { render } from "$effects/render.ts";
 import { dev } from "../../../environment.ts";
 
 export const handleInsertWebSocketScript = handlerFor(

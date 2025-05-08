@@ -1,14 +1,14 @@
 import { basename, extname } from "@std/path";
 import { dedent } from "@std/text/unstable-dedent";
-import { config, denoConfig } from "../../effects/config.ts";
+import { config, denoConfig } from "$effects/config.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import {
   type ImportMap,
   importmap,
   importmapPath,
-} from "../../effects/importmap.ts";
-import { io } from "../../effects/io.ts";
-import { manifest } from "../../effects/manifest.ts";
+} from "$effects/importmap.ts";
+import { io } from "$effects/io.ts";
+import { manifest } from "$effects/manifest.ts";
 import type { ManifestBase, Plugin } from "../../types.d.ts";
 import { throwUnlessNotFound } from "../../utils/io.ts";
 import { findLongestMatchingPrefix } from "../resolve.ts";

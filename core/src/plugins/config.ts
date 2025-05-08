@@ -3,8 +3,8 @@ import { existsSync } from "@std/fs";
 import * as JSONC from "@std/jsonc";
 import { handlerFor } from "@radish/effect-system";
 import type { Plugin } from "../types.d.ts";
-import { io } from "../effects/io.ts";
-import { config, denoConfig } from "../effects/config.ts";
+import { io } from "$effects/io.ts";
+import { config, denoConfig } from "$effects/config.ts";
 import { id } from "../utils/algebraic-structures.ts";
 
 export const pluginConfig: Plugin = {

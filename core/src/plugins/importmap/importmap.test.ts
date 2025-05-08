@@ -2,7 +2,7 @@ import { assertEquals } from "@std/assert/equals";
 import { describe, test } from "@std/testing/bdd";
 import { pluginImportmap, pureImportMap } from "./importmap.ts";
 import { handlerFor, runWith } from "@radish/effect-system";
-import { io } from "../../effects/io.ts";
+import { io } from "$effects/io.ts";
 import { importmapPath } from "../../../exports/mod.ts";
 import { dirname, fromFileUrl, join } from "@std/path";
 import { id } from "../../utils/algebraic-structures.ts";

@@ -17,6 +17,7 @@
     ]
   },
   "imports": {
+    "$effects/": "./src/effects/",
     "@fcrozatier/type-strip": "jsr:@fcrozatier/type-strip@^1.2.0"
   }
 }

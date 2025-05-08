@@ -1,7 +1,7 @@
 import { isElementNode } from "@radish/htmlcrunch";
 import { assert, assertExists } from "@std/assert";
 import { Handler, handlerFor } from "@radish/effect-system";
-import { render } from "../../../../effects/render.ts";
+import { render } from "$effects/render.ts";
 import { setAttribute } from "../../common.ts";
 import { contextLookup } from "../../state.ts";
 

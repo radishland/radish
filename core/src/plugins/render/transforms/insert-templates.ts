@@ -1,8 +1,8 @@
 import { assertObjectMatch } from "@std/assert";
 import { isElementNode } from "@radish/htmlcrunch";
 import { Handler, handlerFor } from "@radish/effect-system";
-import { manifest } from "../../../effects/manifest.ts";
-import { type Manifest, render } from "../../../effects/render.ts";
+import { manifest } from "$effects/manifest.ts";
+import { type Manifest, render } from "$effects/render.ts";
 import { manifestShape } from "../hooks/manifest.ts";
 import { transformNode } from "./transform-node.ts";
 

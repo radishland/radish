@@ -1,5 +1,5 @@
 import { extname, relative } from "@std/path";
-import { build } from "../effects/build.ts";
+import { build } from "$effects/build.ts";
 import {
   elementsFolder,
   libFolder,

@@ -8,8 +8,8 @@ import {
   routesFolder,
   staticFolder,
 } from "../constants.ts";
-import { config as configEffect } from "../effects/config.ts";
-import { startHMR } from "../effects/hot-update.ts";
+import { config as configEffect } from "$effects/config.ts";
+import { startHMR } from "$effects/hot-update.ts";
 import type { MaybePromise } from "../types.d.ts";
 import { AppError, createStandardResponse } from "../utils/http.ts";
 import { Router } from "./router.ts";
