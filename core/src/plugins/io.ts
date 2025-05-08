@@ -1,11 +1,10 @@
 import { ensureDir } from "@std/fs";
 import { dirname, join } from "@std/path";
 import { buildFolder } from "../constants.ts";
-import { handlerFor } from "../effects/effects.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
 import { hot } from "../effects/hot-update.ts";
 import { io } from "../effects/io.ts";
 import type { Plugin } from "../types.d.ts";
-import { Handler } from "../effects/handlers.ts";
 import { throwUnlessNotFound } from "../utils/io.ts";
 import { isParent, workspaceRelative } from "../utils/path.ts";
 import { id } from "../utils/algebraic-structures.ts";

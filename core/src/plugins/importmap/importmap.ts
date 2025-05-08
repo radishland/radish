@@ -1,7 +1,7 @@
 import { basename, extname } from "@std/path";
 import { dedent } from "@std/text/unstable-dedent";
 import { config, denoConfig } from "../../effects/config.ts";
-import { handlerFor } from "../../effects/effects.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
 import {
   type ImportMap,
   importmap,
@@ -15,7 +15,6 @@ import { findLongestMatchingPrefix } from "../resolve.ts";
 import { assert, assertExists, assertMatch, unimplemented } from "@std/assert";
 import { target_head, ts_extension_regex } from "../../constants.ts";
 import { dev } from "../../environment.ts";
-import { Handler } from "../../effects/handlers.ts";
 
 let importmapObject: ImportMap = {};
 

@@ -1,5 +1,4 @@
-import { handlerFor } from "../../../effects/effects.ts";
-import { Handler } from "../../../effects/handlers.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
 import { render } from "../../../effects/render.ts";
 import { dev } from "../../../environment.ts";
 

@@ -2,7 +2,7 @@ import type { WalkEntry } from "@std/fs";
 import { join } from "@std/path";
 import { generatedFolder } from "../constants.ts";
 import type { ManifestBase } from "../types.d.ts";
-import { createEffect, type EffectWithType } from "./effects.ts";
+import { createEffect, type EffectWithType } from "@radish/effect-system";
 
 /**
  * The path to the manifest file

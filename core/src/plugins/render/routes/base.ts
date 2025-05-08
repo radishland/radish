@@ -1,5 +1,5 @@
 import { appPath } from "../../../constants.ts";
-import { handlerFor } from "../../../effects/effects.ts";
+import { handlerFor } from "@radish/effect-system";
 import { io } from "../../../effects/io.ts";
 import { render } from "../../../effects/render.ts";
 

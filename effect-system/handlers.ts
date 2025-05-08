@@ -1,4 +1,4 @@
-import type { MaybePromise } from "../types.d.ts";
+type MaybePromise<T> = T | Promise<T>;
 
 export type BaseHandler<P extends any[], R> = (...payload: P) => MaybePromise<
   R | Continue<P>
@@ -6,6 +6,9 @@ export type BaseHandler<P extends any[], R> = (...payload: P) => MaybePromise<
 
 type HandlerResult<P extends any[], R> = ReturnType<BaseHandler<P, R>>;
 
+/**
+ * Lifts a {@linkcode BaseHandler} into the Handler class
+ */
 export class Handler<P extends any[], R> {
   #handle: BaseHandler<P, R>;
 
@@ -31,13 +34,6 @@ export class Handler<P extends any[], R> {
     return handlers.reduce((acc, curr) =>
       acc.flatMap((...args) => curr.run(...args))
     );
-  }
-
-  /**
-   * Lifts a BaseHandler into the Handler class
-   */
-  static of<P extends any[], R>(handle: BaseHandler<P, R>): Handler<P, R> {
-    return new Handler(handle);
   }
 
   static continue<P extends any[]>(...payload: P): Continue<P> {

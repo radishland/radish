@@ -1,9 +1,8 @@
-import type { Handlers } from "./effects/effects.ts";
+import type { Handlers } from "@radish/effect-system";
 import type { ImportMapOptions } from "./plugins/importmap/importmap.ts";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
 import type { LoadOptions } from "@std/dotenv";
 
-export type Maybe<T> = T | undefined;
 export type MaybePromise<T> = T | Promise<T>;
 
 export type HmrEvent = {

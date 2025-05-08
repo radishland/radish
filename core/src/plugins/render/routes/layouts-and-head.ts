@@ -2,8 +2,7 @@ import { serializeFragments } from "@radish/htmlcrunch";
 import { transformNode } from "../transforms/transform-node.ts";
 import { assertObjectMatch } from "@std/assert";
 import { dirname } from "@std/path";
-import { Handler } from "../../../../exports/effects.ts";
-import { handlerFor } from "../../../effects/effects.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
 import { manifest } from "../../../effects/manifest.ts";
 import {
   type LayoutManifest,

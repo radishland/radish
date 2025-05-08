@@ -1,4 +1,4 @@
-import { handlerFor } from "../../../effects/effects.ts";
+import { handlerFor } from "@radish/effect-system";
 import { render } from "../../../effects/render.ts";
 import { id } from "../../../utils/algebraic-structures.ts";
 import { handleApplyDirectivesTransform } from "./apply-directives.ts";

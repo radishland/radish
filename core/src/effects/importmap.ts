@@ -1,6 +1,6 @@
 import { join } from "@std/path";
 import { generatedFolder } from "../constants.ts";
-import { createEffect, type EffectWithType } from "./effects.ts";
+import { createEffect, type EffectWithType } from "@radish/effect-system";
 
 export interface ImportMap {
   imports?: Record<string, string>;

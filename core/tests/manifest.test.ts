@@ -1,13 +1,12 @@
 import { assertEquals, assertExists } from "@std/assert";
 import type { WalkEntry } from "@std/fs";
 import { basename, extname, relative } from "@std/path";
-import { handlerFor, io } from "../exports/effects.ts";
-import { runWith } from "../src/effects/effects.ts";
+import { io } from "../exports/effects.ts";
+import { Handler, handlerFor, runWith } from "@radish/effect-system";
 import { manifest } from "../src/effects/manifest.ts";
 import type { ManifestBase } from "../src/types.d.ts";
 import { id } from "../src/utils/algebraic-structures.ts";
 import { extractImports } from "../src/utils/parse.ts";
-import { Handler } from "../src/effects/handlers.ts";
 import type { ElementManifest } from "../src/effects/render.ts";
 
 const files: Record<string, string> = {

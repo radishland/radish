@@ -3,7 +3,7 @@ import type { WalkEntry } from "@std/fs";
 import { basename, extname } from "@std/path";
 import { appPath, elementsFolder, routesFolder } from "../../../constants.ts";
 import { build } from "../../../effects/build.ts";
-import { handlerFor } from "../../../effects/effects.ts";
+import { handlerFor } from "@radish/effect-system";
 import { manifest } from "../../../effects/manifest.ts";
 import { filename, isParent } from "../../../utils/path.ts";
 import type {

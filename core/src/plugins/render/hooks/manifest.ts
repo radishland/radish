@@ -1,8 +1,7 @@
 import { basename, dirname, extname, relative } from "@std/path";
-import { handlerFor } from "../../../effects/effects.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
 import { manifest, manifestPath } from "../../../effects/manifest.ts";
 import type { ElementManifest, Manifest } from "../../../effects/render.ts";
-import { Handler } from "../../../../exports/effects.ts";
 import { filename, isParent } from "../../../utils/path.ts";
 import {
   elementsFolder,

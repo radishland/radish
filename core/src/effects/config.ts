@@ -1,5 +1,5 @@
 import type { Config, ResolvedConfig } from "../types.d.ts";
-import { createEffect, type EffectWithType } from "./effects.ts";
+import { createEffect, type EffectWithType } from "@radish/effect-system";
 
 interface ConfigEffect {
   read: () => ResolvedConfig;

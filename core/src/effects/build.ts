@@ -1,5 +1,5 @@
 import type { WalkEntry } from "@std/fs";
-import { createEffect } from "./effects.ts";
+import { createEffect } from "@radish/effect-system";
 
 type BuildOptions = { incremental?: boolean };
 

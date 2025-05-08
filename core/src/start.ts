@@ -7,7 +7,7 @@ import {
   routesFolder,
 } from "./constants.ts";
 import { config as configEffect } from "./effects/config.ts";
-import * as effects from "./effects/effects.ts";
+import * as effects from "@radish/effect-system";
 import { manifest } from "./effects/manifest.ts";
 import { build } from "./effects/build.ts";
 import { createApp, type Handle } from "./server/app.ts";

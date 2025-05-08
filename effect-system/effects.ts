@@ -85,7 +85,7 @@ export const handlerFor = <P extends any[], R>(
   handler: NoInfer<BaseHandler<P, R>>,
 ): HandlerWithType<P, R> => {
   const { type } = effect;
-  const lifted = Handler.of(handler);
+  const lifted = new Handler(handler);
   Object.defineProperty(lifted, "type", { value: type, writable: false });
   return lifted as HandlerWithType<P, R>;
 };

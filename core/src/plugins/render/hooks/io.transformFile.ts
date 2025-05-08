@@ -1,6 +1,5 @@
 import { extname } from "@std/path";
-import { handlerFor } from "../../../effects/effects.ts";
-import { Handler } from "../../../effects/handlers.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
 import { io } from "../../../effects/io.ts";
 import { type Manifest, render } from "../../../effects/render.ts";
 import { manifest } from "../../../effects/manifest.ts";

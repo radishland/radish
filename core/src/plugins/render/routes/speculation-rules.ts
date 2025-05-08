@@ -1,6 +1,5 @@
 import { config } from "../../../effects/config.ts";
-import { handlerFor } from "../../../effects/effects.ts";
-import { Handler } from "../../../effects/handlers.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
 import { render } from "../../../effects/render.ts";
 
 export const handleSpeculationRules = handlerFor(

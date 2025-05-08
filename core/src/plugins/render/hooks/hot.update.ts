@@ -1,8 +1,7 @@
 import { assertObjectMatch } from "@std/assert";
 import { extname } from "@std/path";
 import { elementsFolder, routesFolder } from "../../../constants.ts";
-import { handlerFor } from "../../../effects/effects.ts";
-import { Handler } from "../../../effects/handlers.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
 import { hot } from "../../../effects/hot-update.ts";
 import { manifest } from "../../../effects/manifest.ts";
 import type { Manifest } from "../../../effects/render.ts";

@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { config } from "../../effects/config.ts";
-import { handlerFor, runWith } from "../../effects/effects.ts";
+import { handlerFor, runWith } from "@radish/effect-system";
 import { env } from "../../effects/env.ts";
 import { io } from "../../effects/io.ts";
 import { pluginEnv } from "../env/env.ts";
