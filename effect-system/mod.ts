@@ -1,11 +1,11 @@
 /**
- * Structuring code with the Radish effect system provides several benefits:
+ * Structuring code with the Radish effect system unlocks testability, simplicity, modularity, extendability, customizability.
  *
  * - **Testability**: Swap handlers in a testing environment to easily mock a deep side-effect
  * - **Simplicity**: Avoid passing context or callbacks just for testability makes code simpler and more focused (single responsibility) with a thinner API.
  * - **Modularity**: Thinner APIs implies more reuseable and composable code
  * - **Extendability**: Define your own effects and handlers.
- * - **Flexibility**: Handlers can re-interpret built-in effects, giving a high level of control and customizability.
+ * - **Customizability**: Consumers of your library/framework can extend & override your effects, giving a high level of control and customizability with a plugin API.
  *
  * Use {@linkcode createEffect} to define an effect, and {@linkcode handlerFor} to implement a handler.
  *
@@ -65,8 +65,15 @@
  * @module
  */
 
-export * from "./handlers.ts";
-export * from "./effects.ts";
+export { createEffect, type EffectWithId, handlerFor } from "./effects.ts";
+export {
+  addHandlers,
+  type BaseHandler,
+  Handler,
+  type Handlers,
+  HandlerScope,
+  runWith,
+} from "./handlers.ts";
 
 /**
  * The polymorphic identity
