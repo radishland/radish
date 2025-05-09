@@ -1,10 +1,4 @@
-import { assertExists } from "@std/assert";
-import {
-  type BaseHandler,
-  Continue,
-  Handler,
-  type Handlers,
-} from "./handlers.ts";
+import { type BaseHandler, Handler, perform } from "./handlers.ts";
 
 /**
  * `EffectWithId` describes an effect runner and its corresponding id, as returned by {@linkcode createEffect}
@@ -19,8 +13,6 @@ export interface EffectWithId<P extends any[], R> {
    */
   readonly id: string;
 }
-
-const effectScopes: EffectHandlerScope[] = [];
 
 /**
  * @internal
@@ -107,15 +99,6 @@ export function createEffect<Op extends (...payload: any[]) => any>(
 
   return effect as EffectWithId<Parameters<Op>, ReturnType<Op>>;
 }
-
-const perform = <P extends any[], R>(id: string, ...payload: P): Promise<R> => {
-  const currentScope = effectScopes.at(-1);
-  assertExists(
-    currentScope,
-    `Effect "${id}" should run inside a handler scope. Use runWith`,
-  );
-  return currentScope.handle<P, R>(id, ...payload);
-};
 
 /**
  * Use `handlerFor` to implement a handler for an effect.
@@ -227,130 +210,3 @@ export const handlerFor = <P extends any[], R>(
   const { id } = effect;
   return new Handler(id, handler);
 };
-
-/**
- * Handlers are dependent on scope, yielding a stratified structure
- */
-class EffectHandlerScope {
-  #parent: EffectHandlerScope | undefined;
-  #handlers = new Map<string, Handler<any, any>>();
-
-  constructor(parent?: EffectHandlerScope) {
-    this.#parent = parent;
-  }
-
-  addHandlers(handlers: Handlers) {
-    const handlersById = Object.groupBy(handlers, ({ id }) => id);
-    const handlersEntries = Object.entries(handlersById)
-      .filter(([_k, v]) => v !== undefined)
-      .map(([key, _handlers]): [string, Handler<any, any>[]] => {
-        return [key, _handlers!];
-      });
-
-    for (let [id, _handlers] of handlersEntries) {
-      const currentHandler = this.#handlers.get(id);
-      _handlers = currentHandler ? [currentHandler, ..._handlers] : _handlers;
-
-      const newHandler = Handler.fold(_handlers);
-      this.#handlers.set(id, newHandler);
-    }
-  }
-
-  async handle<P extends any[], R>(id: string, ...payload: P): Promise<R> {
-    if (this.#handlers.has(id)) {
-      const handler: Handler<P, R> = this.#handlers.get(id)!;
-      const result: R | Continue<P> = await handler.run(...payload);
-
-      if (!(result instanceof Continue)) {
-        return result;
-      }
-
-      if (this.#parent) {
-        return this.#parent.handle(id, ...result.getPayload());
-      }
-
-      throw new Error(
-        `Handling the "${id}" effect returned a \`Continue\`. Use \`return\` to terminate the handlers sequence`,
-      );
-    }
-
-    if (this.#parent) {
-      return this.#parent.handle(id, ...payload);
-    }
-
-    throw new UnhandledEffectError(id);
-  }
-}
-
-/**
- * Attaches a list of handlers to the current scope before running the provided callback
- *
- * @example Ordering handlers
- *
- * The ordering of the handlers matters when they rely on delegation via {@linkcode Handler.continue}
- *
- * ```ts
- * import { runWith } from 'radish/effects';
- *
- * runWith(async () => {
- *   const txtFile = await io.read("hello.txt"); // "I can only handle .txt files"
- *   const jsonFile = await io.read("hello.json"); // ...
- * }, [handleTXTOnly, handleReadOp])
- * ```
- *
- * @param fn The effectful program to run
- * @param handlers A list of handlers implementing **all** the effects performed by the program
- *
- * @throws {UnhandledEffectError} Throws an {@linkcode UnhandledEffectError} error if an effect is performed with no handler in scope
- *
- * @see {@linkcode addHandlers}
- */
-export const runWith = async <T>(
-  fn: () => Promise<T>,
-  handlers: Handlers,
-): Promise<T> => {
-  const currentScope = effectScopes.at(-1);
-  const scope = new EffectHandlerScope(currentScope);
-  effectScopes.push(scope);
-
-  scope.addHandlers(handlers);
-
-  try {
-    return await fn();
-  } finally {
-    effectScopes.pop();
-  }
-};
-
-/**
- * Adds a list of handlers to the current scope
- *
- * @param handlers The list of handlers to attach to the current scope
- */
-export const addHandlers = (handlers: Handlers): void => {
-  let currentScope = effectScopes.at(-1);
-  if (!currentScope) {
-    currentScope = new EffectHandlerScope();
-    effectScopes.push(currentScope);
-  }
-
-  currentScope.addHandlers(handlers);
-};
-
-/**
- * Error thrown when an effect is performed but not handled
- *
- * @internal
- */
-export class UnhandledEffectError extends Error {
-  id: string;
-
-  constructor(id: string, ...params: ConstructorParameters<typeof Error>) {
-    super(...params);
-    this.id = id;
-    this.name = this.constructor.name;
-    this.message = `Unhandled effect "${id}"`;
-
-    Error.captureStackTrace(this, UnhandledEffectError);
-  }
-}

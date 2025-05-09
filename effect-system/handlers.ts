@@ -1,4 +1,33 @@
-import { assert } from "@std/assert";
+import { assert, assertExists } from "@std/assert";
+
+/**
+ * The list of current scopes.
+ *
+ * You do not interact with it directly. It is managed by {@linkcode runWith}
+ *
+ * @internal
+ */
+export const handlerScopes: HandlerScope[] = [];
+
+/**
+ * Retrieves the current {@linkcode HandlerScope} and delegates the handling of the provided effect id
+ *
+ * @param id The id of the effect to handle in the current {@linkcode HandlerScope}
+ * @param payload The payload to pass to the handler of the effect
+ *
+ * @internal
+ */
+export const perform = <P extends any[], R>(
+  id: string,
+  ...payload: P
+): Promise<R> => {
+  const currentScope = handlerScopes.at(-1);
+  assertExists(
+    currentScope,
+    `Effect "${id}" running outside of a HandlerScope. Use "runWith"`,
+  );
+  return currentScope.handle<P, R>(id, ...payload);
+};
 
 /**
  * @internal
@@ -15,8 +44,6 @@ type MaybePromise<T> = T | Promise<T>;
 export type BaseHandler<P extends any[], R> = (...payload: P) => MaybePromise<
   R | Continue<P>
 >;
-
-type HandlerResult<P extends any[], R> = ReturnType<BaseHandler<P, R>>;
 
 /**
  * An array of handlers
@@ -79,38 +106,150 @@ export class Handler<P extends any[], R> {
 
   /**
    * This methods lets a handler delegate work to other handlers of the same effect
+   *
+   * In a handlers sequence there must always be a terminal handler, that is, a handler that is a total function and does not delegate.
+   *
+   * @throws If there is no terminal handler in the sequence
    */
   static continue<P extends any[]>(...payload: P): Continue<P> {
     return new Continue(...payload);
   }
 }
 
-abstract class BaseContinue<P extends any[], R> {
-  abstract map<S>(f: (r: R) => S): HandlerResult<P, S>;
-  abstract flatMap(f: BaseHandler<P, R>): HandlerResult<P, R>;
-}
-
 /**
+ * Represents delegation between handlers
+ *
  * @internal
  */
-export class Continue<P extends any[]> extends BaseContinue<P, any> {
+export class Continue<P extends any[]> {
   #payload: P;
 
   constructor(...payload: P) {
-    super();
     this.#payload = payload;
-  }
-
-  override map<S>(_fn: (r: any) => S): Continue<P> {
-    return this;
-  }
-
-  override flatMap<R>(f: BaseHandler<P, R>): HandlerResult<P, R> {
-    // Passes control to the next handler
-    return f(...this.#payload);
   }
 
   getPayload(): P {
     return this.#payload;
   }
 }
+
+/**
+ * A `HandlerScope` is where handlers are registered and ran.
+ *
+ * This class is responsible for finding handlers in scope for a given effect.
+ * `HandlerScope`s  have a parent-child relation and _being in scope_ means being in the current scope or any or its parent scopes.
+ *
+ * Will throw if no handlers are in scope when trying to {@linkcode handle} an effect
+ *
+ * `HandlerScopes` are not instantiated directly, but are created when running {@linkcode runWith}
+ *
+ * @internal
+ */
+export class HandlerScope {
+  #parent: HandlerScope | undefined;
+  #handlers = new Map<string, Handler<any, any>>();
+
+  constructor(parent?: HandlerScope) {
+    this.#parent = parent;
+  }
+
+  addHandlers(handlers: Handlers) {
+    const handlersById = Object.groupBy(handlers, ({ id }) => id);
+    const handlersEntries = Object.entries(handlersById)
+      .filter(([_k, v]) => v !== undefined)
+      .map(([key, _handlers]): [string, Handler<any, any>[]] => {
+        return [key, _handlers!];
+      });
+
+    for (let [id, _handlers] of handlersEntries) {
+      const currentHandler = this.#handlers.get(id);
+      _handlers = currentHandler ? [..._handlers, currentHandler] : _handlers;
+
+      const newHandler = Handler.fold(_handlers);
+      this.#handlers.set(id, newHandler);
+    }
+  }
+
+  async handle<P extends any[], R>(id: string, ...payload: P): Promise<R> {
+    if (this.#handlers.has(id)) {
+      const handler: Handler<P, R> = this.#handlers.get(id)!;
+      const result: R | Continue<P> = await handler.run(...payload);
+
+      if (!(result instanceof Continue)) {
+        return result;
+      }
+
+      if (this.#parent) {
+        return this.#parent.handle(id, ...result.getPayload());
+      }
+
+      throw new Error(
+        `Handling effect "${id}" returned \`Continue\`. Make sure the handlers sequence contains a terminal handler`,
+      );
+    }
+
+    if (this.#parent) {
+      return this.#parent.handle(id, ...payload);
+    }
+
+    throw new Error(`Unhandled effect "${id}"`);
+  }
+}
+
+/**
+ * Creates a new {@linkcode HandlerScope} where the passed handlers are registered, and executes the provided effectful program with the handlers in scope
+ *
+ * The provided handlers are only in scope inside the
+ *
+ * @example Ordering handlers
+ *
+ * The ordering of the handlers matters when they rely on delegation via {@linkcode Handler.continue}
+ *
+ * ```ts
+ * import { runWith } from 'radish/effects';
+ *
+ * runWith(async () => {
+ *   const txtFile = await io.read("hello.txt"); // "I can only handle .txt files"
+ *   const jsonFile = await io.read("hello.json"); // ...
+ * }, [handleTXTOnly, handleReadOp])
+ * ```
+ *
+ * @param fn The effectful program to run
+ * @param handlers A list of handlers implementing **all** the effects performed by the program
+ *
+ * @throws Throws "Unhandled effect" when an effect is performed with no handler in scope
+ *
+ * @see {@linkcode addHandlers}
+ */
+export const runWith = async <T>(
+  fn: () => Promise<T>,
+  handlers: Handlers,
+): Promise<T> => {
+  const currentScope = handlerScopes.at(-1);
+  const scope = new HandlerScope(currentScope);
+  scope.addHandlers(handlers);
+
+  try {
+    handlerScopes.push(scope);
+    return await fn();
+  } finally {
+    handlerScopes.pop();
+  }
+};
+
+/**
+ * Adds a list of handlers to the current {@linkcode HandlersScope}
+ *
+ * @param handlers The list of handlers to attach to the current scope
+ *
+ * @throws It there is no current {@linkcode HandlerScope}
+ */
+export const addHandlers = (handlers: Handlers): void => {
+  const currentScope = handlerScopes.at(-1);
+
+  if (!currentScope) {
+    throw new Error('"addHandlers" called outside of an effect scope');
+  }
+
+  currentScope.addHandlers(handlers);
+};
