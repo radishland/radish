@@ -222,15 +222,16 @@ export class HandlerScope {
  * @see {@linkcode addHandlers}
  */
 export const runWith = async <T>(
-  fn: () => Promise<T>,
+  fn: () => MaybePromise<T>,
   handlers: Handlers,
 ): Promise<T> => {
   const currentScope = handlerScopes.at(-1);
   const scope = new HandlerScope(currentScope);
+
+  handlerScopes.push(scope);
   scope.addHandlers(handlers);
 
   try {
-    handlerScopes.push(scope);
     return await fn();
   } finally {
     handlerScopes.pop();
