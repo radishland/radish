@@ -1,7 +1,6 @@
 import type { Handlers } from "@radish/effect-system";
-import type { ImportMapOptions } from "./plugins/importmap/importmap.ts";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
-import type { LoadOptions } from "@std/dotenv";
+import type { ImportMapOptions } from "./plugins/importmap/importmap.ts";
 
 export type MaybePromise<T> = T | Promise<T>;
 
@@ -46,11 +45,11 @@ export interface Plugin {
 export interface Config {
   env?: {
     /**
-     * Path to the env file. Set to `null` to prevent the default value from being used.
+     * Path to the env file.
      *
      * @default ".env"
      */
-    envPath?: LoadOptions["envPath"];
+    envPath?: string;
   };
   importmap?: ImportMapOptions;
   /**

@@ -58,20 +58,17 @@ export const pluginEnv: Plugin = {
 
 async function load() {
   const envPath = await getEnvPath();
+  const envFile = await io.readFile(envPath);
+  const envObject = parse(envFile);
+  let envModule = "";
 
-  if (envPath) {
-    const envFile = await io.readFile(envPath);
-    const envObject = parse(envFile);
-    let envModule = "";
-
-    for (const [key, value] of Object.entries(envObject)) {
-      envModule += `export const ${key} = ${parseValue(value)};\n`;
-      if (Deno.env.get(key) !== undefined) continue;
-      Deno.env.set(key, value);
-    }
-
-    await io.writeFile(envModulePath, envModule);
+  for (const [key, value] of Object.entries(envObject)) {
+    envModule += `export const ${key} = ${parseValue(value)};\n`;
+    if (Deno.env.get(key) !== undefined) continue;
+    Deno.env.set(key, value);
   }
+
+  await io.writeFile(envModulePath, envModule);
 }
 
 /**
