@@ -50,16 +50,15 @@
  *
  * @example Running code with effects and handlers
  *
- * {@linkcode runWith} takes an effectful program to run and a list of handlers
+ * {@linkcode HandlerScope} creates a new scope where handlers can handle effects
  *
  * ```ts
- * import { runWith } from "@radish/effect-system";
+ * {
+ *  using _ = new HandlerScope([handleIOTransform]);
  *
- * runWith(async () => {
- *   const transformed: string = await io.transform("some content");
- *   console.log(transformed);
- * }, [handleIOTransform]);
- *
+ *  const transformed = await io.transform("some content");
+ *  console.log(transformed);
+ * }
  * ```
  *
  * @module

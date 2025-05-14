@@ -1,4 +1,4 @@
-import { assert, assertExists } from "@std/assert";
+import { assert } from "@std/assert";
 
 /**
  * The list of current scopes.
@@ -22,9 +22,9 @@ export const perform = <P extends any[], R>(
   ...payload: P
 ): Promise<R> => {
   const currentScope = handlerScopes.at(-1);
-  assertExists(
+  assert(
     currentScope,
-    `Effect "${id}" running outside of a HandlerScope. Use "runWith"`,
+    `Effect "${id}" running outside of a HandlerScope`,
   );
   return currentScope.handle<P, R>(id, ...payload);
 };
@@ -128,31 +128,76 @@ export class Continue<P extends any[]> {
     this.#payload = payload;
   }
 
+  /**
+   * Retrieves the payload to pass to the next handler in scope
+   */
   getPayload(): P {
     return this.#payload;
   }
 }
 
 /**
- * A `HandlerScope` is where handlers are registered and ran.
+ * A {@linkcode HandlerScope} creates a new scope where effects are handled
  *
- * This class is responsible for finding handlers in scope for a given effect.
- * `HandlerScope`s  have a parent-child relation and _being in scope_ means being in the current scope or any or its parent scopes.
+ * The {@linkcode handle} method is responsible for finding handlers in scope for a given effect.
  *
- * Will throw if no handlers are in scope when trying to {@linkcode handle} an effect
+ * {@linkcode HandlerScope}s  have a parent-child relation and a handler is _in scope_ if it is in the current scope or any of its parents.
  *
- * `HandlerScopes` are not instantiated directly, but are created when running {@linkcode runWith}
+ * @example Creating a new {@linkcode HandlerScope}
  *
- * @internal
+ * ```ts
+ * {
+ *   using _ = new HandlerScope([handleIO]);
+ *   const content = await io.read("path");
+ * }
+ *
+ * // not in scope
+ * await io.read("other/path"); // throws
+ * ```
+ *
+ * @example Ordering handlers
+ *
+ * The order of the handlers matters when they rely on delegation via {@linkcode Handler.continue}
+ *
+ * ```ts
+ * using _ = new HandlerScope([handleTXTOnly, handleReadOp]);
+ *
+ * const txtFile = await io.read("hello.txt"); // "I can only handle .txt files"
+ * const jsonFile = await io.read("hello.json"); // ...
+ * ```
+ *
+ * @throws If no handlers are in scope when trying to {@linkcode handle} an effect
  */
 export class HandlerScope {
   #parent: HandlerScope | undefined;
   #handlers = new Map<string, Handler<any, any>>();
 
-  constructor(parent?: HandlerScope) {
-    this.#parent = parent;
+  /**
+   * Creates a new {@linkcode HandlerScope}
+   *
+   * @param handlers A list of handlers
+   *
+   * @throws Throws "Unhandled effect" when an effect is performed with no handler in scope
+   *
+   * @see {@linkcode addHandlers}
+   */
+  constructor(handlers?: Handlers) {
+    const currentScope = handlerScopes.at(-1);
+    this.#parent = currentScope;
+    handlerScopes.push(this);
+
+    if (handlers) {
+      this.addHandlers(handlers);
+    }
   }
 
+  /**
+   * Registers a list of handlers in the {@linkcode HandlerScope} instance
+   *
+   * @param handlers the handlers to register
+   *
+   * @internal
+   */
   addHandlers(handlers: Handlers) {
     const handlersById = Object.groupBy(handlers, ({ id }) => id);
     const handlersEntries = Object.entries(handlersById)
@@ -170,6 +215,17 @@ export class HandlerScope {
     }
   }
 
+  /**
+   * Handles an effect by finding its handlers in scope
+   *
+   * @param id The `id` of the effect to handle
+   * @param payload The payload to pass to the handler
+   *
+   * @throws {"Unhandled effect"} If there is no handler in scope
+   * @throws If there is no terminal handler. This happens when all handlers return {@linkcode Handler.continue} and none `return`s
+   *
+   * @internal
+   */
   async handle<P extends any[], R>(id: string, ...payload: P): Promise<R> {
     if (this.#handlers.has(id)) {
       const handler: Handler<P, R> = this.#handlers.get(id)!;
@@ -193,6 +249,15 @@ export class HandlerScope {
     }
 
     throw new Error(`Unhandled effect "${id}"`);
+  }
+
+  /**
+   * Cleans up the {@linkcode HandlerScope} by restoring the parent scope
+   *
+   * @internal
+   */
+  [Symbol.dispose]() {
+    handlerScopes.pop();
   }
 }
 
@@ -225,17 +290,9 @@ export const runWith = async <T>(
   fn: () => MaybePromise<T>,
   handlers: Handlers,
 ): Promise<T> => {
-  const currentScope = handlerScopes.at(-1);
-  const scope = new HandlerScope(currentScope);
+  using _ = new HandlerScope(handlers);
 
-  handlerScopes.push(scope);
-  scope.addHandlers(handlers);
-
-  try {
-    return await fn();
-  } finally {
-    handlerScopes.pop();
-  }
+  return await fn();
 };
 
 /**
@@ -248,9 +305,7 @@ export const runWith = async <T>(
 export const addHandlers = (handlers: Handlers): void => {
   const currentScope = handlerScopes.at(-1);
 
-  if (!currentScope) {
-    throw new Error('"addHandlers" called outside of an effect scope');
-  }
+  assert(currentScope, '"addHandlers" called outside of an effect scope');
 
   currentScope.addHandlers(handlers);
 };
