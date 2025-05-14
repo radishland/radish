@@ -3,7 +3,7 @@ import { assert } from "@std/assert";
 /**
  * The list of current scopes.
  *
- * You do not interact with it directly. It is managed by {@linkcode runWith}
+ * This is managed automatically by {@linkcode HandlerScope}
  *
  * @internal
  */
@@ -260,40 +260,6 @@ export class HandlerScope {
     handlerScopes.pop();
   }
 }
-
-/**
- * Creates a new {@linkcode HandlerScope} where the passed handlers are registered, and executes the provided effectful program with the handlers in scope
- *
- * The provided handlers are only in scope inside the
- *
- * @example Ordering handlers
- *
- * The ordering of the handlers matters when they rely on delegation via {@linkcode Handler.continue}
- *
- * ```ts
- * import { runWith } from 'radish/effects';
- *
- * runWith(async () => {
- *   const txtFile = await io.read("hello.txt"); // "I can only handle .txt files"
- *   const jsonFile = await io.read("hello.json"); // ...
- * }, [handleTXTOnly, handleReadOp])
- * ```
- *
- * @param fn The effectful program to run
- * @param handlers A list of handlers implementing **all** the effects performed by the program
- *
- * @throws Throws "Unhandled effect" when an effect is performed with no handler in scope
- *
- * @see {@linkcode addHandlers}
- */
-export const runWith = async <T>(
-  fn: () => MaybePromise<T>,
-  handlers: Handlers,
-): Promise<T> => {
-  using _ = new HandlerScope(handlers);
-
-  return await fn();
-};
 
 /**
  * Adds a list of handlers to the current {@linkcode HandlersScope}

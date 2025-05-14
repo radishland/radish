@@ -9,7 +9,7 @@
  *
  * Use {@linkcode createEffect} to define an effect, and {@linkcode handlerFor} to implement a handler.
  *
- * To run effectful code with handlers in scope use {@linkcode runWith}.
+ * To create a new scope with handlers to run effects in {@linkcode HandlerScope}.
  *
  * Handlers can also be added dynamically to a running programming with {@linkcode addHandlers}
  *
@@ -71,7 +71,6 @@ export {
   Handler,
   type Handlers,
   HandlerScope,
-  runWith,
 } from "./handlers.ts";
 
 /**
