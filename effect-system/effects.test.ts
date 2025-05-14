@@ -1,11 +1,11 @@
-import { afterEach, beforeEach, describe, test } from "@std/testing/bdd";
+import { assertInstanceOf, unreachable } from "@std/assert";
 import { assertEquals } from "@std/assert/equals";
 import { assertGreaterOrEqual } from "@std/assert/greater-or-equal";
 import { assertLessOrEqual } from "@std/assert/less-or-equal";
+import { afterEach, beforeEach, describe, test } from "@std/testing/bdd";
 import { createEffect, handlerFor } from "./effects.ts";
-import { addHandlers, Handler, handlerScopes, runWith } from "./handlers.ts";
-import { assertInstanceOf, unreachable } from "@std/assert";
-import { id } from "./mod.ts";
+import { addHandlers, Handler, handlerScopes } from "./handlers.ts";
+import { HandlerScope, id } from "./mod.ts";
 
 /**
  * Console
@@ -116,77 +116,69 @@ afterEach(() => {
 
 describe("effect system", () => {
   test("unhandled effect", async () => {
-    await runWith(
-      async () => {
-        try {
-          await random();
-          unreachable();
-        } catch (error) {
-          assertInstanceOf(error, Error);
-          assertEquals(error.message, 'Unhandled effect "random"');
-        }
-      },
-      [],
-    );
+    using _ = new HandlerScope();
+
+    try {
+      await random();
+      unreachable();
+    } catch (error) {
+      assertInstanceOf(error, Error);
+      assertEquals(error.message, 'Unhandled effect "random"');
+    }
   });
 
   test("simple handling", async () => {
-    await runWith(
-      async () => {
-        const number = await random();
+    using _ = new HandlerScope([handleRandom]);
 
-        assertEquals(typeof number, "number");
-        assertGreaterOrEqual(number, 0);
-        assertLessOrEqual(number, 1);
-      },
-      [handleRandom],
-    );
+    const number = await random();
+
+    assertEquals(typeof number, "number");
+    assertGreaterOrEqual(number, 0);
+    assertLessOrEqual(number, 1);
   });
 
   test("delegation", async () => {
-    await runWith(async () => {
-      const txt = await io.readFile("note.txt");
-      const css = await io.readFile("style.css");
+    using _ = new HandlerScope([handleIoReadTXT, handleIOReadBase]);
 
-      assertEquals(txt, "txt content");
-      assertEquals(css, "file content");
-    }, [handleIoReadTXT, handleIOReadBase]);
+    const txt = await io.readFile("note.txt");
+    const css = await io.readFile("style.css");
+
+    assertEquals(txt, "txt content");
+    assertEquals(css, "file content");
   });
 
   test("missing terminal handler", async () => {
-    await runWith(async () => {
-      try {
-        await io.readFile("style.css");
-        unreachable();
-      } catch (error) {
-        assertInstanceOf(error, Error);
-        assertEquals(
-          error.message,
-          'Handling effect "io/read" returned `Continue`. Make sure the handlers sequence contains a terminal handler',
-        );
-      }
-    }, [handleIoReadTXT]);
+    using _ = new HandlerScope([handleIoReadTXT]);
+
+    try {
+      await io.readFile("style.css");
+      unreachable();
+    } catch (error) {
+      assertInstanceOf(error, Error);
+      assertEquals(
+        error.message,
+        'Handling effect "io/read" returned `Continue`. Make sure the handlers sequence contains a terminal handler',
+      );
+    }
   });
 
   test("dynamic handling", async () => {
-    await runWith(async () => {
-      addHandlers([handleIoReadTXT]);
+    using _ = new HandlerScope([]);
+    addHandlers([handleIoReadTXT]);
 
-      const txt = await io.readFile("note.txt");
-      assertEquals(txt, "txt content");
-    }, []);
+    const txt = await io.readFile("note.txt");
+    assertEquals(txt, "txt content");
   });
 
   test("dynamic delegation", async () => {
-    await runWith(async () => {
-      addHandlers([handleIoReadTXT]);
+    using _ = new HandlerScope([handleIOReadBase]);
+    addHandlers([handleIoReadTXT]);
 
-      const txt = await io.readFile("note.txt");
-      assertEquals(txt, "txt content");
+    const txt = await io.readFile("note.txt");
+    assertEquals(txt, "txt content");
 
-      const ts = await io.readFile("script.ts");
-      assertEquals(ts, "file content");
-    }, [handleIOReadBase]);
+    const ts = await io.readFile("script.ts");
+    assertEquals(ts, "file content");
   });
 
   test("unscoped dynamic handling", () => {
@@ -202,22 +194,43 @@ describe("effect system", () => {
     }
   });
 
+  test("simple scoping", async () => {
+    {
+      using _ = new HandlerScope([handleIOReadBase]);
+
+      const txt = await io.readFile("note.txt");
+      assertEquals(txt, "file content");
+    }
+
+    try {
+      await io.readFile("note.txt");
+      unreachable();
+    } catch (error) {
+      assertInstanceOf(error, Error);
+      assertEquals(
+        error.message,
+        'Effect "io/read" running outside of a HandlerScope',
+      );
+    }
+  });
+
   test("handlers can be in a parent scope", async () => {
-    await runWith(async () => {
-      await runWith(async () => {
-        const content = await io.readFile("file");
-        assertEquals(content, "file content");
-      }, [handleRandom]);
-    }, [handleIOReadBase]);
+    using _ = new HandlerScope([handleIOReadBase]);
+
+    {
+      using __ = new HandlerScope([handleRandom]);
+
+      const content = await io.readFile("file");
+      assertEquals(content, "file content");
+    }
   });
 
   test("handlers can delegate to a parent scope handler", async () => {
-    await runWith(async () => {
-      await runWith(async () => {
-        const content = await io.readFile("file.ts");
-        assertEquals(content, "file content");
-      }, [handleIoReadTXT]);
-    }, [handleIOReadBase]);
+    using _ = new HandlerScope([handleIOReadBase]);
+    using __ = new HandlerScope([handleIoReadTXT]);
+
+    const content = await io.readFile("file.ts");
+    assertEquals(content, "file content");
   });
 
   test("effects can perform other effects", async () => {
@@ -226,11 +239,11 @@ describe("effect system", () => {
       return `content of ${path}`;
     });
 
-    await runWith(async () => {
-      const res = await io.readFile("/path/to/file");
-      assertEquals(logs, ["reading /path/to/file..."]);
-      assertEquals(res, "content of /path/to/file");
-    }, [readAndLog, handleConsole]);
+    using _ = new HandlerScope([readAndLog, handleConsole]);
+
+    const res = await io.readFile("/path/to/file");
+    assertEquals(logs, ["reading /path/to/file..."]);
+    assertEquals(res, "content of /path/to/file");
   });
 
   test("handler decoration", async () => {
@@ -243,14 +256,14 @@ describe("effect system", () => {
       return Handler.continue({ path, data });
     });
 
-    await runWith(async () => {
-      const { data } = await io.transformFile({
-        path: "note.txt",
-        data: "some todos",
-      });
+    using _ = new HandlerScope([transformTXT.flatMap(id)]);
 
-      assertEquals(data, "SOME TODOS");
-    }, [transformTXT.flatMap(id)]);
+    const { data } = await io.transformFile({
+      path: "note.txt",
+      data: "some todos",
+    });
+
+    assertEquals(data, "SOME TODOS");
   });
 
   test("observation", async () => {
@@ -264,17 +277,22 @@ describe("effect system", () => {
       await Console.log(`writing to "${path}": "${data}"`);
     });
 
-    await runWith(async () => {
-      await io.writeFile("todo.txt", "garden");
-      await io.writeFile("styles.css", "some styles");
-      await io.writeFile("script.ts", "my script");
+    using _ = new HandlerScope([
+      countWrites,
+      handleWrite,
+      ...state.handlers,
+      handleConsole,
+    ]);
 
-      assertEquals(logs, [
-        'writing to "todo.txt": "garden"',
-        'writing to "styles.css": "some styles"',
-        'writing to "script.ts": "my script"',
-      ]);
-      assertEquals(await state.get(), 3);
-    }, [countWrites, handleWrite, ...state.handlers, handleConsole]);
+    await io.writeFile("todo.txt", "garden");
+    await io.writeFile("styles.css", "some styles");
+    await io.writeFile("script.ts", "my script");
+
+    assertEquals(logs, [
+      'writing to "todo.txt": "garden"',
+      'writing to "styles.css": "some styles"',
+      'writing to "script.ts": "my script"',
+    ]);
+    assertEquals(await state.get(), 3);
   });
 });

@@ -3,7 +3,7 @@ import { assertEquals } from "@std/assert";
 import { dirname, fromFileUrl, join } from "@std/path";
 import { describe, test } from "@std/testing/bdd";
 import { globals } from "../../../../constants.ts";
-import { handlerFor, runWith } from "@radish/effect-system";
+import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { io } from "$effects/io.ts";
 import { manifest } from "$effects/manifest.ts";
 import { id } from "../../../../utils/algebraic-structures.ts";
@@ -22,19 +22,7 @@ globals();
 
 describe("bind directive", () => {
   test("renders", async () => {
-    await runWith(async () => {
-      const content = await Deno.readTextFile(join(testDataDir, "input.html"));
-      const output = await Deno.readTextFile(
-        join(testDataDir, "output.html"),
-      );
-
-      const { content: transformed } = await io.transformFile({
-        path: "elements/my-component.html",
-        content,
-      });
-
-      assertEquals(transformed, output);
-    }, [
+    using _ = new HandlerScope([
       handleTransformFile,
       handlerFor(io.transformFile, id),
       handleComponents,
@@ -65,5 +53,17 @@ describe("bind directive", () => {
         };
       }),
     ]);
+
+    const content = await Deno.readTextFile(join(testDataDir, "input.html"));
+    const output = await Deno.readTextFile(
+      join(testDataDir, "output.html"),
+    );
+
+    const { content: transformed } = await io.transformFile({
+      path: "elements/my-component.html",
+      content,
+    });
+
+    assertEquals(transformed, output);
   });
 });

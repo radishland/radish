@@ -1,5 +1,6 @@
 import { importmapPath, manifestPath, startApp } from "@radish/core";
-import { handlerFor, importmap, io } from "@radish/core/effects";
+import { handlerFor } from "@radish/effect-system";
+import { importmap, io } from "@radish/core/effects";
 import {
   pluginBuild,
   pluginConfig,

@@ -9,7 +9,7 @@
  *
  * Use {@linkcode createEffect} to define an effect, and {@linkcode handlerFor} to implement a handler.
  *
- * To run effectful code with handlers in scope use {@linkcode runWith}.
+ * To create a new scope with handlers to run effects in {@linkcode HandlerScope}.
  *
  * Handlers can also be added dynamically to a running programming with {@linkcode addHandlers}
  *
@@ -50,16 +50,15 @@
  *
  * @example Running code with effects and handlers
  *
- * {@linkcode runWith} takes an effectful program to run and a list of handlers
+ * {@linkcode HandlerScope} creates a new scope where handlers can handle effects
  *
  * ```ts
- * import { runWith } from "@radish/effect-system";
+ * {
+ *  using _ = new HandlerScope([handleIOTransform]);
  *
- * runWith(async () => {
- *   const transformed: string = await io.transform("some content");
- *   console.log(transformed);
- * }, [handleIOTransform]);
- *
+ *  const transformed = await io.transform("some content");
+ *  console.log(transformed);
+ * }
  * ```
  *
  * @module
@@ -72,7 +71,6 @@ export {
   Handler,
   type Handlers,
   HandlerScope,
-  runWith,
 } from "./handlers.ts";
 
 /**

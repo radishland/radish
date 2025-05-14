@@ -1,7 +1,7 @@
 import { io } from "$effects/io.ts";
 import { manifest } from "$effects/manifest.ts";
 import type { ElementManifest } from "$effects/render.ts";
-import { Handler, handlerFor, runWith } from "@radish/effect-system";
+import { Handler, handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals, assertExists } from "@std/assert";
 import type { WalkEntry } from "@std/fs";
 import { basename, extname, relative } from "@std/path";
@@ -30,15 +30,7 @@ const createWalkEntry = (path: string): WalkEntry => {
   };
 };
 
-runWith(async () => {
-  for (const path of Object.keys(files)) {
-    const { manifestObject: newManifest } = await manifest.update({
-      entry: createWalkEntry(path),
-      manifestObject,
-    });
-    manifestObject = newManifest;
-  }
-}, [
+using _ = new HandlerScope([
   handlerFor(io.readFile, (path) => {
     const content = files[path];
     assertExists(content);
@@ -83,6 +75,14 @@ runWith(async () => {
   }),
   handlerFor(manifest.update, id),
 ]);
+
+for (const path of Object.keys(files)) {
+  const { manifestObject: newManifest } = await manifest.update({
+    entry: createWalkEntry(path),
+    manifestObject,
+  });
+  manifestObject = newManifest;
+}
 
 Deno.test("manifest", () => {
   assertEquals(manifestObject, {
