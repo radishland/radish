@@ -38,11 +38,8 @@ export async function startApp(
   config: Config,
   getManifest: () => Promise<any>,
 ) {
-  for (const plugin of config.plugins ?? []) {
-    if (plugin.handlers) {
-      effects.addHandlers(plugin.handlers);
-    }
-  }
+  const handlers = config.plugins?.flatMap((plugin) => plugin.handlers);
+  using _ = new effects.HandlerScope(handlers);
 
   config = await configEffect.transform(config);
 

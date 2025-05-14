@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert/equals";
 import { describe, test } from "@std/testing/bdd";
 import { pluginImportmap, pureImportMap } from "./importmap.ts";
-import { handlerFor, runWith } from "@radish/effect-system";
+import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { io } from "$effects/io.ts";
 import { importmapPath } from "../../../exports/mod.ts";
 import { dirname, fromFileUrl, join } from "@std/path";
@@ -97,23 +97,8 @@ describe("pure importmap", () => {
 const moduleDir = dirname(fromFileUrl(import.meta.url));
 
 describe("importmap generation", () => {
-  test("transforms index.html files", () => {
-    runWith(async () => {
-      const input = await Deno.readTextFile(
-        join(moduleDir, "testdata", "input.html"),
-      );
-
-      const output = await Deno.readTextFile(
-        join(moduleDir, "testdata", "output.nofmt.html"),
-      );
-
-      const { content } = await io.transformFile({
-        path: "_app.html",
-        content: input,
-      });
-
-      assertEquals(content, output);
-    }, [
+  test("transforms index.html files", async () => {
+    using _ = new HandlerScope([
       ...pluginImportmap.handlers,
       handlerFor(io.readFile, async (path) => {
         if (path === importmapPath) {
@@ -125,5 +110,20 @@ describe("importmap generation", () => {
       }),
       handlerFor(io.transformFile, id),
     ]);
+
+    const input = await Deno.readTextFile(
+      join(moduleDir, "testdata", "input.html"),
+    );
+
+    const output = await Deno.readTextFile(
+      join(moduleDir, "testdata", "output.nofmt.html"),
+    );
+
+    const { content } = await io.transformFile({
+      path: "_app.html",
+      content: input,
+    });
+
+    assertEquals(content, output);
   });
 });

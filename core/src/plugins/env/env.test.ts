@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { config } from "$effects/config.ts";
-import { handlerFor, runWith } from "@radish/effect-system";
+import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { env } from "$effects/env.ts";
 import { io } from "$effects/io.ts";
 import { pluginEnv } from "../env/env.ts";
@@ -54,10 +54,10 @@ export const URL = "https://example.com";
 
 let result: string | undefined;
 
-Deno.test("env plugin", () => {
-  runWith(async () => {
-    await env.load();
+Deno.test("env plugin", async () => {
+  using _ = new HandlerScope([...handlers, ...pluginEnv.handlers]);
 
-    assertEquals(result?.trim(), expected);
-  }, [...handlers, ...pluginEnv.handlers]);
+  await env.load();
+
+  assertEquals(result?.trim(), expected);
 });
