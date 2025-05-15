@@ -1,4 +1,9 @@
-import { assert } from "@std/assert";
+import { assert, assertEquals, assertExists } from "@std/assert";
+import {
+  MissingHandlerScopeError,
+  MissingTerminalHandlerError,
+  UnhandledEffectError,
+} from "./errors.Ts";
 
 /**
  * @internal
@@ -36,6 +41,8 @@ export const handlerScopes: HandlerScope[] = [];
  * @param id The id of the effect to handle in the current {@linkcode HandlerScope}
  * @param payload The payload to pass to the handler of the effect
  *
+ * @throws {MissingHandlerScopeError} If the effect is ran outside of a {@linkcode HandlerScope}
+ *
  * @internal
  */
 export const perform = <P extends any[], R>(
@@ -43,10 +50,8 @@ export const perform = <P extends any[], R>(
   ...payload: P
 ): Promise<R> => {
   const currentScope = handlerScopes.at(-1);
-  assert(
-    currentScope,
-    `Effect "${id}" running outside of a HandlerScope`,
-  );
+  if (!currentScope) throw new MissingHandlerScopeError();
+
   return currentScope.handle<P, R>(id, ...payload);
 };
 
@@ -170,9 +175,11 @@ export class Continue<P extends any[]> {
  */
 export class HandlerScope {
   #parent: HandlerScope | undefined;
-  #handlers = new Map<string, Handler<any, any>>();
   #stack = new DisposableStack();
-  #store = new Map();
+  #disposed = false;
+
+  handlers = new Map<string, Handler<any, any>>();
+  store = new Map();
 
   /**
    * Creates a new {@linkcode HandlerScope}
@@ -199,6 +206,8 @@ export class HandlerScope {
    * @internal
    */
   addHandlers(handlers: Handlers) {
+    assert(!this.#disposed, "Can't add handlers to a disposed HandlerScope");
+
     const handlersById = Object.groupBy(handlers, ({ id }) => id);
     const handlersEntries = Object.entries(handlersById)
       .filter(([_k, v]) => v !== undefined)
@@ -207,11 +216,11 @@ export class HandlerScope {
       });
 
     for (let [id, _handlers] of handlersEntries) {
-      const currentHandler = this.#handlers.get(id);
+      const currentHandler = this.handlers.get(id);
       _handlers = currentHandler ? [..._handlers, currentHandler] : _handlers;
 
       const newHandler = Handler.fold(_handlers);
-      this.#handlers.set(id, newHandler);
+      this.handlers.set(id, newHandler);
     }
   }
 
@@ -221,14 +230,14 @@ export class HandlerScope {
    * @param id The `id` of the effect to handle
    * @param payload The payload to pass to the handler
    *
-   * @throws {"Unhandled effect"} If there is no handler in scope
-   * @throws If there is no terminal handler. This happens when all handlers return {@linkcode Handler.continue} and none `return`s
+   * @throws {UnhandledEffectError} If there is no handler in scope for the effect
+   * @throws {MissingTerminalHandlerError} If there is no terminal handler. This happens when all handlers return {@linkcode Handler.continue} and none returns
    *
    * @internal
    */
   async handle<P extends any[], R>(id: string, ...payload: P): Promise<R> {
-    if (this.#handlers.has(id)) {
-      const handler: Handler<P, R> = this.#handlers.get(id)!;
+    if (this.handlers.has(id)) {
+      const handler: Handler<P, R> = this.handlers.get(id)!;
       const result: R | Continue<P> = await handler.run(...payload);
 
       if (!(result instanceof Continue)) {
@@ -239,16 +248,14 @@ export class HandlerScope {
         return this.#parent.handle(id, ...result.getPayload());
       }
 
-      throw new Error(
-        `Handling effect "${id}" returned \`Continue\`. Make sure the handlers sequence contains a terminal handler`,
-      );
+      throw new MissingTerminalHandlerError(id);
     }
 
     if (this.#parent) {
       return this.#parent.handle(id, ...payload);
     }
 
-    throw new Error(`Unhandled effect "${id}"`);
+    throw new UnhandledEffectError(id);
   }
 
   /**
@@ -259,29 +266,58 @@ export class HandlerScope {
   }
 
   /**
-   * Cleans up the {@linkcode HandlerScope} by restoring the parent scope
+   * Cleans up the {@linkcode HandlerScope} and restores its parent scope as the current scope
    *
    * @internal
    */
   [Symbol.dispose]() {
+    if (this.#disposed) return;
+
+    this.#disposed = true;
     handlerScopes.pop();
+
     this.#parent = undefined;
-    this.#handlers.clear();
+    this.handlers.clear();
     this.#stack.dispose();
   }
 }
+
+export const Snapshot = () => {
+  const handlersMap = handlerScopes.map((
+    scope,
+  ) => [...scope.handlers.values()]);
+  const stores = handlerScopes.map((scope) => scope.store);
+
+  assertEquals(handlersMap.length, stores.length);
+
+  return () => {
+    let scope: HandlerScope | undefined;
+    for (let index = 0; index < handlersMap.length; index++) {
+      const handlers = handlersMap[index];
+      const store = stores[index];
+
+      assert(handlers);
+      assert(store);
+
+      scope = new HandlerScope(...handlers);
+      scope.store = store;
+    }
+
+    assertExists(scope);
+    return scope;
+  };
+};
 
 /**
  * Adds a list of handlers to the current {@linkcode HandlersScope}
  *
  * @param handlers The list of handlers to attach to the current scope
  *
- * @throws It there is no current {@linkcode HandlerScope}
+ * @throws {MissingHandlerScopeError} It there is no {@linkcode HandlerScope} to register handlers to
  */
 export const addHandlers = (handlers: Handlers): void => {
   const currentScope = handlerScopes.at(-1);
-
-  assert(currentScope, '"addHandlers" called outside of an effect scope');
+  if (!currentScope) throw new MissingHandlerScopeError();
 
   currentScope.addHandlers(handlers);
 };
