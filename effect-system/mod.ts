@@ -71,6 +71,7 @@ export {
   Handler,
   type Handlers,
   HandlerScope,
+  Snapshot,
 } from "./handlers.ts";
 
 /**
@@ -81,8 +82,6 @@ export {
  * @example
  *
  * ```ts
- * import { handlerFor } from "@radish/effect-system";
- *
  * const trivialHandler = handlerFor(io.transformFile, id);
  * ```
  */
