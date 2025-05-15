@@ -54,7 +54,7 @@
  *
  * ```ts
  * {
- *  using _ = new HandlerScope([handleIOTransform]);
+ *  using _ = new HandlerScope(handleIOTransform);
  *
  *  const transformed = await io.transform("some content");
  *  console.log(transformed);

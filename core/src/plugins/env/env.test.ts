@@ -55,7 +55,7 @@ export const URL = "https://example.com";
 let result: string | undefined;
 
 Deno.test("env plugin", async () => {
-  using _ = new HandlerScope([...handlers, ...pluginEnv.handlers]);
+  using _ = new HandlerScope(...handlers, ...pluginEnv.handlers);
 
   await env.load();
 

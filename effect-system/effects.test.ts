@@ -128,7 +128,7 @@ describe("effect system", () => {
   });
 
   test("simple handling", async () => {
-    using _ = new HandlerScope([handleRandom]);
+    using _ = new HandlerScope(handleRandom);
 
     const number = await random();
 
@@ -138,7 +138,7 @@ describe("effect system", () => {
   });
 
   test("delegation", async () => {
-    using _ = new HandlerScope([handleIoReadTXT, handleIOReadBase]);
+    using _ = new HandlerScope(handleIoReadTXT, handleIOReadBase);
 
     const txt = await io.readFile("note.txt");
     const css = await io.readFile("style.css");
@@ -148,7 +148,7 @@ describe("effect system", () => {
   });
 
   test("missing terminal handler", async () => {
-    using _ = new HandlerScope([handleIoReadTXT]);
+    using _ = new HandlerScope(handleIoReadTXT);
 
     try {
       await io.readFile("style.css");
@@ -163,7 +163,7 @@ describe("effect system", () => {
   });
 
   test("dynamic handling", async () => {
-    using _ = new HandlerScope([]);
+    using _ = new HandlerScope();
     addHandlers([handleIoReadTXT]);
 
     const txt = await io.readFile("note.txt");
@@ -171,7 +171,7 @@ describe("effect system", () => {
   });
 
   test("dynamic delegation", async () => {
-    using _ = new HandlerScope([handleIOReadBase]);
+    using _ = new HandlerScope(handleIOReadBase);
     addHandlers([handleIoReadTXT]);
 
     const txt = await io.readFile("note.txt");
@@ -196,7 +196,7 @@ describe("effect system", () => {
 
   test("simple scoping", async () => {
     {
-      using _ = new HandlerScope([handleIOReadBase]);
+      using _ = new HandlerScope(handleIOReadBase);
 
       const txt = await io.readFile("note.txt");
       assertEquals(txt, "file content");
@@ -215,10 +215,10 @@ describe("effect system", () => {
   });
 
   test("handlers can be in a parent scope", async () => {
-    using _ = new HandlerScope([handleIOReadBase]);
+    using _ = new HandlerScope(handleIOReadBase);
 
     {
-      using __ = new HandlerScope([handleRandom]);
+      using __ = new HandlerScope(handleRandom);
 
       const content = await io.readFile("file");
       assertEquals(content, "file content");
@@ -226,8 +226,8 @@ describe("effect system", () => {
   });
 
   test("handlers can delegate to a parent scope handler", async () => {
-    using _ = new HandlerScope([handleIOReadBase]);
-    using __ = new HandlerScope([handleIoReadTXT]);
+    using _ = new HandlerScope(handleIOReadBase);
+    using __ = new HandlerScope(handleIoReadTXT);
 
     const content = await io.readFile("file.ts");
     assertEquals(content, "file content");
@@ -239,7 +239,7 @@ describe("effect system", () => {
       return `content of ${path}`;
     });
 
-    using _ = new HandlerScope([readAndLog, handleConsole]);
+    using _ = new HandlerScope(readAndLog, handleConsole);
 
     const res = await io.readFile("/path/to/file");
     assertEquals(logs, ["reading /path/to/file..."]);
@@ -256,7 +256,7 @@ describe("effect system", () => {
       return Handler.continue({ path, data });
     });
 
-    using _ = new HandlerScope([transformTXT.flatMap(id)]);
+    using _ = new HandlerScope(transformTXT.flatMap(id));
 
     const { data } = await io.transformFile({
       path: "note.txt",
@@ -277,12 +277,12 @@ describe("effect system", () => {
       await Console.log(`writing to "${path}": "${data}"`);
     });
 
-    using _ = new HandlerScope([
+    using _ = new HandlerScope(
       countWrites,
       handleWrite,
       ...state.handlers,
       handleConsole,
-    ]);
+    );
 
     await io.writeFile("todo.txt", "garden");
     await io.writeFile("styles.css", "some styles");

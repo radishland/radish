@@ -1,6 +1,27 @@
 import { assert } from "@std/assert";
 
 /**
+ * @internal
+ */
+type MaybePromise<T> = T | Promise<T>;
+
+/**
+ * Type of base handlers used in {@linkcode handlerFor}
+ *
+ * A `BaseHandler` can be synchronous, asynchronous, partial or total
+ *
+ * @see {@linkcode handlerFor}
+ */
+export type BaseHandler<P extends any[], R> = (...payload: P) => MaybePromise<
+  R | Continue<P>
+>;
+
+/**
+ * An array of handlers
+ */
+export type Handlers = Handler<any, any>[];
+
+/**
  * The list of current scopes.
  *
  * This is managed automatically by {@linkcode HandlerScope}
@@ -28,27 +49,6 @@ export const perform = <P extends any[], R>(
   );
   return currentScope.handle<P, R>(id, ...payload);
 };
-
-/**
- * @internal
- */
-type MaybePromise<T> = T | Promise<T>;
-
-/**
- * Type of base handlers used in {@linkcode handlerFor}
- *
- * A `BaseHandler` can be synchronous, asynchronous, partial or total
- *
- * @see {@linkcode handlerFor}
- */
-export type BaseHandler<P extends any[], R> = (...payload: P) => MaybePromise<
-  R | Continue<P>
->;
-
-/**
- * An array of handlers
- */
-export type Handlers = Handler<any, any>[];
 
 /**
  * This class implements the monadic sequencing of handlers with {@linkcode flatMap} and {@linkcode fold}
@@ -147,7 +147,7 @@ export class Continue<P extends any[]> {
  *
  * ```ts
  * {
- *   using _ = new HandlerScope([handleIO]);
+ *   using _ = new HandlerScope(handleIO);
  *   const content = await io.read("path");
  * }
  *
@@ -160,7 +160,7 @@ export class Continue<P extends any[]> {
  * The order of the handlers matters when they rely on delegation via {@linkcode Handler.continue}
  *
  * ```ts
- * using _ = new HandlerScope([handleTXTOnly, handleReadOp]);
+ * using _ = new HandlerScope(handleTXTOnly, handleReadOp);
  *
  * const txtFile = await io.read("hello.txt"); // "I can only handle .txt files"
  * const jsonFile = await io.read("hello.json"); // ...
@@ -171,6 +171,8 @@ export class Continue<P extends any[]> {
 export class HandlerScope {
   #parent: HandlerScope | undefined;
   #handlers = new Map<string, Handler<any, any>>();
+  #stack = new DisposableStack();
+  #store = new Map();
 
   /**
    * Creates a new {@linkcode HandlerScope}
@@ -181,14 +183,12 @@ export class HandlerScope {
    *
    * @see {@linkcode addHandlers}
    */
-  constructor(handlers?: Handlers) {
+  constructor(...handlers: Handlers) {
     const currentScope = handlerScopes.at(-1);
     this.#parent = currentScope;
     handlerScopes.push(this);
 
-    if (handlers) {
-      this.addHandlers(handlers);
-    }
+    this.addHandlers(handlers);
   }
 
   /**
@@ -252,12 +252,22 @@ export class HandlerScope {
   }
 
   /**
+   * Adds a callback to be invoked when the {@linkcode HandlerScope} is disposed.
+   */
+  onDispose(cleanup: () => void) {
+    this.#stack.defer(cleanup);
+  }
+
+  /**
    * Cleans up the {@linkcode HandlerScope} by restoring the parent scope
    *
    * @internal
    */
   [Symbol.dispose]() {
     handlerScopes.pop();
+    this.#parent = undefined;
+    this.#handlers.clear();
+    this.#stack.dispose();
   }
 }
 
