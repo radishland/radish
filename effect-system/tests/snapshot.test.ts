@@ -1,18 +1,13 @@
-import { describe, test } from "@std/testing/bdd";
+import { assert, assertInstanceOf, unreachable } from "@std/assert";
 import { delay } from "@std/async";
+import { describe, test } from "@std/testing/bdd";
+import { MissingHandlerScopeError } from "../errors.ts";
+import { Snapshot } from "../handlers.ts";
 import { HandlerScope } from "../mod.ts";
 import { handleRandom, random } from "./setup.ts";
-import {
-  assert,
-  assertEquals,
-  assertInstanceOf,
-  unreachable,
-} from "@std/assert";
-import { Snapshot } from "../handlers.ts";
-import { MissingHandlerScopeError } from "../errors.Ts";
 
-describe("effects async", () => {
-  test("setTimeout executes after HandlerScopes are disposed of", async () => {
+describe("effects snapshots", () => {
+  test("setTimeout executes after HandlerScope is disposed of", async () => {
     {
       using _ = new HandlerScope(handleRandom);
 
@@ -29,7 +24,7 @@ describe("effects async", () => {
     await delay(20);
   });
 
-  test("snapshot restores the scope inside setTimeout", async () => {
+  test("Snapshot restores the HandlerScope in setTimeout", async () => {
     {
       using _ = new HandlerScope(handleRandom);
       const snapshot = Snapshot();
@@ -43,24 +38,5 @@ describe("effects async", () => {
     }
 
     await delay(20);
-  });
-
-  test.ignore("single thread trying to do async doesn't work", async () => {
-    {
-      using _ = new HandlerScope(handleRandom);
-
-      let curr;
-      const double = async (x: number) => {
-        curr = x;
-        await delay(0);
-        return curr * 2;
-      };
-
-      const res = await Promise.all([1, 2, 3].map(double));
-
-      assertEquals(res, [2, 4, 6]);
-    }
-
-    await delay(1000);
   });
 });

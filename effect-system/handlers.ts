@@ -3,7 +3,7 @@ import {
   MissingHandlerScopeError,
   MissingTerminalHandlerError,
   UnhandledEffectError,
-} from "./errors.Ts";
+} from "./errors.ts";
 
 /**
  * @internal
@@ -179,7 +179,7 @@ export class HandlerScope {
   #disposed = false;
 
   handlers = new Map<string, Handler<any, any>>();
-  store = new Map();
+  store = new Map<string, any>();
 
   /**
    * Creates a new {@linkcode HandlerScope}
@@ -286,7 +286,7 @@ export const Snapshot = () => {
   const handlersMap = handlerScopes.map((
     scope,
   ) => [...scope.handlers.values()]);
-  const stores = handlerScopes.map((scope) => scope.store);
+  const stores = handlerScopes.map((scope) => new Map(scope.store));
 
   assertEquals(handlersMap.length, stores.length);
 

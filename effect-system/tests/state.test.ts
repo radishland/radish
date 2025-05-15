@@ -1,4 +1,4 @@
-import { describe, test } from "@std/testing/bdd";
+import { beforeEach, describe, test } from "@std/testing/bdd";
 import { HandlerScope } from "../mod.ts";
 import { createState } from "../state.ts";
 import {
@@ -10,8 +10,23 @@ import {
 } from "@std/assert";
 import { MissingHandlerScopeError } from "../errors.ts";
 import { delay } from "@std/async";
+import { Snapshot } from "../handlers.ts";
 
-describe("effect asyncState", () => {
+let currentContext: Record<string, any> | null = null;
+
+function setContext(ctx: Record<string, any>) {
+  currentContext = ctx;
+}
+
+function getContext() {
+  return currentContext;
+}
+
+beforeEach(() => {
+  currentContext = null;
+});
+
+describe("effect async state", () => {
   test("needs a HandlerScope", () => {
     try {
       createState("requestId", 0);
@@ -52,7 +67,7 @@ describe("effect asyncState", () => {
     assertEquals(res, [6, 6, 6]);
   });
 
-  test.only("map(double) works with createState", async () => {
+  test("map(double) works with createState", async () => {
     using _ = new HandlerScope();
 
     const double = async (x: number) => {
@@ -67,5 +82,46 @@ describe("effect asyncState", () => {
     const res = await Promise.all([1, 2, 3].map(double));
 
     assertEquals(res, [2, 4, 6]);
+  });
+
+  test("setTimeout context loss", async () => {
+    // Can't reliably schedule contextual operations
+
+    setContext({ id: "A" });
+    setTimeout(() => {
+      assertEquals(getContext(), { id: "B" }); // expected: { id: 'A' }
+    }, 10);
+
+    setContext({ id: "B" });
+    setTimeout(() => {
+      assertEquals(getContext(), { id: "B" });
+    }, 20);
+
+    await delay(40);
+  });
+
+  test("snapshot states keep track of their context", async () => {
+    using _ = new HandlerScope();
+    const state = createState("user", { id: "A" });
+    const snapshot = Snapshot();
+
+    setTimeout(async () => {
+      using _ = snapshot();
+      const user = await state.get();
+      assertExists(user);
+      assertEquals(user, { id: "A" }); // as expected
+    }, 10);
+
+    const state2 = createState("user", { id: "B" });
+    const snapshot2 = Snapshot();
+
+    setTimeout(async () => {
+      using _ = snapshot2();
+      const user = await state2.get();
+      assertExists(user);
+      assertEquals(user, { id: "B" });
+    }, 20);
+
+    await delay(40);
   });
 });

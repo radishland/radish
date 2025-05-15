@@ -21,7 +21,7 @@ import {
   MissingHandlerScopeError,
   MissingTerminalHandlerError,
   UnhandledEffectError,
-} from "../errors.Ts";
+} from "../errors.ts";
 
 /**
  * Tests
