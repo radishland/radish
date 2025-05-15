@@ -86,41 +86,49 @@ describe("effect async state", () => {
 
   test("setTimeout context loss", async () => {
     // Can't reliably schedule contextual operations
+    {
+      setContext({ id: "A" });
+      setTimeout(() => {
+        assertEquals(getContext(), { id: "B" }); // expected: { id: 'A' }
+      }, 10);
+    }
 
-    setContext({ id: "A" });
-    setTimeout(() => {
-      assertEquals(getContext(), { id: "B" }); // expected: { id: 'A' }
-    }, 10);
-
-    setContext({ id: "B" });
-    setTimeout(() => {
-      assertEquals(getContext(), { id: "B" });
-    }, 20);
+    {
+      setContext({ id: "B" });
+      setTimeout(() => {
+        assertEquals(getContext(), { id: "B" });
+      }, 20);
+    }
 
     await delay(40);
   });
 
   test("snapshot states keep track of their context", async () => {
     using _ = new HandlerScope();
-    const state = createState("user", { id: "A" });
-    const snapshot = Snapshot();
 
-    setTimeout(async () => {
-      using _ = snapshot();
-      const user = await state.get();
-      assertExists(user);
-      assertEquals(user, { id: "A" }); // as expected
-    }, 10);
+    {
+      const state = createState("user", { id: "A" });
+      const snapshot = Snapshot();
 
-    const state2 = createState("user", { id: "B" });
-    const snapshot2 = Snapshot();
+      setTimeout(async () => {
+        using _ = snapshot();
+        const user = await state.get();
+        assertExists(user);
+        assertEquals(user, { id: "A" }); // as expected
+      }, 10);
+    }
 
-    setTimeout(async () => {
-      using _ = snapshot2();
-      const user = await state2.get();
-      assertExists(user);
-      assertEquals(user, { id: "B" });
-    }, 20);
+    {
+      const state2 = createState("user", { id: "B" });
+      const snapshot2 = Snapshot();
+
+      setTimeout(async () => {
+        using _ = snapshot2();
+        const user = await state2.get();
+        assertExists(user);
+        assertEquals(user, { id: "B" });
+      }, 20);
+    }
 
     await delay(40);
   });
