@@ -98,7 +98,7 @@ const moduleDir = dirname(fromFileUrl(import.meta.url));
 
 describe("importmap generation", () => {
   test("transforms index.html files", async () => {
-    using _ = new HandlerScope([
+    using _ = new HandlerScope(
       ...pluginImportmap.handlers,
       handlerFor(io.readFile, async (path) => {
         if (path === importmapPath) {
@@ -109,7 +109,7 @@ describe("importmap generation", () => {
         return "";
       }),
       handlerFor(io.transformFile, id),
-    ]);
+    );
 
     const input = await Deno.readTextFile(
       join(moduleDir, "testdata", "input.html"),

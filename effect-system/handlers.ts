@@ -1,33 +1,9 @@
-import { assert } from "@std/assert";
-
-/**
- * The list of current scopes.
- *
- * This is managed automatically by {@linkcode HandlerScope}
- *
- * @internal
- */
-export const handlerScopes: HandlerScope[] = [];
-
-/**
- * Retrieves the current {@linkcode HandlerScope} and delegates the handling of the provided effect id
- *
- * @param id The id of the effect to handle in the current {@linkcode HandlerScope}
- * @param payload The payload to pass to the handler of the effect
- *
- * @internal
- */
-export const perform = <P extends any[], R>(
-  id: string,
-  ...payload: P
-): Promise<R> => {
-  const currentScope = handlerScopes.at(-1);
-  assert(
-    currentScope,
-    `Effect "${id}" running outside of a HandlerScope`,
-  );
-  return currentScope.handle<P, R>(id, ...payload);
-};
+import { assert, assertEquals, assertExists } from "@std/assert";
+import {
+  MissingHandlerScopeError,
+  MissingTerminalHandlerError,
+  UnhandledEffectError,
+} from "./errors.ts";
 
 /**
  * @internal
@@ -49,6 +25,35 @@ export type BaseHandler<P extends any[], R> = (...payload: P) => MaybePromise<
  * An array of handlers
  */
 export type Handlers = Handler<any, any>[];
+
+/**
+ * The list of current scopes.
+ *
+ * This is managed automatically by {@linkcode HandlerScope}
+ *
+ * @internal
+ */
+export const handlerScopes: HandlerScope[] = [];
+
+/**
+ * Retrieves the current {@linkcode HandlerScope} and delegates the handling of the provided effect id
+ *
+ * @param id The id of the effect to handle in the current {@linkcode HandlerScope}
+ * @param payload The payload to pass to the handler of the effect
+ *
+ * @throws {MissingHandlerScopeError} If the effect is ran outside of a {@linkcode HandlerScope}
+ *
+ * @internal
+ */
+export const perform = <P extends any[], R>(
+  id: string,
+  ...payload: P
+): Promise<R> => {
+  const currentScope = handlerScopes.at(-1);
+  if (!currentScope) throw new MissingHandlerScopeError();
+
+  return currentScope.handle<P, R>(id, ...payload);
+};
 
 /**
  * This class implements the monadic sequencing of handlers with {@linkcode flatMap} and {@linkcode fold}
@@ -109,7 +114,7 @@ export class Handler<P extends any[], R> {
    *
    * In a handlers sequence there must always be a terminal handler, that is, a handler that is a total function and does not delegate.
    *
-   * @throws If there is no terminal handler in the sequence
+   * @throws {MissingTerminalHandlerError} If there is no terminal handler in the sequence
    */
   static continue<P extends any[]>(...payload: P): Continue<P> {
     return new Continue(...payload);
@@ -137,58 +142,73 @@ export class Continue<P extends any[]> {
 }
 
 /**
- * A {@linkcode HandlerScope} creates a new scope where effects are handled
+ * A {@linkcode HandlerScope} creates a new scope where effects are handled and AsyncState is stored.
+ *
+ * Use `using` when creating a `HandlerScope` to have proper cleanup when leaving the scope
  *
  * The {@linkcode handle} method is responsible for finding handlers in scope for a given effect.
  *
  * {@linkcode HandlerScope}s  have a parent-child relation and a handler is _in scope_ if it is in the current scope or any of its parents.
  *
- * @example Creating a new {@linkcode HandlerScope}
+ * @example Create a new {@linkcode HandlerScope}
  *
  * ```ts
  * {
- *   using _ = new HandlerScope([handleIO]);
+ *   using _ = new HandlerScope(handleIO);
  *   const content = await io.read("path");
  * }
  *
  * // not in scope
- * await io.read("other/path"); // throws
+ * await io.read("other/path"); // throws UnhandledEffectError
  * ```
  *
- * @example Ordering handlers
+ * @example Order handlers
  *
- * The order of the handlers matters when they rely on delegation via {@linkcode Handler.continue}
+ * The order of the handlers passed to the {@linkcode HandlerScope} constructor matters when they rely on delegation via {@linkcode Handler.continue}
  *
  * ```ts
- * using _ = new HandlerScope([handleTXTOnly, handleReadOp]);
+ * using _ = new HandlerScope(handleTXTOnly, handleReadOp);
  *
  * const txtFile = await io.read("hello.txt"); // "I can only handle .txt files"
  * const jsonFile = await io.read("hello.json"); // ...
  * ```
- *
- * @throws If no handlers are in scope when trying to {@linkcode handle} an effect
  */
 export class HandlerScope {
   #parent: HandlerScope | undefined;
-  #handlers = new Map<string, Handler<any, any>>();
+  #stack = new DisposableStack();
+  #disposed = false;
+
+  /**
+   * The map of registered handlers in the {@linkcode HandlerScope}
+   *
+   * @internal
+   */
+  handlers: Map<string, Handler<any, any>> = new Map<
+    string,
+    Handler<any, any>
+  >();
+  /**
+   * The internal store where {@linkcode HandlerScope HandlerScopes} keep track of AsyncState created with {@linkcode createState}
+   *
+   * You don't interact directly with this store
+   *
+   * @internal
+   */
+  store: Map<string, any> = new Map<string, any>();
 
   /**
    * Creates a new {@linkcode HandlerScope}
    *
    * @param handlers A list of handlers
    *
-   * @throws Throws "Unhandled effect" when an effect is performed with no handler in scope
-   *
    * @see {@linkcode addHandlers}
    */
-  constructor(handlers?: Handlers) {
+  constructor(...handlers: Handlers) {
     const currentScope = handlerScopes.at(-1);
     this.#parent = currentScope;
     handlerScopes.push(this);
 
-    if (handlers) {
-      this.addHandlers(handlers);
-    }
+    this.addHandlers(handlers);
   }
 
   /**
@@ -199,6 +219,8 @@ export class HandlerScope {
    * @internal
    */
   addHandlers(handlers: Handlers) {
+    assert(!this.#disposed, "Can't add handlers to a disposed HandlerScope");
+
     const handlersById = Object.groupBy(handlers, ({ id }) => id);
     const handlersEntries = Object.entries(handlersById)
       .filter(([_k, v]) => v !== undefined)
@@ -207,11 +229,11 @@ export class HandlerScope {
       });
 
     for (let [id, _handlers] of handlersEntries) {
-      const currentHandler = this.#handlers.get(id);
+      const currentHandler = this.handlers.get(id);
       _handlers = currentHandler ? [..._handlers, currentHandler] : _handlers;
 
       const newHandler = Handler.fold(_handlers);
-      this.#handlers.set(id, newHandler);
+      this.handlers.set(id, newHandler);
     }
   }
 
@@ -221,14 +243,14 @@ export class HandlerScope {
    * @param id The `id` of the effect to handle
    * @param payload The payload to pass to the handler
    *
-   * @throws {"Unhandled effect"} If there is no handler in scope
-   * @throws If there is no terminal handler. This happens when all handlers return {@linkcode Handler.continue} and none `return`s
+   * @throws {UnhandledEffectError} If there is no handler in scope for the effect
+   * @throws {MissingTerminalHandlerError} If there is no terminal handler. This happens when all handlers return {@linkcode Handler.continue} and none returns
    *
    * @internal
    */
   async handle<P extends any[], R>(id: string, ...payload: P): Promise<R> {
-    if (this.#handlers.has(id)) {
-      const handler: Handler<P, R> = this.#handlers.get(id)!;
+    if (this.handlers.has(id)) {
+      const handler: Handler<P, R> = this.handlers.get(id)!;
       const result: R | Continue<P> = await handler.run(...payload);
 
       if (!(result instanceof Continue)) {
@@ -239,39 +261,122 @@ export class HandlerScope {
         return this.#parent.handle(id, ...result.getPayload());
       }
 
-      throw new Error(
-        `Handling effect "${id}" returned \`Continue\`. Make sure the handlers sequence contains a terminal handler`,
-      );
+      throw new MissingTerminalHandlerError(id);
     }
 
     if (this.#parent) {
       return this.#parent.handle(id, ...payload);
     }
 
-    throw new Error(`Unhandled effect "${id}"`);
+    throw new UnhandledEffectError(id);
   }
 
   /**
-   * Cleans up the {@linkcode HandlerScope} by restoring the parent scope
+   * Adds a callback to be invoked when the {@linkcode HandlerScope} is disposed.
+   */
+  onDispose(cleanup: () => void) {
+    this.#stack.defer(cleanup);
+  }
+
+  /**
+   * Cleans up the {@linkcode HandlerScope} and restores its parent scope as the current scope
    *
    * @internal
    */
   [Symbol.dispose]() {
+    if (this.#disposed) return;
+
+    this.#disposed = true;
     handlerScopes.pop();
+
+    this.#parent = undefined;
+    this.handlers.clear();
+    this.#stack.dispose();
   }
 }
+
+/**
+ * Creates a snapshot of the whole {@linkcode HandlerScope} stack
+ *
+ * AsyncState stored inside `HandlerScope` {@linkcode HandlerScope.store stores} is also captured by the snapshot and restored when using the snapshot.
+ *
+ * Creating a snapshot doesn't freeze the state. This means you can create AsyncState with {@linkcode createState}, create a snapshot with {@linkcode Snapshot}, then update the state after the snapshot was created and still expect to retrieve the live, updated state when restoring the snapshot. Without race conditions or context loss in async flows.
+ *
+ * @example Restoring handlers in a `setTimeout`
+ *
+ * ```ts
+ * {
+ *   using _ = new HandlerScope(handleRandom);
+ *   const snapshot = Snapshot();
+ *
+ *   setTimeout(async () => {
+ *     // without the snapshot `setTimeout` executes after the scope is disposed of which would throw a `MissingHandlerScopeError`
+ *     using _ = snapshot();
+ *     const num = await random();
+ *     assert(typeof num === "number");
+ *   }, 10);
+ * }
+ * ```
+ *
+ * @example Updating state after snapshot creation
+ *
+ * ```ts
+ * {
+ *   using _ = new HandlerScope();
+ *   const state = createState("user", { name: "bob" });
+ *
+ *   const snapshot = Snapshot();
+ *
+ *   // turns out the user was updated after the snapshot was taken but before the scheduled workflow runs
+ *   await state.set({ name: "bobby" });
+ *
+ *   setTimeout(async () => {
+ *     using _ = snapshot();
+ *     const user = await state.get();
+ *     // the snapshot reflects the updated data
+ *     assertEquals(user, { name: "bobby" });
+ *   }, 10);
+ * }
+ * ```
+ *
+ * @see {@linkcode createState}
+ */
+export const Snapshot = (): () => HandlerScope => {
+  const handlersMap = handlerScopes.map((
+    scope,
+  ) => [...scope.handlers.values()]);
+  const stores = handlerScopes.map((scope) => new Map(scope.store));
+
+  assertEquals(handlersMap.length, stores.length);
+
+  return () => {
+    let scope: HandlerScope | undefined;
+    for (let index = 0; index < handlersMap.length; index++) {
+      const handlers = handlersMap[index];
+      const store = stores[index];
+
+      assert(handlers);
+      assert(store);
+
+      scope = new HandlerScope(...handlers);
+      scope.store = store;
+    }
+
+    assertExists(scope);
+    return scope;
+  };
+};
 
 /**
  * Adds a list of handlers to the current {@linkcode HandlersScope}
  *
  * @param handlers The list of handlers to attach to the current scope
  *
- * @throws It there is no current {@linkcode HandlerScope}
+ * @throws {MissingHandlerScopeError} It there is no {@linkcode HandlerScope} to register handlers to
  */
 export const addHandlers = (handlers: Handlers): void => {
   const currentScope = handlerScopes.at(-1);
-
-  assert(currentScope, '"addHandlers" called outside of an effect scope');
+  if (!currentScope) throw new MissingHandlerScopeError();
 
   currentScope.addHandlers(handlers);
 };

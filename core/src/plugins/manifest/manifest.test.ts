@@ -30,7 +30,7 @@ const createWalkEntry = (path: string): WalkEntry => {
   };
 };
 
-using _ = new HandlerScope([
+using _ = new HandlerScope(
   handlerFor(io.readFile, (path) => {
     const content = files[path];
     assertExists(content);
@@ -74,7 +74,7 @@ using _ = new HandlerScope([
     return Handler.continue({ entry, manifestObject });
   }),
   handlerFor(manifest.update, id),
-]);
+);
 
 for (const path of Object.keys(files)) {
   const { manifestObject: newManifest } = await manifest.update({

@@ -22,7 +22,7 @@ globals();
 
 describe("html directive", () => {
   test("renders", async () => {
-    using _ = new HandlerScope([
+    using _ = new HandlerScope(
       handleTransformFile,
       handlerFor(io.transformFile, id),
       handleComponents,
@@ -54,7 +54,7 @@ describe("html directive", () => {
           },
         };
       }),
-    ]);
+    );
 
     const content = await Deno.readTextFile(join(testDataDir, "input.html"));
     const output = await Deno.readTextFile(

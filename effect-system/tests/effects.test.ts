@@ -3,103 +3,25 @@ import { assertEquals } from "@std/assert/equals";
 import { assertGreaterOrEqual } from "@std/assert/greater-or-equal";
 import { assertLessOrEqual } from "@std/assert/less-or-equal";
 import { afterEach, beforeEach, describe, test } from "@std/testing/bdd";
-import { createEffect, handlerFor } from "./effects.ts";
-import { addHandlers, Handler, handlerScopes } from "./handlers.ts";
-import { HandlerScope, id } from "./mod.ts";
-
-/**
- * Console
- */
-
-interface ConsoleOps {
-  log: (message: string) => void;
-}
-
-const Console = { log: createEffect<ConsoleOps["log"]>("console/log") };
-
-const logs: string[] = [];
-
-const handleConsole = handlerFor(Console.log, (message: string) => {
-  logs.push(message);
-});
-
-/**
- * State
- */
-
-interface StateOps<S> {
-  get: () => S;
-  set: (state: S) => void;
-  update: (updater: (old: S) => S) => void;
-}
-
-const createState = <S>(initialState: S) => {
-  const get = createEffect<StateOps<S>["get"]>("state/get");
-  const set = createEffect<StateOps<S>["set"]>("state/set");
-  const update = createEffect<StateOps<S>["update"]>("state/update");
-
-  let state = initialState;
-
-  return {
-    get,
-    set,
-    update,
-    handlers: [
-      handlerFor(get, () => state),
-      handlerFor(set, (newState) => {
-        state = newState;
-      }),
-      handlerFor(update, (updater) => {
-        state = updater(state);
-      }),
-    ],
-  };
-};
-
-const state = createState(0);
-
-/**
- * Random
- */
-
-interface RandomOps {
-  random: () => number;
-}
-
-const random = createEffect<RandomOps["random"]>("random");
-
-const handleRandom = handlerFor(random, () => Math.random());
-
-/**
- * IO
- */
-
-interface IO {
-  readFile: (path: string) => string;
-  writeFile: (path: string, data: string) => void;
-  transformFile: (
-    options: { path: string; data: string },
-  ) => { path: string; data: string };
-}
-
-const io = {
-  readFile: createEffect<IO["readFile"]>("io/read"),
-  writeFile: createEffect<IO["writeFile"]>("io/write"),
-  transformFile: createEffect<
-    (options: { path: string; data: string }) => { path: string; data: string }
-  >("io/transform"),
-};
-
-const handleIoReadTXT = handlerFor(io.readFile, (path: string) => {
-  if (path.endsWith(".txt")) {
-    return "txt content";
-  }
-  return Handler.continue(path);
-});
-
-const handleIOReadBase = handlerFor(io.readFile, () => {
-  return "file content";
-});
+import { handlerFor } from "../effects.ts";
+import { addHandlers, Handler, handlerScopes } from "../handlers.ts";
+import { HandlerScope, id } from "../mod.ts";
+import {
+  Console,
+  createState,
+  handleConsole,
+  handleIOReadBase,
+  handleIoReadTXT,
+  handleRandom,
+  io,
+  logs,
+  random,
+} from "./setup.ts";
+import {
+  MissingHandlerScopeError,
+  MissingTerminalHandlerError,
+  UnhandledEffectError,
+} from "../errors.ts";
 
 /**
  * Tests
@@ -122,13 +44,12 @@ describe("effect system", () => {
       await random();
       unreachable();
     } catch (error) {
-      assertInstanceOf(error, Error);
-      assertEquals(error.message, 'Unhandled effect "random"');
+      assertInstanceOf(error, UnhandledEffectError);
     }
   });
 
   test("simple handling", async () => {
-    using _ = new HandlerScope([handleRandom]);
+    using _ = new HandlerScope(handleRandom);
 
     const number = await random();
 
@@ -138,7 +59,7 @@ describe("effect system", () => {
   });
 
   test("delegation", async () => {
-    using _ = new HandlerScope([handleIoReadTXT, handleIOReadBase]);
+    using _ = new HandlerScope(handleIoReadTXT, handleIOReadBase);
 
     const txt = await io.readFile("note.txt");
     const css = await io.readFile("style.css");
@@ -148,22 +69,18 @@ describe("effect system", () => {
   });
 
   test("missing terminal handler", async () => {
-    using _ = new HandlerScope([handleIoReadTXT]);
+    using _ = new HandlerScope(handleIoReadTXT);
 
     try {
       await io.readFile("style.css");
       unreachable();
     } catch (error) {
-      assertInstanceOf(error, Error);
-      assertEquals(
-        error.message,
-        'Handling effect "io/read" returned `Continue`. Make sure the handlers sequence contains a terminal handler',
-      );
+      assertInstanceOf(error, MissingTerminalHandlerError);
     }
   });
 
   test("dynamic handling", async () => {
-    using _ = new HandlerScope([]);
+    using _ = new HandlerScope();
     addHandlers([handleIoReadTXT]);
 
     const txt = await io.readFile("note.txt");
@@ -171,7 +88,7 @@ describe("effect system", () => {
   });
 
   test("dynamic delegation", async () => {
-    using _ = new HandlerScope([handleIOReadBase]);
+    using _ = new HandlerScope(handleIOReadBase);
     addHandlers([handleIoReadTXT]);
 
     const txt = await io.readFile("note.txt");
@@ -186,17 +103,13 @@ describe("effect system", () => {
       addHandlers([handleIoReadTXT]);
       unreachable();
     } catch (error) {
-      assertInstanceOf(error, Error);
-      assertEquals(
-        error.message,
-        '"addHandlers" called outside of an effect scope',
-      );
+      assertInstanceOf(error, MissingHandlerScopeError);
     }
   });
 
   test("simple scoping", async () => {
     {
-      using _ = new HandlerScope([handleIOReadBase]);
+      using _ = new HandlerScope(handleIOReadBase);
 
       const txt = await io.readFile("note.txt");
       assertEquals(txt, "file content");
@@ -206,19 +119,15 @@ describe("effect system", () => {
       await io.readFile("note.txt");
       unreachable();
     } catch (error) {
-      assertInstanceOf(error, Error);
-      assertEquals(
-        error.message,
-        'Effect "io/read" running outside of a HandlerScope',
-      );
+      assertInstanceOf(error, MissingHandlerScopeError);
     }
   });
 
   test("handlers can be in a parent scope", async () => {
-    using _ = new HandlerScope([handleIOReadBase]);
+    using _ = new HandlerScope(handleIOReadBase);
 
     {
-      using __ = new HandlerScope([handleRandom]);
+      using __ = new HandlerScope(handleRandom);
 
       const content = await io.readFile("file");
       assertEquals(content, "file content");
@@ -226,8 +135,8 @@ describe("effect system", () => {
   });
 
   test("handlers can delegate to a parent scope handler", async () => {
-    using _ = new HandlerScope([handleIOReadBase]);
-    using __ = new HandlerScope([handleIoReadTXT]);
+    using _ = new HandlerScope(handleIOReadBase);
+    using __ = new HandlerScope(handleIoReadTXT);
 
     const content = await io.readFile("file.ts");
     assertEquals(content, "file content");
@@ -239,7 +148,7 @@ describe("effect system", () => {
       return `content of ${path}`;
     });
 
-    using _ = new HandlerScope([readAndLog, handleConsole]);
+    using _ = new HandlerScope(readAndLog, handleConsole);
 
     const res = await io.readFile("/path/to/file");
     assertEquals(logs, ["reading /path/to/file..."]);
@@ -256,7 +165,7 @@ describe("effect system", () => {
       return Handler.continue({ path, data });
     });
 
-    using _ = new HandlerScope([transformTXT.flatMap(id)]);
+    using _ = new HandlerScope(transformTXT.flatMap(id));
 
     const { data } = await io.transformFile({
       path: "note.txt",
@@ -267,6 +176,8 @@ describe("effect system", () => {
   });
 
   test("observation", async () => {
+    const state = createState(0);
+
     // the countWrite handler only observe the io/write effect and does something orthogonal
     const countWrites = handlerFor(io.writeFile, async (path, data) => {
       await state.update((old) => old + 1);
@@ -277,12 +188,12 @@ describe("effect system", () => {
       await Console.log(`writing to "${path}": "${data}"`);
     });
 
-    using _ = new HandlerScope([
+    using _ = new HandlerScope(
       countWrites,
       handleWrite,
       ...state.handlers,
       handleConsole,
-    ]);
+    );
 
     await io.writeFile("todo.txt", "garden");
     await io.writeFile("styles.css", "some styles");

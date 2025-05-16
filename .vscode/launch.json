@@ -18,7 +18,8 @@
         "--allow-all"
       ],
       "env": {},
-      "attachSimplePort": 9229
+      "attachSimplePort": 9229,
+      "experimentalNetworking": "off"
     },
     {
       "name": "deno test",
@@ -35,7 +36,8 @@
         "--no-check"
       ],
       "env": {},
-      "attachSimplePort": 9229
+      "attachSimplePort": 9229,
+      "experimentalNetworking": "off"
     },
     {
       "name": "deno run in app",
@@ -55,7 +57,8 @@
       "env": {},
       // Debug command args: "--build", "--importmap" etc.
       "args": [],
-      "attachSimplePort": 9229
+      "attachSimplePort": 9229,
+      "experimentalNetworking": "off"
     }
   ]
 }

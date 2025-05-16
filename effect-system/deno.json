@@ -9,5 +9,8 @@
     "exclude": [
       "**/*.md"
     ]
+  },
+  "publish": {
+    "exclude": ["**/*.test.ts"]
   }
 }

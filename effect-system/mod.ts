@@ -1,63 +1,90 @@
 /**
- * Structuring code with the Radish effect system unlocks testability, simplicity, modularity, extendability, customizability.
+ * Structuring code with an effect system unlocks **testability**, **simplicity**, **modularity**, **customizability**.
  *
- * - **Testability**: Swap handlers in a testing environment to easily mock a deep side-effect
- * - **Simplicity**: Avoid passing context or callbacks just for testability makes code simpler and more focused (single responsibility) with a thinner API.
- * - **Modularity**: Thinner APIs implies more reuseable and composable code
- * - **Extendability**: Define your own effects and handlers.
- * - **Customizability**: Consumers of your library/framework can extend & override your effects, giving a high level of control and customizability with a plugin API.
+ * - **Testability**: Swap handlers in a test environment to easily mock deep side-effects without modifying your API for testing purposes
+ * - **Simplicity**: Avoiding the need to pass context objects or callbacks solely for testing makes code simpler and more focused, with thinner, single responsibility APIs
+ * - **Modularity**: Thinner APIs with focused responsibilities make code more reuseable and composable
+ * - **Customizability**: Consumers of your library or framework can override effect handlers to suit their needs
  *
- * Use {@linkcode createEffect} to define an effect, and {@linkcode handlerFor} to implement a handler.
+ * ## Powerful Handler Patterns
  *
- * To create a new scope with handlers to run effects in {@linkcode HandlerScope}.
+ * Handlers can be:
+ * - synchronous or asynchronous
+ * - partial or total
  *
- * Handlers can also be added dynamically to a running programming with {@linkcode addHandlers}
+ * This flexibility enables powerful patterns like handler delegation, dynamic decoration and effect observation.
  *
- * @example Defining effects
+ * See {@linkcode handlerFor}
+ *
+ * ## AsyncState
+ *
+ * In stateful async workflows, you can create AsyncState and take snapshots of {@linkcode HandlerScope HandlerScopes}, including their handlers and store, and later restore these scopes, states and handlers across async boundaries, without race conditions or context loss.
+ *
+ * See {@linkcode Snapshot} and {@linkcode createState}
+ *
+ * ## Zero-effort Plugin API
+ *
+ * As a bonus, you get a plugin API out of the box: define your own effects and handlers, and allow consumers to extend and override them with their own handlers to suit their needs. This provides flexibility and a high level of control to your users
+ *
+ * @example Create a new effect
+ *
+ * Use {@linkcode createEffect} to create a new effect
  *
  * ```ts
  * import { createEffect } from "@radish/effect-system";
  *
  * const io = {
+ *   read: createEffect<(path: string) => string>('io/read'),
  *   transform: createEffect<(content: string)=> string>('io/transform'),
+ *   write: createEffect<(path: string, data: string)=> void>('io/write'),
  * }
  * ```
  *
- * @example Using effects
+ * @example Perform an effect
  *
- * When an effect is defined, we can use it in code type-safely without providing an implementation yet. This cleanly separates definition from implementation.
+ * We can already use the above effect without providing an implementation yet. This separates definition from implementation.
  *
  * To perform an effect operation we _await_ it. This allows the sequencing of effects in direct style.
  *
- * At runtime, performing an effect with no handler in scope will throw an "Unhandled effect" error.
- *
  * ```ts
- * // await to perform an effect
- * const transformed: string = await io.transform("some content");
+ * // a sequence of effects
+ * const content = await io.read("/path/to/input");
+ * const transformed = await io.transform(content);
+ * await io.write("/path/to/output", transformed);
  * ```
  *
- * @example Handling effects
+ * @example Create an effect handler
  *
- * {@linkcode handlerFor} creates a new handler for an effect
+ * Use {@linkcode handlerFor} to create a handler for a given effect
  *
  * ```ts
  * import { handlerFor } from "@radish/effect-system";
  *
+ * const handleIORead = handlerFor(io.read, (path: string) => {
+ *   return "my content";
+ * });
+ *
  * const handleIOTransform = handlerFor(io.transform, (content: string) => {
- *   return content;
+ *   return content.toUpperCase();
+ * });
+ *
+ * const handleIOWrite = handlerFor(io.transform, (path: string, data: string) => {
+ *   console.log(`writing to ${path}: ${data}`);
  * });
  * ```
  *
- * @example Running code with effects and handlers
+ * @example Perform effects with handlers in scope
  *
- * {@linkcode HandlerScope} creates a new scope where handlers can handle effects
+ * Use {@linkcode HandlerScope} to create a new scope with handlers to run effects in.
  *
  * ```ts
  * {
- *  using _ = new HandlerScope([handleIOTransform]);
+ *  using _ = new HandlerScope(handleIORead, handleIOTransform, handleIOWrite);
  *
- *  const transformed = await io.transform("some content");
- *  console.log(transformed);
+ *  const content = await io.read("/path/to/input");
+ *  const transformed = await io.transform(content);
+ *  await io.write("/path/to/output", transformed);
+ *  // logs "writing to /path/to/output: MY CONTENT"
  * }
  * ```
  *
@@ -71,6 +98,7 @@ export {
   Handler,
   type Handlers,
   HandlerScope,
+  Snapshot,
 } from "./handlers.ts";
 
 /**
@@ -81,8 +109,6 @@ export {
  * @example
  *
  * ```ts
- * import { handlerFor } from "@radish/effect-system";
- *
  * const trivialHandler = handlerFor(io.transformFile, id);
  * ```
  */

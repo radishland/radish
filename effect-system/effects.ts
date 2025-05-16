@@ -105,7 +105,7 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  *
  * Handlers for the same effect can be:
  * - **Synchronous** or **asynchronous**
- * - **Total** (handle all inputs) or **partial** (handle selectively)
+ * - **Total** (handles all inputs) or **partial** (handles selectively)
  *
  * and they can be freely mixed and composed as needed.
  *
@@ -131,7 +131,7 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  *
  * Different handlers for the same effect can be synchronous or asynchronous.
  *
- * The operation signature (*e.g.* `A -> B`) is the minimal, effect-free contract. Handlers are free to perform their own effects, and asynchrony being an effect, async handlers (*e.g.* `A -> Promise<B>`) are allowed.
+ * The operation signature passed as the {@linkcode createEffect} type parameter (*e.g.* `A -> B`) is the minimal, effect-free contract. Handlers are free to perform their own effects, and asynchrony is an effect, so in particular async handlers (*e.g.* `A -> Promise<B>`) are allowed.
  *
  * ```ts
  * import { handlerFor } from "@radish/effect-system";
@@ -160,12 +160,12 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  *
  * Handlers don't have to be total functions. They can be **partial**, handling only specific cases, and delegating the rest to other handlers.
  *
- * To delegate the handling we use {@linkcode Handler.continue Handler.continue(...)}  as shown below. You can modify arguments before forwarding them.
+ * Use {@linkcode Handler.continue Handler.continue(...args)} to delegate handling. You can modify arguments before forwarding them.
  *
  * This forwarding mechanism enables several powerful patterns:
  *
  * - **Delegation**: Focus on handling a specific case
- * - **Decoration**: Wrap or augment another handler
+ * - **Decoration**: Wrap or augment others handlers dynamically
  * - **Observation**: React to effects and do something orthogonal
  *
  * Handlers can also perform other effects while handling their own operation
@@ -202,6 +202,8 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  *
  * @param effect The effect we're implementing a handler for
  * @param handler The handler implementation
+ *
+ * @see {@linkcode Handler.continue}
  */
 export const handlerFor = <P extends any[], R>(
   effect: EffectWithId<P, R>,
