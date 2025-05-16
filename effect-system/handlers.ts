@@ -150,7 +150,7 @@ export class Continue<P extends any[]> {
  *
  * {@linkcode HandlerScope}s  have a parent-child relation and a handler is _in scope_ if it is in the current scope or any of its parents.
  *
- * @example Creating a new {@linkcode HandlerScope}
+ * @example Create a new {@linkcode HandlerScope}
  *
  * ```ts
  * {
@@ -162,9 +162,9 @@ export class Continue<P extends any[]> {
  * await io.read("other/path"); // throws
  * ```
  *
- * @example Ordering handlers
+ * @example Order handlers
  *
- * The order of the handlers matters when they rely on delegation via {@linkcode Handler.continue}
+ * The order of the handlers passed to the {@linkcode HandlerScope} constructor matters when they rely on delegation via {@linkcode Handler.continue}
  *
  * ```ts
  * using _ = new HandlerScope(handleTXTOnly, handleReadOp);
@@ -172,8 +172,6 @@ export class Continue<P extends any[]> {
  * const txtFile = await io.read("hello.txt"); // "I can only handle .txt files"
  * const jsonFile = await io.read("hello.json"); // ...
  * ```
- *
- * @throws If no handlers are in scope when trying to {@linkcode handle} an effect
  */
 export class HandlerScope {
   #parent: HandlerScope | undefined;
@@ -199,8 +197,6 @@ export class HandlerScope {
    * Creates a new {@linkcode HandlerScope}
    *
    * @param handlers A list of handlers
-   *
-   * @throws Throws "Unhandled effect" when an effect is performed with no handler in scope
    *
    * @see {@linkcode addHandlers}
    */
