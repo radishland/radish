@@ -1,16 +1,15 @@
-import { beforeEach, describe, test } from "@std/testing/bdd";
-import { HandlerScope } from "../mod.ts";
-import { createState } from "../state.ts";
 import {
   assertEquals,
-  assertExists,
   assertInstanceOf,
   assertNotEquals,
   unreachable,
 } from "@std/assert";
-import { MissingHandlerScopeError } from "../errors.ts";
 import { delay } from "@std/async";
+import { beforeEach, describe, test } from "@std/testing/bdd";
+import { MissingHandlerScopeError } from "../errors.ts";
 import { Snapshot } from "../handlers.ts";
+import { HandlerScope } from "../mod.ts";
+import { createState } from "../state.ts";
 
 let currentContext: Record<string, any> | null = null;
 
@@ -65,7 +64,6 @@ describe("effect async state", () => {
       setTimeout(async () => {
         using _ = snapshot();
         const user = await state.get();
-        assertExists(user);
 
         // the snapshot reflects the updated data
         assertEquals(user, { name: "bobby" });
@@ -100,7 +98,6 @@ describe("async context loss patterns", () => {
       await delay(1);
       await state.update((x) => x * 2);
       const curr = await state.get();
-      assertExists(curr);
       return curr;
     };
 
@@ -138,21 +135,19 @@ describe("async context loss patterns", () => {
       setTimeout(async () => {
         using _ = snapshot();
         const user = await state.get();
-        assertExists(user);
         assertEquals(user, { id: "A" }); // as expected
-      }, 10);
+      }, 20);
     }
 
     {
-      const state2 = createState("user", { id: "B" });
-      const snapshot2 = Snapshot();
+      const state = createState("user", { id: "B" });
+      const snapshot = Snapshot();
 
       setTimeout(async () => {
-        using _ = snapshot2();
-        const user = await state2.get();
-        assertExists(user);
+        using _ = snapshot();
+        const user = await state.get();
         assertEquals(user, { id: "B" });
-      }, 20);
+      }, 10);
     }
 
     await delay(40);
@@ -178,7 +173,6 @@ describe("async context loss patterns", () => {
     Promise.resolve().then(() => {
       using _ = snapshot();
       state.get().then((u) => {
-        assertExists(u);
         assertEquals(u, { id: 4 });
       });
     });
@@ -188,7 +182,6 @@ describe("async context loss patterns", () => {
     Promise.resolve().then(() => {
       using _ = snapshot2();
       state2.get().then((u) => {
-        assertExists(u);
         assertEquals(u, { id: 5 });
       });
     });
