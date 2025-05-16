@@ -165,7 +165,7 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  * This forwarding mechanism enables several powerful patterns:
  *
  * - **Delegation**: Focus on handling a specific case
- * - **Decoration**: Wrap or augment another handler
+ * - **Decoration**: Wrap or augment others handlers dynamically
  * - **Observation**: React to effects and do something orthogonal
  *
  * Handlers can also perform other effects while handling their own operation
