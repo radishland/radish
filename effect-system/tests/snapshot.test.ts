@@ -12,6 +12,7 @@ describe("effects snapshots", () => {
       using _ = new HandlerScope(handleRandom);
 
       setTimeout(async () => {
+        // handlers are lost
         try {
           await random();
           unreachable();

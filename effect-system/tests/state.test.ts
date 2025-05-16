@@ -52,7 +52,32 @@ describe("effect async state", () => {
     assertEquals(value, 2);
   });
 
-  test("map(double) suffers async context loss", async () => {
+  test("snapshots keep track of mutations", async () => {
+    {
+      using _ = new HandlerScope();
+
+      const state = createState("user", { name: "bob" });
+      const snapshot = Snapshot();
+
+      // turns out the user was updated after the snapshot was taken
+      await state.set({ name: "bobby" });
+
+      setTimeout(async () => {
+        using _ = snapshot();
+        const user = await state.get();
+        assertExists(user);
+
+        // the snapshot reflects the updated data
+        assertEquals(user, { name: "bobby" });
+      }, 10);
+    }
+
+    await delay(20);
+  });
+});
+
+describe("async context loss patterns", () => {
+  test("race condition map(double)", async () => {
     let curr;
 
     const double = async (x: number) => {
@@ -67,16 +92,16 @@ describe("effect async state", () => {
     assertEquals(res, [6, 6, 6]);
   });
 
-  test("map(double) works with createState", async () => {
+  test("race condition map(double) fixed by createState", async () => {
     using _ = new HandlerScope();
 
     const double = async (x: number) => {
       const state = createState("requestId", x);
       await delay(1);
-
+      await state.update((x) => x * 2);
       const curr = await state.get();
       assertExists(curr);
-      return curr * 2;
+      return curr;
     };
 
     const res = await Promise.all([1, 2, 3].map(double));
@@ -103,7 +128,7 @@ describe("effect async state", () => {
     await delay(40);
   });
 
-  test("snapshot states keep track of their context", async () => {
+  test("setTimeout context loss fixed with createState", async () => {
     using _ = new HandlerScope();
 
     {
@@ -131,5 +156,94 @@ describe("effect async state", () => {
     }
 
     await delay(40);
+  });
+
+  test("Promise.then context loss", () => {
+    setContext({ id: 4 });
+    Promise.resolve().then(() => {
+      assertEquals(getContext(), { id: 5 }); // wants 4
+    });
+
+    setContext({ id: 5 });
+    Promise.resolve().then(() => {
+      assertEquals(getContext(), { id: 5 });
+    });
+  });
+
+  test("Promise.then context loss fixed by createState", () => {
+    using _ = new HandlerScope();
+    const state = createState("user", { id: 4 });
+    const snapshot = Snapshot();
+
+    Promise.resolve().then(() => {
+      using _ = snapshot();
+      state.get().then((u) => {
+        assertExists(u);
+        assertEquals(u, { id: 4 });
+      });
+    });
+
+    const state2 = createState("user", { id: 5 });
+    const snapshot2 = Snapshot();
+    Promise.resolve().then(() => {
+      using _ = snapshot2();
+      state2.get().then((u) => {
+        assertExists(u);
+        assertEquals(u, { id: 5 });
+      });
+    });
+  });
+
+  test("await context loss", () => {
+    const flow = async (id: number, expected: number) => {
+      setContext({ id });
+      await 1;
+      assertEquals(getContext(), { id: expected });
+    };
+
+    flow(3, 4); // would expect 3
+    flow(4, 4);
+  });
+
+  test("await context loss fixed by createState", () => {
+    const flow = async (id: number, expected: number) => {
+      using _ = new HandlerScope();
+      const state = createState("user", { id });
+      await 1;
+      const current = await state.get();
+      assertEquals(current, { id: expected });
+    };
+
+    flow(3, 3);
+    flow(4, 4);
+  });
+
+  test("queueMicrotask context loss", () => {
+    const flow = (id: number, expected: number) => {
+      setContext({ id });
+      queueMicrotask(() => {
+        assertEquals(getContext(), { id: expected });
+      });
+    };
+
+    flow(3, 4); // would expect 3
+    flow(4, 4);
+  });
+
+  test("queueMicrotask context loss fixed by createState", () => {
+    const flow = (id: number, expected: number) => {
+      using _ = new HandlerScope();
+      const state = createState("user", { id });
+      const snapshot = Snapshot();
+
+      queueMicrotask(async () => {
+        using _ = snapshot();
+        const current = await state.get();
+        assertEquals(current, { id: expected });
+      });
+    };
+
+    flow(3, 3);
+    flow(4, 4);
   });
 });
