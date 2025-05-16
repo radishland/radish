@@ -22,11 +22,16 @@ To cut a release, follow these steps:
 
 1. Review the changes and manually update the following version numbers if
    relevant:
-   - in the README/try-it-out section
-   - in the init/deno.json template file
-   - in the runtime/package.json
+   - README/try-it-out section if @radish/init was bumped
+   - runtime/package.json if @radish/runtime was bumped
+   - init/template/base/deno.jsonc if @radish/core or @radish/runtime were bumped
 
 1. Create and land a PR
+
+1. Publish @radish/runtime if it has a new version
+   ```sh
+
+   ```
 
 1. Switch back to the main branch, pull the changes and delete the release
    branch
