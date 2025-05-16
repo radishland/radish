@@ -114,7 +114,7 @@ export class Handler<P extends any[], R> {
    *
    * In a handlers sequence there must always be a terminal handler, that is, a handler that is a total function and does not delegate.
    *
-   * @throws If there is no terminal handler in the sequence
+   * @throws {MissingTerminalHandlerError} If there is no terminal handler in the sequence
    */
   static continue<P extends any[]>(...payload: P): Continue<P> {
     return new Continue(...payload);
@@ -159,7 +159,7 @@ export class Continue<P extends any[]> {
  * }
  *
  * // not in scope
- * await io.read("other/path"); // throws
+ * await io.read("other/path"); // throws UnhandledEffectError
  * ```
  *
  * @example Order handlers
