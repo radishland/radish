@@ -183,7 +183,10 @@ export class HandlerScope {
    *
    * @internal
    */
-  handlers = new Map<string, Handler<any, any>>();
+  handlers: Map<string, Handler<any, any>> = new Map<
+    string,
+    Handler<any, any>
+  >();
   /**
    * The internal store where {@linkcode HandlerScope HandlerScopes} keep track of AsyncState created with {@linkcode createState}
    *
@@ -191,7 +194,7 @@ export class HandlerScope {
    *
    * @internal
    */
-  store = new Map<string, any>();
+  store: Map<string, any> = new Map<string, any>();
 
   /**
    * Creates a new {@linkcode HandlerScope}
@@ -338,7 +341,7 @@ export class HandlerScope {
  *
  * @see {@linkcode createState}
  */
-export const Snapshot = () => {
+export const Snapshot = (): () => HandlerScope => {
   const handlersMap = handlerScopes.map((
     scope,
   ) => [...scope.handlers.values()]);
