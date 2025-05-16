@@ -178,7 +178,19 @@ export class HandlerScope {
   #stack = new DisposableStack();
   #disposed = false;
 
+  /**
+   * The map of registered handlers in the {@linkcode HandlerScope}
+   *
+   * @internal
+   */
   handlers = new Map<string, Handler<any, any>>();
+  /**
+   * The internal store where {@linkcode HandlerScope HandlerScopes} keep track of AsyncState created with {@linkcode createState}
+   *
+   * You don't interact directly with this store
+   *
+   * @internal
+   */
   store = new Map<string, any>();
 
   /**
@@ -282,6 +294,52 @@ export class HandlerScope {
   }
 }
 
+/**
+ * Creates a snapshot of the whole {@linkcode HandlerScope} stack
+ *
+ * AsyncState stored inside `HandlerScope` {@linkcode HandlerScope.store stores} is also captured by the snapshot and restored when using the snapshot.
+ *
+ * Creating a snapshot doesn't freeze the state. This means you can create AsyncState with {@linkcode createState}, create a snapshot with {@linkcode Snapshot}, then update the state after the snapshot was created and still expect to retrieve the live, updated state when restoring the snapshot. Without race conditions or context loss in async flows.
+ *
+ * @example Restoring handlers in a `setTimeout`
+ *
+ * ```ts
+ * {
+ *   using _ = new HandlerScope(handleRandom);
+ *   const snapshot = Snapshot();
+ *
+ *   setTimeout(async () => {
+ *     // without the snapshot `setTimeout` executes after the scope is disposed of which would throw a `MissingHandlerScopeError`
+ *     using _ = snapshot();
+ *     const num = await random();
+ *     assert(typeof num === "number");
+ *   }, 10);
+ * }
+ * ```
+ *
+ * @example Updating state after snapshot creation
+ *
+ * ```ts
+ * {
+ *   using _ = new HandlerScope();
+ *   const state = createState("user", { name: "bob" });
+ *
+ *   const snapshot = Snapshot();
+ *
+ *   // turns out the user was updated after the snapshot was taken but before the scheduled workflow runs
+ *   await state.set({ name: "bobby" });
+ *
+ *   setTimeout(async () => {
+ *     using _ = snapshot();
+ *     const user = await state.get();
+ *     // the snapshot reflects the updated data
+ *     assertEquals(user, { name: "bobby" });
+ *   }, 10);
+ * }
+ * ```
+ *
+ * @see {@linkcode createState}
+ */
 export const Snapshot = () => {
   const handlersMap = handlerScopes.map((
     scope,
