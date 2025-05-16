@@ -1,5 +1,5 @@
 /**
- * Structuring code with an effect system unlocks **testability**, **simplicity**, **modularity**, **customizability**.
+ * Structuring code with [Radish](https://github.com/radishland/radish) effect-system unlocks **testability**, **simplicity**, **modularity**, **customizability**.
  *
  * - **Testability**: Swap handlers in a test environment to easily mock deep side-effects without modifying your API for testing purposes
  * - **Simplicity**: Avoiding the need to pass context objects or callbacks solely for testing makes code simpler and more focused, with thinner, single responsibility APIs
@@ -100,6 +100,7 @@ export {
   HandlerScope,
   Snapshot,
 } from "./handlers.ts";
+export { createState, type StateOps } from "./state.ts";
 
 /**
  * The polymorphic identity

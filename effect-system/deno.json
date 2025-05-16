@@ -11,6 +11,6 @@
     ]
   },
   "publish": {
-    "exclude": ["**/*.test.ts"]
+    "exclude": ["**/*.test.ts", "tests"]
   }
 }
