@@ -28,13 +28,13 @@ To cut a release, follow these steps:
 
 1. Create and land a PR
 
-1. Publish @radish/runtime if it has a new version
-   ```sh
-
-   ```
-
 1. Switch back to the main branch, pull the changes and delete the release
    branch
+
+1. Publish @radish/runtime if it has a new version
+   ```sh
+   pnpm publish
+   ```
 
 1. Tag the main branch with release-YYY-MM-DD (this step can be automated in the
    future):
