@@ -142,7 +142,9 @@ export class Continue<P extends any[]> {
 }
 
 /**
- * A {@linkcode HandlerScope} creates a new scope where effects are handled
+ * A {@linkcode HandlerScope} creates a new scope where effects are handled and AsyncState is stored.
+ *
+ * Use `using` when creating a `HandlerScope` to have proper cleanup when leaving the scope
  *
  * The {@linkcode handle} method is responsible for finding handlers in scope for a given effect.
  *
