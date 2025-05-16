@@ -13,7 +13,7 @@ To cut a release, follow these steps:
    deno publish --dry-run
    ```
 
-1. Create a release branch and run the version bump script:
+1. Create a release branch and run the version bump script from the root:
    ```sh
    deno run -A jsr:@deno/bump-workspaces@0.1.22/cli
    ```
