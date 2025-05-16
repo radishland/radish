@@ -44,6 +44,6 @@ To cut a release, follow these steps:
    git push origin release-YYYY.MM.DD
    ```
 
-1. Publish the tag from github UI (Make sure the tag has the correct form).
+1. Publish as pre-release from github UI
 
 1. Wait for the workspace publish action to publish the new versions to JSR.
