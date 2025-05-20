@@ -4,29 +4,6 @@ import type { ImportMapOptions } from "./plugins/importmap/importmap.ts";
 
 export type MaybePromise<T> = T | Promise<T>;
 
-export type HmrEvent = {
-  /**
-   * Indicates whether the source of the event is a file
-   */
-  isFile: boolean;
-  /**
-   * The path of the entry triggering the event
-   */
-  path: string;
-  /**
-   * The path of the original entry in the case of a rename event
-   */
-  from?: string;
-  /**
-   * The timestamp the event was triggered at
-   */
-  timestamp: number;
-  /**
-   * The kind of the underlying `FsEvent`
-   */
-  kind: Deno.FsEvent["kind"];
-};
-
 export interface ManifestBase extends Record<string, any> {
   /**
    * Maps module paths to their import specifiers
@@ -43,6 +20,10 @@ export interface Plugin {
 }
 
 export interface Config {
+  /**
+   * The arguments of the current running command
+   */
+  args?: CLIArgs;
   env?: {
     /**
      * Path to the env file.
@@ -88,7 +69,7 @@ export interface Config {
   speculationRules?: SpeculationRules;
 }
 
-export type CLIArgs = Readonly<{
+export type CLIArgs = Partial<{
   build: boolean;
   dev: boolean;
   env: boolean;
@@ -96,10 +77,3 @@ export type CLIArgs = Readonly<{
   manifest: boolean;
   server: boolean;
 }>;
-
-export interface ResolvedConfig extends Config {
-  /**
-   * The arguments of the current running command
-   */
-  args: CLIArgs;
-}

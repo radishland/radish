@@ -1,13 +1,13 @@
-import type { Config, ResolvedConfig } from "../types.d.ts";
+import type { Config } from "../types.d.ts";
 import { createEffect, type EffectWithId } from "@radish/effect-system";
 
 interface ConfigEffect {
-  read: () => ResolvedConfig;
+  read: () => Config;
   transform: (config: Config) => Config;
 }
 
 export const config: {
-  read: EffectWithId<[], ResolvedConfig>;
+  read: EffectWithId<[], Config>;
   transform: EffectWithId<[config: Config], Config>;
 } = {
   /**
