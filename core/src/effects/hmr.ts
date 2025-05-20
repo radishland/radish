@@ -1,18 +1,5 @@
-import { extname, relative } from "@std/path";
-import { build } from "$effects/build.ts";
-import {
-  elementsFolder,
-  libFolder,
-  routesFolder,
-  staticFolder,
-} from "../constants.ts";
-import { manifest } from "./manifest.ts";
-import type { HmrEvent } from "../types.d.ts";
-import { TtlCache } from "../utils/cache.ts";
-import { ws } from "../server/ws.ts";
-import { generateImportmap } from "../plugins/importmap/importmap.ts";
 import { createEffect, type EffectWithId } from "@radish/effect-system";
-import { onDispose } from "../cleanup.ts";
+import type { HmrEvent } from "$lib/types.d.ts";
 
 type HotUpdateParam = {
   event: HmrEvent;
@@ -34,66 +21,4 @@ export const hmr: {
    * Triggers the hot update transform
    */
   update: createEffect<Hot["update"]>("hot/update"),
-};
-
-const hmrEvensCache = new TtlCache<string, HmrEvent>(200);
-let watcher: Deno.FsWatcher | undefined;
-
-export const startHMR = async (): Promise<void> => {
-  watcher = Deno.watchFs([
-    elementsFolder,
-    routesFolder,
-    libFolder,
-    staticFolder,
-  ], { recursive: true });
-
-  onDispose(() => {
-    watcher?.close();
-    console.log("HMR closed");
-  });
-
-  console.log("HRM server watching...");
-
-  for await (const event of watcher) {
-    console.log(`FS Event`, event.kind, event.paths, Date.now());
-
-    for (const path of event.paths) {
-      const relativePath = relative(Deno.cwd(), path);
-      const key = `${event.kind}:${path}`;
-
-      if (!hmrEvensCache.has(key)) {
-        const hmrEvent: HmrEvent = {
-          isFile: !!extname(path),
-          path: relativePath,
-          kind: event.kind,
-          timestamp: Date.now(),
-        };
-        hmrEvensCache.set(key, hmrEvent);
-        await hotUpdatePipeline(hmrEvent);
-      }
-
-      // TODO: update router
-      // if (!throttle.has("route")) {
-      //   // Update routes
-      //   if (
-      //     event.paths.some((p) => common([routesPath, p]) === routesPath)
-      //   ) {
-      //     router.generateFileBasedRoutes();
-      //   }
-      //   throttle.add("route");
-      // }
-    }
-  }
-};
-
-const hotUpdatePipeline = async (event: HmrEvent) => {
-  const { paths } = await hmr.update({ event, paths: [event.path] });
-
-  await manifest.write();
-  await manifest.load();
-  await generateImportmap();
-  await build.start(paths, { incremental: true });
-
-  console.log("Hot-Reloading...");
-  ws.send("reload");
 };

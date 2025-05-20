@@ -1,5 +1,4 @@
 import { config as configEffect } from "$effects/config.ts";
-import { startHMR } from "$effects/hmr.ts";
 import { dispose, onDispose } from "$lib/cleanup.ts";
 import {
   buildFolder,
@@ -9,6 +8,7 @@ import {
   staticFolder,
 } from "$lib/constants.ts";
 import { dev } from "$lib/environment.ts";
+import { startHMR } from "$lib/plugins/hmr/hmr.ts";
 import type { MaybePromise } from "$lib/types.d.ts";
 import { AppError, createStandardResponse } from "$lib/utils/http.ts";
 import { getCookies, STATUS_CODE } from "@std/http";
