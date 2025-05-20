@@ -6,7 +6,7 @@
     ".": "./src/mod.ts",
     "./effects": "./src/effects/mod.ts",
     "./plugins": "./src/plugins/mod.ts",
-    "./parser": "./exports/parser.ts",
+    "./parser": "./src/parser.ts",
     "./environment": "./src/environment.ts"
   },
   "fmt": {
