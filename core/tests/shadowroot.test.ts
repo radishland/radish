@@ -1,5 +1,5 @@
 import { fragments, serializeFragments } from "@radish/htmlcrunch";
-import { applyServerEffects } from "../src/walk.ts";
+import { applyServerEffects } from "../src/plugins/render/utils/walk.ts";
 import { assertEquals } from "@std/assert/equals";
 
 Deno.test("inline shadowroot", () => {
