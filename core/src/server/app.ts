@@ -14,6 +14,7 @@ import type { MaybePromise } from "../types.d.ts";
 import { AppError, createStandardResponse } from "../utils/http.ts";
 import { Router } from "./router.ts";
 import { ws } from "./ws.ts";
+import { dispose, onDispose } from "../cleanup.ts";
 
 export type Context = {
   request: Request;
@@ -29,7 +30,6 @@ export type Handle = (input: {
 
 let router: Router;
 let server: Deno.HttpServer<Deno.NetAddr>;
-let watcher: Deno.FsWatcher | undefined;
 let handle: Handle;
 
 const defaults = {
@@ -77,6 +77,8 @@ export const createApp = async (handler: Handle) => {
    * Server
    */
 
+  if (dev) ws.create();
+
   server = Deno.serve({
     port: defaults.port,
     hostname: defaults.hostname,
@@ -94,10 +96,15 @@ export const createApp = async (handler: Handle) => {
     }
     if (dev && request.headers.get("upgrade") === "websocket") {
       const { socket, response } = Deno.upgradeWebSocket(request);
-      ws.handleWebSocket(socket);
+      ws.handle(socket);
       return response;
     }
     return handleRequest(request, info);
+  });
+
+  onDispose(async () => {
+    await server.shutdown();
+    console.log("Server closed");
   });
 
   Deno.addSignalListener("SIGINT", shutdown);
@@ -106,15 +113,10 @@ export const createApp = async (handler: Handle) => {
   if (dev) startHMR();
 };
 
-const shutdown = (): void => {
+const shutdown = async () => {
   console.log("\nShutting down gracefully...");
-
-  ws.close();
-  watcher?.close();
-  server.shutdown().then(() => {
-    console.log("Server closed");
-    Deno.exit();
-  });
+  await dispose();
+  Deno.exit();
 };
 
 const handleRequest: Deno.ServeHandler = async (request) => {
