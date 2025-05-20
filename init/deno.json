@@ -5,11 +5,6 @@
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts"
   },
-  "fmt": {
-    "exclude": [
-      "**/*.md"
-    ]
-  },
   "exports": {
     ".": "./mod.ts"
   }

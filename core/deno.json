@@ -9,11 +9,6 @@
     "./parser": "./src/parser.ts",
     "./environment": "./src/environment.ts"
   },
-  "fmt": {
-    "exclude": [
-      "**/*.md"
-    ]
-  },
   "imports": {
     "$effects/": "./src/effects/",
     "$lib/": "./src/",
