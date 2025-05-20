@@ -14,7 +14,7 @@ const resources = new AsyncDisposableStack();
  * })
  * ```
  */
-export const onDispose = (callback: () => PromiseLike<void> | void) => {
+export const onDispose = (callback: () => PromiseLike<void> | void): void => {
   resources.defer(callback);
 };
 
