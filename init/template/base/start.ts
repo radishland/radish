@@ -9,7 +9,7 @@ import {
   pluginRender,
   pluginStripTypes,
 } from "@radish/core/plugins";
-import type { Config } from "@radish/core/types";
+import type { Config } from "@radish/core";
 
 const config: Config = {
   importmap: {
