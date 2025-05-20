@@ -1,5 +1,5 @@
+import { assertArrayIncludes } from "@std/assert/array-includes";
 import { booleanAttributes } from "@radish/htmlcrunch";
-import { assertArrayIncludes } from "@std/assert";
 
 export const setAttribute = (
   attributes: [string, string][],

@@ -1,7 +1,7 @@
 import { isElementNode } from "@radish/htmlcrunch";
 import { handlerFor } from "@radish/effect-system";
 import { render } from "$effects/render.ts";
-import { setAttribute } from "../common.ts";
+import { setAttribute } from "../utils/setAttribute.ts";
 import { handleAttrDirective } from "./attr/attr.ts";
 import { handleBindDirective } from "./bind/bind.ts";
 import { handleBoolDirective } from "./bool/bool.ts";
