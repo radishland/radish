@@ -1,5 +1,5 @@
 import type { MFragment, MNode } from "@radish/htmlcrunch";
-import { createEffect } from "@radish/effect-system";
+import { createEffect, type EffectWithId } from "@radish/effect-system";
 import type { ManifestBase } from "../types.d.ts";
 import type { AnyConstructor } from "@std/assert";
 
@@ -45,7 +45,15 @@ interface RenderOperations {
   directive: (node: MNode, key: string, value: string) => void;
 }
 
-export const render = {
+export const render: {
+  transformNode: EffectWithId<[node: MNode], MNode>;
+  component: EffectWithId<[element: ElementManifest], string>;
+  route: EffectWithId<
+    [route: RouteManifest, insertHead: string, insertBody: string],
+    string
+  >;
+  directive: EffectWithId<[node: MNode, key: string, value: string], void>;
+} = {
   /**
    * Prepares a node to be serialized
    */

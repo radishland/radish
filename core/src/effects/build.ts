@@ -1,5 +1,5 @@
 import type { WalkEntry } from "@std/fs";
-import { createEffect } from "@radish/effect-system";
+import { createEffect, type EffectWithId } from "@radish/effect-system";
 
 type BuildOptions = { incremental?: boolean };
 
@@ -9,7 +9,14 @@ interface Build {
   start: (paths: string[], options?: BuildOptions) => void;
 }
 
-export const build = {
+export const build: {
+  file: EffectWithId<[path: string], void>;
+  sort: EffectWithId<[entries: WalkEntry[]], WalkEntry[]>;
+  start: EffectWithId<
+    [paths: string[], options?: BuildOptions | undefined],
+    void
+  >;
+} = {
   /**
    * Builds a single file
    */
