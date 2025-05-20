@@ -6,7 +6,6 @@
     ".": "./src/mod.ts",
     "./effects": "./src/effects/mod.ts",
     "./parser": "./exports/parser.ts",
-    "./utils": "./exports/utils.ts",
     "./environment": "./src/environment.ts",
     "./plugins": "./exports/plugins.ts"
   },
