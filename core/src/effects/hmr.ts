@@ -27,7 +27,7 @@ interface Hot {
   update: (param: HotUpdateParam) => HotUpdateParam;
 }
 
-export const hot: {
+export const hmr: {
   update: EffectWithId<[param: HotUpdateParam], HotUpdateParam>;
 } = {
   /**
@@ -87,7 +87,7 @@ export const startHMR = async (): Promise<void> => {
 };
 
 const hotUpdatePipeline = async (event: HmrEvent) => {
-  const { paths } = await hot.update({ event, paths: [event.path] });
+  const { paths } = await hmr.update({ event, paths: [event.path] });
 
   await manifest.write();
   await manifest.load();

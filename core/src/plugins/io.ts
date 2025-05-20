@@ -1,13 +1,13 @@
+import { hmr } from "$effects/hmr.ts";
+import { io } from "$effects/io.ts";
+import { buildFolder } from "$lib/constants.ts";
+import type { Plugin } from "$lib/types.d.ts";
+import { id } from "$lib/utils/algebraic-structures.ts";
+import { throwUnlessNotFound } from "$lib/utils/io.ts";
+import { isParent, workspaceRelative } from "$lib/utils/path.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
 import { ensureDir } from "@std/fs";
 import { dirname, join } from "@std/path";
-import { buildFolder } from "../constants.ts";
-import { Handler, handlerFor } from "@radish/effect-system";
-import { hot } from "$effects/hot-update.ts";
-import { io } from "$effects/io.ts";
-import type { Plugin } from "../types.d.ts";
-import { throwUnlessNotFound } from "../utils/io.ts";
-import { isParent, workspaceRelative } from "../utils/path.ts";
-import { id } from "../utils/algebraic-structures.ts";
 
 /**
  * A file store caching `Deno.readTextFile` calls for efficient file access
@@ -75,7 +75,7 @@ export const pluginIO: Plugin = {
     /**
      * Invalidates the file cache when a file is modified or removed
      */
-    handlerFor(hot.update, ({ event, paths }) => {
+    handlerFor(hmr.update, ({ event, paths }) => {
       if (
         event.isFile &&
         (event.kind === "modify" || event.kind === "remove")
@@ -94,7 +94,7 @@ export const pluginIO: Plugin = {
     /**
      * Updates files inside the build folder in a way that mirrors the source folder structure
      */
-    handlerFor(hot.update, async ({ event, paths }) => {
+    handlerFor(hmr.update, async ({ event, paths }) => {
       if (event.kind === "remove") {
         try {
           const target = await io.emitTo(event.path);

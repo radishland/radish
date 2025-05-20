@@ -1,20 +1,20 @@
-import { dev } from "../environment.ts";
-import { getCookies, STATUS_CODE } from "@std/http";
-import { join } from "@std/path";
+import { config as configEffect } from "$effects/config.ts";
+import { startHMR } from "$effects/hmr.ts";
+import { dispose, onDispose } from "$lib/cleanup.ts";
 import {
   buildFolder,
   elementsFolder,
   libFolder,
   routesFolder,
   staticFolder,
-} from "../constants.ts";
-import { config as configEffect } from "$effects/config.ts";
-import { startHMR } from "$effects/hot-update.ts";
-import type { MaybePromise } from "../types.d.ts";
-import { AppError, createStandardResponse } from "../utils/http.ts";
+} from "$lib/constants.ts";
+import { dev } from "$lib/environment.ts";
+import type { MaybePromise } from "$lib/types.d.ts";
+import { AppError, createStandardResponse } from "$lib/utils/http.ts";
+import { getCookies, STATUS_CODE } from "@std/http";
+import { join } from "@std/path";
 import { Router } from "./router.ts";
 import { ws } from "./ws.ts";
-import { dispose, onDispose } from "../cleanup.ts";
 
 export type Context = {
   request: Request;
