@@ -1,14 +1,25 @@
-export const ws = {
-  clients: new Set<WebSocket>(),
+import { onDispose } from "../cleanup.ts";
 
-  handleWebSocket(socket: WebSocket) {
+let clients: Set<WebSocket>;
+
+export const ws = {
+  create() {
+    clients = new Set<WebSocket>();
+
+    onDispose(() => {
+      for (const client of clients) client.close();
+      clients.clear();
+      console.log("WebSocket connection closed");
+    });
+  },
+  handle(socket: WebSocket) {
     socket.addEventListener("open", () => {
       console.log("WebSocket Client connected");
-      this.clients.add(socket);
+      clients.add(socket);
     });
     socket.addEventListener("close", () => {
       console.log("WebSocket Client disconnected");
-      this.clients.delete(socket);
+      clients.delete(socket);
     });
     socket.addEventListener("message", (e) => {
       console.log("WebSocket message", e);
@@ -19,17 +30,10 @@ export const ws = {
   },
 
   send(payload: string) {
-    for (const client of this.clients) {
+    for (const client of clients) {
       if (client.readyState === WebSocket.OPEN) {
         client.send(payload);
       }
     }
-  },
-
-  close() {
-    for (const client of this.clients) {
-      client.close();
-    }
-    this.clients.clear();
   },
 };

@@ -12,6 +12,7 @@ import { TtlCache } from "../utils/cache.ts";
 import { ws } from "../server/ws.ts";
 import { generateImportmap } from "../plugins/importmap/importmap.ts";
 import { createEffect, type EffectWithId } from "@radish/effect-system";
+import { onDispose } from "../cleanup.ts";
 
 type HotUpdateParam = {
   event: HmrEvent;
@@ -45,6 +46,11 @@ export const startHMR = async (): Promise<void> => {
     libFolder,
     staticFolder,
   ], { recursive: true });
+
+  onDispose(() => {
+    watcher?.close();
+    console.log("HMR closed");
+  });
 
   console.log("HRM server watching...");
 
