@@ -2,13 +2,13 @@ import { createEffect, type EffectWithId } from "@radish/effect-system";
 
 interface WS {
   create: () => void;
-  handle: (socket: WebSocket) => void;
+  handleSocket: (socket: WebSocket) => void;
   send: (message: string) => void;
 }
 
 export const ws: {
   create: EffectWithId<[], void>;
-  handle: EffectWithId<[WebSocket], void>;
+  handleSocket: EffectWithId<[WebSocket], void>;
   send: EffectWithId<[string], void>;
 } = {
   /**
@@ -18,7 +18,7 @@ export const ws: {
   /**
    * Handles a WebSocket
    */
-  handle: createEffect<WS["handle"]>("ws/handle"),
+  handleSocket: createEffect<WS["handleSocket"]>("ws/socket"),
   /**
    * Sends a message
    */

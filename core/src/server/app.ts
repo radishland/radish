@@ -95,7 +95,7 @@ export const createApp = async (handler: Handle) => {
     }
     if (dev && request.headers.get("upgrade") === "websocket") {
       const { socket, response } = Deno.upgradeWebSocket(request);
-      await ws.handle(socket);
+      await ws.handleSocket(socket);
       return response;
     }
     return handleRequest(request, info);

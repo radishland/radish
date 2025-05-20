@@ -6,7 +6,7 @@ import { handleInsertWebSocketScript } from "./hooks/render.ts";
 
 let clients: Set<WebSocket>;
 
-const create = handlerFor(ws.create, () => {
+const handleWSCreate = handlerFor(ws.create, () => {
   clients = new Set<WebSocket>();
 
   onDispose(() => {
@@ -16,7 +16,7 @@ const create = handlerFor(ws.create, () => {
   });
 });
 
-const send = handlerFor(ws.send, (payload) => {
+const handleWSSend = handlerFor(ws.send, (payload) => {
   console.log("Hot-Reloading...");
 
   for (const client of clients) {
@@ -26,7 +26,7 @@ const send = handlerFor(ws.send, (payload) => {
   }
 });
 
-const handle = handlerFor(ws.handle, (socket) => {
+const handleWSHandleSocket = handlerFor(ws.handleSocket, (socket) => {
   socket.addEventListener("open", () => {
     console.log("WebSocket Client connected");
     clients.add(socket);
@@ -50,5 +50,10 @@ const handle = handlerFor(ws.handle, (socket) => {
  */
 export const pluginWS: Plugin = {
   name: "plugin-ws",
-  handlers: [create, handle, send, handleInsertWebSocketScript],
+  handlers: [
+    handleWSCreate,
+    handleWSHandleSocket,
+    handleWSSend,
+    handleInsertWebSocketScript,
+  ],
 };
