@@ -12,3 +12,4 @@ export {
   render,
   type RouteManifest,
 } from "./render.ts";
+export { ws } from "./ws.ts";

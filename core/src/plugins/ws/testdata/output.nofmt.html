@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script>
+      const ws = new WebSocket("ws://localhost:1235/ws");
+      ws.onmessage = (e) => {
+        if (e.data === "reload") {
+          console.log("Reload triggered by server");
+          location.reload();
+        }
+      };
+      ws.onerror = (e) => {
+        console.error("WebSocket error", e);
+      };
+      ws.onclose = () => {
+        console.log("Websocket connection closed");
+      };
+    </script>
+
+    <script type="module">
+      import "@radish/runtime/boot";
+    </script>
+
+    <title>Document</title>
+  </head>
+  <body>
+    <p>Hello world</p>
+  </body>
+</html>

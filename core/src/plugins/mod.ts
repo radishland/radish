@@ -7,3 +7,4 @@ export { pluginIO } from "./io.ts";
 export { pluginManifest, updateManifest } from "./manifest/manifest.ts";
 export { pluginRender } from "./render/mod.ts";
 export { pluginStripTypes } from "./strip-types.ts";
+export { pluginWS } from "./ws/ws.ts";

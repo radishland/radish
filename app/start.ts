@@ -1,17 +1,19 @@
+import type { Config } from "@radish/core";
 import { importmapPath, manifestPath, startApp } from "@radish/core";
-import { handlerFor } from "@radish/effect-system";
 import { importmap, io } from "@radish/core/effects";
+import { handlerFor } from "@radish/effect-system";
 import {
   pluginBuild,
   pluginConfig,
   pluginEnv,
+  pluginHMR,
   pluginImportmap,
   pluginIO,
   pluginManifest,
   pluginRender,
   pluginStripTypes,
+  pluginWS,
 } from "@radish/core/plugins";
-import type { Config } from "@radish/core/types";
 
 const config: Config = {
   importmap: {
@@ -36,6 +38,8 @@ const config: Config = {
   },
   router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
   plugins: [
+    pluginHMR,
+    pluginWS,
     pluginRender,
     {
       name: "plugin-rewrite-importmap-imports",
@@ -59,6 +63,7 @@ const config: Config = {
         }),
       ],
     },
+
     pluginBuild,
     pluginImportmap,
     pluginManifest,
