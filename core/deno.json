@@ -4,12 +4,11 @@
   "license": "MIT",
   "exports": {
     ".": "./src/mod.ts",
+    "./effects": "./src/effects/mod.ts",
     "./parser": "./exports/parser.ts",
     "./utils": "./exports/utils.ts",
     "./environment": "./src/environment.ts",
-    "./types": "./exports/types.ts",
-    "./plugins": "./exports/plugins.ts",
-    "./effects": "./exports/effects.ts"
+    "./plugins": "./exports/plugins.ts"
   },
   "fmt": {
     "exclude": [
