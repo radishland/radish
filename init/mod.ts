@@ -1,5 +1,5 @@
 import { assert, assertExists, assertObjectMatch } from "@std/assert";
-import { parseArgs } from "@std/cli/parse-args";
+import { parseArgs } from "@std/cli";
 import { Spinner } from "@std/cli/unstable-spinner";
 import { bold, green } from "@std/fmt/colors";
 import { emptyDirSync, existsSync } from "@std/fs";

@@ -1,39 +1,35 @@
 # Roadmap
 
-[x] Inline declarative shadow root templates on the server
-[x] JIT CSS variables: fluid scale and typography
-[x] Scoped Handler Registries
-[x] @on directive
-[x] @use directive
-[x] @attr directive
-[x] @class directive
-[x] @prop directive
-[x] @text directive
-[x] @html directive
-[x] @bind directive
-[x] Generate client importmap
-[x] Hydration script
-[x] auto-import custom elements
-[x] Hot-reloading dev server
+- [x] Inline declarative shadow root templates on the server
+- [x] JIT CSS variables: fluid scale and typography
+- [x] Scoped Handler Registries
+- [x] Directives: on, use, attr, class, prop, text, html, bind
+- [x] Importmap
+- [x] Hydration script
+- [x] auto-import custom elements
+- [x] HMR
 
-[ ] Scaffolding scripts for project & components
-[ ] Lazy load islands
-[ ] Handle client errors and try-catch components
-[ ] Load effect
-[ ] Option to prerender a component
-[ ] local first compatible data loading model with storage providers, diffing & merging and smart updates on navigation request
-[?] Convenience: use proxy for state?
-[ ] Distinguish between route level handler registries and others: a global handler throws if it sees an unhandled interaction request
-[ ] Stateful navigation
+- [ ] Scaffolding scripts for project & components
+- [ ] Lazy load islands
+- [ ] Handle client errors and try-catch components
+- [ ] Load effect
+- [ ] Option to prerender a component
+- [ ] local first compatible data loading model with storage providers, diffing
+      & merging and smart updates on navigation request
+- [?] Convenience: use proxy for state?
+- [ ] Distinguish between route level handler registries and others: a global
+      handler throws if it sees an unhandled interaction request
+- [ ] Stateful navigation
 
-[ ] Templating: loops
+- [ ] Templating: loops
 
-[ ] Static files: cache headers
-[ ] Static files: content length headers
+- [ ] Static files: cache headers
+- [ ] Static files: content length headers
 
-[ ] Security: CSP
-[ ] Security: Rate Limiter
-[ ] Security: Handle 413 Content too large, 414 URI too large, 415 Unsupported media
+- [ ] Security: CSP
+- [ ] Security: Rate Limiter
+- [ ] Security: Handle 413 Content too large, 414 URI too large, 415 Unsupported
+      media
 
 ---
 

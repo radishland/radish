@@ -1,16 +1,16 @@
-import { assertObjectMatch } from "@std/assert";
-import { extname } from "@std/path";
-import { elementsFolder, routesFolder } from "../../../constants.ts";
-import { Handler, handlerFor } from "@radish/effect-system";
-import { hot } from "$effects/hot-update.ts";
+import { hmr } from "$effects/hmr.ts";
 import { manifest } from "$effects/manifest.ts";
 import type { Manifest } from "$effects/render.ts";
-import { filename, isParent } from "../../../utils/path.ts";
-import { manifestShape } from "./manifest.ts";
+import { elementsFolder, routesFolder } from "$lib/constants.ts";
+import { filename, isParent } from "$lib/utils/path.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
+import { assertObjectMatch } from "@std/assert";
+import { extname } from "@std/path";
 import { updateManifest } from "../../manifest/manifest.ts";
+import { manifestShape } from "./manifest.ts";
 
 export const handleHotUpdate = handlerFor(
-  hot.update,
+  hmr.update,
   async ({ event, paths }) => {
     const extension = extname(event.path);
     const _manifest = await manifest.get() as Manifest;

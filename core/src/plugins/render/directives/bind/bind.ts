@@ -3,7 +3,7 @@ import { assert } from "@std/assert";
 import { bindingConfig } from "@radish/runtime/utils";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { render } from "$effects/render.ts";
-import { setAttribute } from "../../common.ts";
+import { setAttribute } from "../../utils/setAttribute.ts";
 import { contextLookup } from "../../state.ts";
 
 export const handleBindDirective = handlerFor(

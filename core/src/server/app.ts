@@ -1,20 +1,20 @@
-import { dev } from "../environment.ts";
-import { getCookies, STATUS_CODE } from "@std/http";
-import { join } from "@std/path";
+import { config as configEffect } from "$effects/config.ts";
+import { hmr } from "$effects/mod.ts";
+import { ws } from "$effects/ws.ts";
+import { dispose, onDispose } from "$lib/cleanup.ts";
 import {
   buildFolder,
   elementsFolder,
   libFolder,
   routesFolder,
   staticFolder,
-} from "../constants.ts";
-import { config as configEffect } from "$effects/config.ts";
-import { startHMR } from "$effects/hot-update.ts";
-import type { MaybePromise } from "../types.d.ts";
-import { AppError, createStandardResponse } from "../utils/http.ts";
+} from "$lib/constants.ts";
+import { dev } from "$lib/environment.ts";
+import type { MaybePromise } from "$lib/types.d.ts";
+import { AppError, createStandardResponse } from "$lib/utils/http.ts";
+import { getCookies, STATUS_CODE } from "@std/http";
+import { join } from "@std/path";
 import { Router } from "./router.ts";
-import { ws } from "./ws.ts";
-import { dispose, onDispose } from "../cleanup.ts";
 
 export type Context = {
   request: Request;
@@ -29,7 +29,6 @@ export type Handle = (input: {
 }) => MaybePromise<Response>;
 
 let router: Router;
-let server: Deno.HttpServer<Deno.NetAddr>;
 let handle: Handle;
 
 const defaults = {
@@ -77,9 +76,9 @@ export const createApp = async (handler: Handle) => {
    * Server
    */
 
-  if (dev) ws.create();
+  if (dev) await ws.create();
 
-  server = Deno.serve({
+  const server = Deno.serve({
     port: defaults.port,
     hostname: defaults.hostname,
     onListen: () => {
@@ -88,7 +87,7 @@ export const createApp = async (handler: Handle) => {
         "color: green",
       );
     },
-  }, (request, info) => {
+  }, async (request, info) => {
     console.log("Request", request.method, request.url);
     if (!dev && request.headers.get("upgrade")) {
       // Not implemented: we don't support upgrades in production
@@ -96,7 +95,7 @@ export const createApp = async (handler: Handle) => {
     }
     if (dev && request.headers.get("upgrade") === "websocket") {
       const { socket, response } = Deno.upgradeWebSocket(request);
-      ws.handle(socket);
+      await ws.handleSocket(socket);
       return response;
     }
     return handleRequest(request, info);
@@ -110,7 +109,7 @@ export const createApp = async (handler: Handle) => {
   Deno.addSignalListener("SIGINT", shutdown);
   Deno.addSignalListener("SIGTERM", shutdown);
 
-  if (dev) startHMR();
+  if (dev) await hmr.start();
 };
 
 const shutdown = async () => {

@@ -8,11 +8,6 @@
   "exports": {
     ".": "./mod.ts"
   },
-  "fmt": {
-    "exclude": [
-      "**/*.md"
-    ]
-  },
   "publish": {
     "exclude": [
       "./tests/**/*"

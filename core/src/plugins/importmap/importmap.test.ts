@@ -1,11 +1,11 @@
-import { assertEquals } from "@std/assert/equals";
+import { importmapPath } from "$effects/importmap.ts";
+import { io } from "$effects/io.ts";
+import { id } from "$lib/utils/algebraic-structures.ts";
+import { handlerFor, HandlerScope } from "@radish/effect-system";
+import { assertEquals } from "@std/assert";
+import { dirname, fromFileUrl, join } from "@std/path";
 import { describe, test } from "@std/testing/bdd";
 import { pluginImportmap, pureImportMap } from "./importmap.ts";
-import { handlerFor, HandlerScope } from "@radish/effect-system";
-import { io } from "$effects/io.ts";
-import { importmapPath } from "../../../exports/mod.ts";
-import { dirname, fromFileUrl, join } from "@std/path";
-import { id } from "../../utils/algebraic-structures.ts";
 
 describe("pure importmap", () => {
   test("main import", () => {

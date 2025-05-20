@@ -5,11 +5,6 @@
     "check": "deno fmt --check && deno lint && deno check **/*.ts",
     "build": "pnpm build"
   },
-  "fmt": {
-    "exclude": [
-      "**/*.md"
-    ]
-  },
   "compilerOptions": {
     "lib": [
       "dom",

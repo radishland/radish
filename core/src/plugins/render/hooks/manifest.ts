@@ -1,19 +1,19 @@
-import { basename, dirname, extname, relative } from "@std/path";
-import { Handler, handlerFor } from "@radish/effect-system";
+import { io } from "$effects/io.ts";
 import { manifest, manifestPath } from "$effects/manifest.ts";
 import type { ElementManifest, Manifest } from "$effects/render.ts";
-import { filename, isParent } from "../../../utils/path.ts";
 import {
   elementsFolder,
   generatedFolder,
   routesFolder,
-} from "../../../constants.ts";
-import { assert } from "@std/assert";
-import { io } from "$effects/io.ts";
+} from "$lib/constants.ts";
+import { setScope } from "$lib/utils/stringify.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
 import { fragments, shadowRoot } from "@radish/htmlcrunch";
-import { dependencies } from "../../../walk.ts";
-import { setScope } from "../../../utils/stringify.ts";
+import { assert } from "@std/assert";
+import { basename, dirname, extname, relative } from "@std/path";
 import { toPascalCase } from "@std/text";
+import { filename, isParent } from "../../../utils/path.ts";
+import { dependencies } from "../utils/walk.ts";
 
 export const manifestShape = {
   elements: {},

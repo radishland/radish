@@ -1,13 +1,13 @@
+import { config } from "$effects/config.ts";
+import { env } from "$effects/env.ts";
+import { hmr } from "$effects/hmr.ts";
+import { io } from "$effects/io.ts";
+import { generatedFolder } from "$lib/constants.ts";
+import type { Plugin } from "$lib/types.d.ts";
+import { stringifyObject } from "$lib/utils/stringify.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
 import { parse } from "@std/dotenv";
 import { join } from "@std/path";
-import { generatedFolder } from "../../constants.ts";
-import { config } from "$effects/config.ts";
-import { Handler, handlerFor } from "@radish/effect-system";
-import { env } from "$effects/env.ts";
-import { hot } from "$effects/hot-update.ts";
-import { io } from "$effects/io.ts";
-import type { Plugin } from "../../types.d.ts";
-import { stringifyObject } from "../../utils/stringify.ts";
 
 /**
  * This module implements the {@linkcode env} effect
@@ -46,7 +46,7 @@ export const pluginEnv: Plugin = {
       const value = Deno.env.get(key);
       return parseValue(value);
     }),
-    handlerFor(hot.update, async ({ event, paths }) => {
+    handlerFor(hmr.update, async ({ event, paths }) => {
       if (event.path === await getEnvPath()) {
         await load();
       }
