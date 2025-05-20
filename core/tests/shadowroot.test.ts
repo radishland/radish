@@ -1,12 +1,11 @@
 import { fragments, serializeFragments } from "@radish/htmlcrunch";
-import { applyServerEffects } from "../src/plugins/render/utils/walk.ts";
 import { assertEquals } from "@std/assert/equals";
 
 Deno.test("inline shadowroot", () => {
   const shadowRoot = serializeFragments(
     fragments.parseOrThrow(
       `<test-shadowroot></test-shadowroot>`,
-    ).map(applyServerEffects),
+    ),
   );
 
   assertEquals(
