@@ -18,7 +18,7 @@ import { extname, relative } from "@std/path";
 
 const hmrEventsCache = new TtlCache<string, HmrEvent>(200);
 
-const hmrPipeline = async (event: HmrEvent) => {
+const handleHMRPipeline = handlerFor(hmr.pipeline, async (event: HmrEvent) => {
   const { paths } = await hmr.update({ event, paths: [event.path] });
 
   await manifest.write();
@@ -26,11 +26,12 @@ const hmrPipeline = async (event: HmrEvent) => {
   await generateImportmap();
   await build.start(paths, { incremental: true });
   await ws.send("reload");
-};
+});
 
 export const pluginHMR: Plugin = {
   name: "plugin-hmr",
   handlers: [
+    handleHMRPipeline,
     handlerFor(hmr.start, async (): Promise<void> => {
       const watcher = Deno.watchFs([
         elementsFolder,
@@ -62,7 +63,7 @@ export const pluginHMR: Plugin = {
               timestamp: Date.now(),
             };
             hmrEventsCache.set(key, hmrEvent);
-            await hmrPipeline(hmrEvent);
+            await hmr.pipeline(hmrEvent);
           }
 
           // TODO: update router

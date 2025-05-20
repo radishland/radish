@@ -34,11 +34,13 @@ type HotUpdateParam = {
 
 interface Hmr {
   start: () => void;
+  pipeline: (event: HmrEvent) => void;
   update: (param: HotUpdateParam) => HotUpdateParam;
 }
 
 export const hmr: {
   start: EffectWithId<[], void>;
+  pipeline: EffectWithId<[HmrEvent], void>;
   update: EffectWithId<[param: HotUpdateParam], HotUpdateParam>;
 } = {
   /**
@@ -46,7 +48,13 @@ export const hmr: {
    */
   start: createEffect<Hmr["start"]>("hmr/start"),
   /**
-   * Triggers the hot update transform
+   * Runs the hmr pipeline: performs an hmr/update, then updates the manifest and importmap, rebuilds relevant files and send a ws message
+   */
+  pipeline: createEffect<Hmr["pipeline"]>("hmr/pipeline"),
+  /**
+   * Lets other plugins hook into the hot update transform on an {@linkcode HmrEvent}
+   *
+   * This is part of the hmr/pipeline
    */
   update: createEffect<Hmr["update"]>("hmr/update"),
 };
