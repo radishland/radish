@@ -5,9 +5,9 @@
   "exports": {
     ".": "./src/mod.ts",
     "./effects": "./src/effects/mod.ts",
+    "./plugins": "./src/plugins/mod.ts",
     "./parser": "./exports/parser.ts",
-    "./environment": "./src/environment.ts",
-    "./plugins": "./exports/plugins.ts"
+    "./environment": "./src/environment.ts"
   },
   "fmt": {
     "exclude": [
