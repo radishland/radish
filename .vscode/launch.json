@@ -59,6 +59,16 @@
       "args": [],
       "attachSimplePort": 9229,
       "experimentalNetworking": "off"
+    },
+    {
+      "name": "Attach to Deno",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "restart": false,
+      "timeout": 10000,
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": null
     }
   ]
 }
