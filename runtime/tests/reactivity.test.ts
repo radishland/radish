@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert/equals";
+import { assertEquals } from "@std/assert";
 import { computed, reactive } from "../src/reactivity.ts";
 
 Deno.test("reactive object", () => {

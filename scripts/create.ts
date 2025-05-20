@@ -1,4 +1,4 @@
-import { parseArgs } from "@std/cli/parse-args";
+import { parseArgs } from "@std/cli";
 import { promptSelect } from "@std/cli/unstable-prompt-select";
 import { copySync, emptyDirSync, ensureDirSync, existsSync } from "@std/fs";
 import { extname, relative } from "@std/path";

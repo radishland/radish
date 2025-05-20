@@ -3,7 +3,7 @@ import { env } from "$effects/env.ts";
 import { importmap } from "$effects/importmap.ts";
 import { manifest } from "$effects/manifest.ts";
 import * as effects from "@radish/effect-system";
-import { parseArgs } from "@std/cli/parse-args";
+import { parseArgs } from "@std/cli";
 import { UserAgent } from "@std/http";
 import {
   elementsFolder,

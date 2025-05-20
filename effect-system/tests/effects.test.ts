@@ -1,9 +1,17 @@
-import { assertInstanceOf, unreachable } from "@std/assert";
-import { assertEquals } from "@std/assert/equals";
-import { assertGreaterOrEqual } from "@std/assert/greater-or-equal";
-import { assertLessOrEqual } from "@std/assert/less-or-equal";
+import {
+  assertEquals,
+  assertGreaterOrEqual,
+  assertInstanceOf,
+  assertLessOrEqual,
+  unreachable,
+} from "@std/assert";
 import { afterEach, beforeEach, describe, test } from "@std/testing/bdd";
 import { handlerFor } from "../effects.ts";
+import {
+  MissingHandlerScopeError,
+  MissingTerminalHandlerError,
+  UnhandledEffectError,
+} from "../errors.ts";
 import { addHandlers, Handler, handlerScopes } from "../handlers.ts";
 import { HandlerScope, id } from "../mod.ts";
 import {
@@ -17,11 +25,6 @@ import {
   logs,
   random,
 } from "./setup.ts";
-import {
-  MissingHandlerScopeError,
-  MissingTerminalHandlerError,
-  UnhandledEffectError,
-} from "../errors.ts";
 
 /**
  * Tests

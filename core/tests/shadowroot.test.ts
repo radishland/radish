@@ -1,5 +1,5 @@
 import { fragments, serializeFragments } from "@radish/htmlcrunch";
-import { assertEquals } from "@std/assert/equals";
+import { assertEquals } from "@std/assert";
 
 Deno.test("inline shadowroot", () => {
   const shadowRoot = serializeFragments(
