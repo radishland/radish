@@ -1,6 +1,6 @@
 import type { Config } from "@radish/core";
 import { importmapPath, manifestPath, startApp } from "@radish/core";
-import { importmap, io } from "@radish/core/effects";
+import { importmap, io, router } from "@radish/core/effects";
 import { handlerFor } from "@radish/effect-system";
 import {
   pluginBuild,
@@ -11,10 +11,47 @@ import {
   pluginIO,
   pluginManifest,
   pluginRender,
+  pluginRouter,
   pluginServer,
   pluginStripTypes,
   pluginWS,
 } from "@radish/core/plugins";
+import { join } from "@std/path";
+import { Handler } from "@radish/effect-system";
+import { serveDir, UserAgent } from "@std/http";
+import { dev } from "../core/src/environment.ts";
+
+const dirname = import.meta.dirname ?? "";
+const clientRuntime = join(dirname, "..", "runtime", "client");
+
+const substituteDevRuntime = handlerFor(router.handleRoute, async (context) => {
+  const pattern = new URLPattern({ pathname: "/_radish/runtime/*" });
+  const patternResult = pattern.exec(context.request.url);
+
+  if (patternResult && "GET" === context.request.method) {
+    return await serveDir(context.request, {
+      fsRoot: clientRuntime,
+      urlRoot: "_radish/runtime",
+    });
+  }
+
+  return Handler.continue(context);
+});
+
+const handleUALogger = handlerFor(
+  router.handleRoute,
+  (context) => {
+    // Avoid mime type sniffing
+    context.request.headers.set("X-Content-Type-Options", "nosniff");
+
+    if (!dev) {
+      const ua = new UserAgent(context.request.headers.get("user-agent") ?? "");
+      console.log("ua:", ua);
+    }
+
+    return Handler.continue(context);
+  },
+);
 
 const config: Config = {
   importmap: {
@@ -39,8 +76,10 @@ const config: Config = {
   },
   router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
   plugins: [
+    { name: "sub", handlers: [substituteDevRuntime] },
     pluginWS,
     pluginServer,
+    pluginRouter,
     pluginHMR,
     pluginRender,
     {
