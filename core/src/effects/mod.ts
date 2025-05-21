@@ -12,4 +12,6 @@ export {
   render,
   type RouteManifest,
 } from "./render.ts";
+export { router } from "./router.ts";
+export { server } from "./server.ts";
 export { ws } from "./ws.ts";
