@@ -11,6 +11,7 @@ import {
   pluginIO,
   pluginManifest,
   pluginRender,
+  pluginServer,
   pluginStripTypes,
   pluginWS,
 } from "@radish/core/plugins";
@@ -38,6 +39,7 @@ const config: Config = {
   },
   router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
   plugins: [
+    pluginServer,
     pluginHMR,
     pluginWS,
     pluginRender,
