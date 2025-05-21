@@ -12,7 +12,7 @@ import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals, unreachable } from "@std/assert";
 import { dirname, fromFileUrl, join } from "@std/path";
 import { describe, test } from "@std/testing/bdd";
-import { handleInsertWebSocketScript } from "./hooks/render.ts";
+import { handleInsertWebSocketScript } from "./hooks/render.route.ts";
 import { config } from "$effects/mod.ts";
 
 const moduleDir = dirname(fromFileUrl(import.meta.url));

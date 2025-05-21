@@ -2,8 +2,8 @@ import { ws } from "$effects/ws.ts";
 import { handlerFor } from "@radish/effect-system";
 import { onDispose } from "$lib/cleanup.ts";
 import type { Plugin } from "$lib/mod.ts";
-import { handleInsertWebSocketScript } from "./hooks/render.ts";
-import { handleWSServerRequest } from "./hooks/server.ts";
+import { handleInsertWebSocketScript } from "./hooks/render.route.ts";
+import { handleWSServerRequest } from "./hooks/server.handle-request.ts";
 
 let clients: Set<WebSocket>;
 
