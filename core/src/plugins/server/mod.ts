@@ -3,10 +3,24 @@ import { server } from "$effects/server.ts";
 import { ws } from "$effects/ws.ts";
 import { dispose, onDispose } from "$lib/cleanup.ts";
 import { dev } from "$lib/environment.ts";
-import type { Plugin } from "$lib/types.d.ts";
+import type { Config, Plugin } from "$lib/types.d.ts";
 import { AppError, createStandardResponse } from "$lib/utils/http.ts";
 import { handlerFor } from "@radish/effect-system";
 import { getCookies, STATUS_CODE } from "@std/http";
+
+/**
+ * Default server options
+ */
+export const SERVER_DEFAULTS: Config["server"] = {
+  port: 1235,
+  hostname: "127.0.0.1",
+  onListen: (addr) => {
+    console.log(
+      `%cListening at ${addr.hostname}:${addr.port}`,
+      "color: green",
+    );
+  },
+};
 
 export const handleServerRequest = handlerFor(
   server.handleRequest,
