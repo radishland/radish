@@ -16,6 +16,9 @@ export interface Plugin {
    * The name of the plugin
    */
   name: string;
+  /**
+   * The plugin handlers
+   */
   handlers: Handlers;
 }
 
