@@ -1,8 +1,6 @@
-import { hmr } from "$effects/hmr.ts";
+import { router } from "$effects/router.ts";
 import { server } from "$effects/server.ts";
-import { ws } from "$effects/ws.ts";
 import { dispose, onDispose } from "$lib/cleanup.ts";
-import { dev } from "$lib/environment.ts";
 import type { Config, Plugin } from "$lib/types.d.ts";
 import { AppError, createStandardResponse } from "$lib/utils/http.ts";
 import { handlerFor } from "@radish/effect-system";
@@ -24,18 +22,12 @@ export const SERVER_DEFAULTS: Config["server"] = {
 
 export const handleServerRequest = handlerFor(
   server.handleRequest,
-  async (request, info) => {
+  async (request) => {
     try {
       const url = new URL(request.url);
       const cookies = getCookies(request.headers);
 
-      // return await handle(
-      //   {
-      //     context: { request, url, cookies },
-      //     resolve: async (ctx) => await router.handler(ctx),
-      //   },
-      // );
-      return new Response();
+      return await router.handleRoute({ request, url, cookies });
     } catch (error) {
       console.error(error);
       if (error instanceof AppError) {
@@ -53,18 +45,11 @@ export const handleServerRequest = handlerFor(
 );
 
 /**
- * Handles the server/start effect. Depends on
+ * Handles the server/start effect.
  *
- * - hmr/start in dev mode to start the HMR watcher
- * - ws/start in dev mode to start the WebSocket server
- * - server/handle-request
+ * Depends on `server/handle-request`
  */
-export const handleServerStart = handlerFor(server.start, async (options) => {
-  if (dev) {
-    await hmr.start();
-    await ws.create();
-  }
-
+export const handleServerStart = handlerFor(server.start, (options) => {
   const httpServer = Deno.serve(options, async (request, info) => {
     return await server.handleRequest(request, info);
   });
