@@ -39,9 +39,9 @@ const config: Config = {
   },
   router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
   plugins: [
+    pluginWS,
     pluginServer,
     pluginHMR,
-    pluginWS,
     pluginRender,
     {
       name: "plugin-rewrite-importmap-imports",

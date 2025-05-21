@@ -3,6 +3,7 @@ import { handlerFor } from "@radish/effect-system";
 import { onDispose } from "$lib/cleanup.ts";
 import type { Plugin } from "$lib/mod.ts";
 import { handleInsertWebSocketScript } from "./hooks/render.ts";
+import { handleWSServerRequest } from "./hooks/server.ts";
 
 let clients: Set<WebSocket>;
 
@@ -46,7 +47,7 @@ const handleWSHandleSocket = handlerFor(ws.handleSocket, (socket) => {
 /**
  * The WebSocket plugin
  *
- * Depends on "render/route"
+ * Hook into the `render/route` process and decorates the `server/handle-request` effect
  */
 export const pluginWS: Plugin = {
   name: "plugin-ws",
@@ -55,5 +56,6 @@ export const pluginWS: Plugin = {
     handleWSHandleSocket,
     handleWSSend,
     handleInsertWebSocketScript,
+    handleWSServerRequest,
   ],
 };
