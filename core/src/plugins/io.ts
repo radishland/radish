@@ -8,6 +8,7 @@ import { isParent, workspaceRelative } from "$lib/utils/path.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { ensureDir } from "@std/fs";
 import { dirname, join } from "@std/path";
+import { build } from "$effects/mod.ts";
 
 /**
  * A file store caching `Deno.readTextFile` calls for efficient file access
@@ -38,10 +39,10 @@ export const IOReadFileHandler = handlerFor(io.read, async (path) => {
 });
 
 /**
- * Handles {@linkcode io.emitTo} effects
+ * Handles {@linkcode build.dest} effects
  */
 export const IOEmitToHandler = handlerFor(
-  io.emitTo,
+  build.dest,
   (path) => join(buildFolder, workspaceRelative(path)),
 );
 
@@ -103,7 +104,7 @@ export const pluginIO: Plugin = {
     handlerFor(hmr.update, async ({ event, paths }) => {
       if (event.kind === "remove") {
         try {
-          const target = await io.emitTo(event.path);
+          const target = await build.dest(event.path);
           await Deno.remove(target, { recursive: !event.isFile });
           console.log(`removed`, event.path);
 

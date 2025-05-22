@@ -1,6 +1,5 @@
-import { io } from "$effects/io.ts";
 import { manifest } from "$effects/manifest.ts";
-import { config, router } from "$effects/mod.ts";
+import { build, config, router } from "$effects/mod.ts";
 import type { Route } from "$effects/router.ts";
 import { manifestShape } from "$lib/plugins/render/hooks/manifest.ts";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
@@ -25,7 +24,7 @@ describe("router", () => {
     using _ = new HandlerScope(
       handleRouterInit,
       handlerFor(config.read, () => ({ router: { matchers: {} } })),
-      handlerFor(io.emitTo, () => "served/path"),
+      handlerFor(build.dest, () => "served/path"),
       handlerFor(router.addRoute, (route) => {
         routes.push(route);
       }),
@@ -57,7 +56,7 @@ describe("router", () => {
       handlerFor(config.read, () => {
         return { router: { matchers: { number: /^\d+/, uuid: /\w+/ } } };
       }),
-      handlerFor(io.emitTo, () => "served/path"),
+      handlerFor(build.dest, () => "served/path"),
       handlerFor(router.addRoute, (route) => {
         routes.push(route);
       }),

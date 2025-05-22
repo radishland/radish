@@ -12,7 +12,7 @@ import { id } from "../utils/algebraic-structures.ts";
  * @performs
  * - `io/read`
  * - `io/transform`
- * - `io/emit`
+ * - `build/dest`
  * - `io/write`
  */
 const handleBuildFile = handlerFor(build.file, async (path: string) => {
@@ -21,7 +21,7 @@ const handleBuildFile = handlerFor(build.file, async (path: string) => {
     path,
     content,
   });
-  const dest = await io.emitTo(path);
+  const dest = await build.dest(path);
   await io.write(dest, transformed);
 });
 
@@ -34,7 +34,7 @@ const handleBuildFile = handlerFor(build.file, async (path: string) => {
  * @performs
  * - `build/file`
  * - `build/sort`
- * - `io/emit`
+ * - `build/dest`
  */
 const handleBuildStart = handlerFor(
   build.start,
@@ -56,7 +56,7 @@ const handleBuildStart = handlerFor(
       if (entry.isFile) {
         await build.file(entry.path);
       } else {
-        const dest = await io.emitTo(entry.path);
+        const dest = await build.dest(entry.path);
         ensureDirSync(dest);
       }
     }
@@ -74,7 +74,7 @@ const handleBuildSort = handlerFor(build.sort, id);
  * @performs
  * - `io/read`
  * - `io/transform`
- * - `io/emit`
+ * - `build/dest`
  * - `io/write`
  */
 export const pluginBuild: Plugin = {

@@ -1,6 +1,6 @@
 import { config } from "$effects/config.ts";
-import { io } from "$effects/io.ts";
 import { manifest } from "$effects/manifest.ts";
+import { build } from "$effects/mod.ts";
 import type { Manifest } from "$effects/render.ts";
 import { type Route, type RouteContext, router } from "$effects/router.ts";
 import { routesFolder } from "$lib/constants.ts";
@@ -68,7 +68,7 @@ export const handleRouterDefaultRouteHandler: Handler<
  *
  * @performs
  * - `config/read`
- * - `io/emit`
+ * - `build/dest`
  * - `manifest/get`
  * - `router/add-route`
  */
@@ -97,7 +97,7 @@ export const handleRouterInit: Handler<[], void> = handlerFor(
           },
         );
 
-      const destPath = await io.emitTo(route.path);
+      const destPath = await build.dest(route.path);
 
       await router.addRoute({
         method: "GET",
@@ -115,7 +115,7 @@ export const handleRouterInit: Handler<[], void> = handlerFor(
  *
  * @performs
  * - `config/read`
- * - `io/emit`
+ * - `build/dest`
  * - `manifest/get`
  */
 export const pluginRouter: Plugin = {

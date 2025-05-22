@@ -20,7 +20,7 @@ import { handleTransformNode } from "./transforms/mod.ts";
  *
  * @performs
  * - `config/read`
- * - `io/emit`
+ * - `build/dest`
  * - `io/read`
  * - `manifest/get`
  * - `manifest/update`

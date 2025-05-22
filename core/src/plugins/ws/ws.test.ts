@@ -1,6 +1,6 @@
 import { io } from "$effects/io.ts";
 import { manifest } from "$effects/manifest.ts";
-import { config } from "$effects/mod.ts";
+import { build, config } from "$effects/mod.ts";
 import { render } from "$effects/render.ts";
 import { fragments } from "$lib/parser.ts";
 import { handleTransformFile } from "$lib/plugins/render/hooks/io.transformFile.ts";
@@ -28,7 +28,7 @@ describe("ws plugin", () => {
       handleRouteBase,
       handlerFor(render.transformNode, id),
       handlerFor(io.transformFile, id),
-      handlerFor(io.emitTo, (path) => {
+      handlerFor(build.dest, (path) => {
         if (path === "routes/_app.html") return "build/routes/_app.html";
         unreachable();
       }),

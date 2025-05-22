@@ -4,6 +4,7 @@ import { buildFolder, ts_extension_regex } from "../constants.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { io } from "$effects/io.ts";
 import type { Plugin } from "../types.d.ts";
+import { build } from "$effects/mod.ts";
 
 /**
  * The type-stripping plugin
@@ -11,13 +12,13 @@ import type { Plugin } from "../types.d.ts";
  * Removes type annotations and comments and handles path rewriting
  *
  * @hooks
- * - `io/emit`
+ * - `build/dest`
  * - `io/transform`
  */
 export const pluginStripTypes: Plugin = {
   name: "plugin-strip-types",
   handlers: [
-    handlerFor(io.emitTo, (path) => {
+    handlerFor(build.dest, (path) => {
       if (extname(path) === ".ts" && !path.endsWith(".d.ts")) {
         return join(buildFolder, path).replace(ts_extension_regex, ".js");
       }
