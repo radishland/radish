@@ -1,11 +1,9 @@
-import { config, denoConfig } from "$effects/config.ts";
 import {
   type ImportMap,
   importmap,
   importmapPath,
 } from "$effects/importmap.ts";
-import { io } from "$effects/io.ts";
-import { manifest } from "$effects/manifest.ts";
+import { config, denoConfig, io, manifest } from "$effects/mod.ts";
 import { target_head, ts_extension_regex } from "$lib/constants.ts";
 import { dev } from "$lib/environment.ts";
 import type { ManifestBase, Plugin } from "$lib/types.d.ts";
@@ -18,6 +16,12 @@ import { findLongestMatchingPrefix } from "../resolve.ts";
 
 let importmapObject: ImportMap = {};
 
+/**
+ * @performs
+ * - `io/read`
+ * - `io/write`
+ * - `io/transformFile`
+ */
 export const pluginImportmap: Plugin = {
   name: "plugin-importmap",
   handlers: [
@@ -60,6 +64,11 @@ export const pluginImportmap: Plugin = {
 
 /**
  * Generates the importmap of based on the manifest.
+ *
+ * @performs
+ * - `config/read`
+ * - `denoConfig/read`
+ * - `manifest/read`
  */
 export const generateImportmap = async (): Promise<void> => {
   console.log("Generating importmap...");

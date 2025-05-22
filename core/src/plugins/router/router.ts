@@ -68,8 +68,8 @@ export const handleRouterDefaultRouteHandler: Handler<
  *
  * @performs
  * - `config/read`
+ * - `io/emit`
  * - `manifest/get`
- * - `io/emit-to`
  * - `router/add-route`
  */
 export const handleRouterInit: Handler<[], void> = handlerFor(
@@ -110,6 +110,14 @@ export const handleRouterInit: Handler<[], void> = handlerFor(
   },
 );
 
+/**
+ * The router plugin
+ *
+ * @performs
+ * - `config/read`
+ * - `io/emit`
+ * - `manifest/get`
+ */
 export const pluginRouter: Plugin = {
   name: "plugin-router",
   handlers: [

@@ -22,6 +22,10 @@ export const manifestShape = {
   routes: {},
 } satisfies Manifest;
 
+/**
+ * @performs
+ * - `io/read`
+ */
 export const handleManifest = [
   /**
    * Decorator for the io/write handler

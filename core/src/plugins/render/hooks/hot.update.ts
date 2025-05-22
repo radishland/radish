@@ -9,6 +9,11 @@ import { extname } from "@std/path";
 import { updateManifest } from "../../manifest/manifest.ts";
 import { manifestShape } from "./manifest.ts";
 
+/**
+ * @performs
+ * - `manifest/get`
+ * - `manifest/update`
+ */
 export const handleHotUpdate = handlerFor(
   hmr.update,
   async ({ event, paths }) => {

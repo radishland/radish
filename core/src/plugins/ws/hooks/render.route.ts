@@ -7,6 +7,9 @@ const rawScript = Deno.readTextFileSync(join(moduleDir, "./script.nofmt.ts"));
 
 /**
  * Inserts WebSocket script in the head of routes to initiate a WebSocket connection to enable HMR
+ *
+ * @performs
+ * - `config/read`
  */
 export const handleInsertWebSocketScript = handlerFor(
   render.route,

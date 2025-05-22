@@ -9,6 +9,12 @@ import { assertEmptyHandlerRegistryStack } from "../state.ts";
 import { filename, isParent } from "../../../utils/path.ts";
 import { elementsFolder, routesFolder } from "../../../constants.ts";
 
+/**
+ * @performs
+ * - `manifest/get`
+ * - `render/component`
+ * - `render/route`
+ */
 export const handleTransformFile = handlerFor(
   io.transformFile,
   async ({ path, content }) => {

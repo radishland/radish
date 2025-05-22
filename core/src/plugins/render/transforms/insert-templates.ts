@@ -6,6 +6,10 @@ import { type Manifest, render } from "$effects/render.ts";
 import { manifestShape } from "../hooks/manifest.ts";
 import { transformNode } from "./transform-node.ts";
 
+/**
+ * @performs
+ * - `manifest/get`
+ */
 export const handleInsertTemplatesTransform = handlerFor(
   render.transformNode,
   async (node) => {

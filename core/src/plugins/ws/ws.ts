@@ -47,7 +47,12 @@ const handleWSHandleSocket = handlerFor(ws.handleSocket, (socket) => {
 /**
  * The WebSocket plugin
  *
- * Hook into the `render/route` process and decorates the `server/handle-request` effect
+ * @hooks
+ * - `render/route`
+ * - `server/handle-request`
+ *
+ * @performs
+ * - `config/read`
  */
 export const pluginWS: Plugin = {
   name: "plugin-ws",

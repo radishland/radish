@@ -65,6 +65,12 @@ export const IOWriteFileHandler = handlerFor(
  */
 export const IOTransformHandler = handlerFor(io.transformFile, id);
 
+/**
+ * The io plugin
+ *
+ * @hooks
+ * - `hmr/update`
+ */
 export const pluginIO: Plugin = {
   name: "plugin-io",
   handlers: [

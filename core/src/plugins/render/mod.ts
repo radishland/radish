@@ -8,6 +8,14 @@ import { handleManifest } from "./hooks/manifest.ts";
 import { handleRoutes } from "./routes/mod.ts";
 import { handleTransformNode } from "./transforms/mod.ts";
 
+/**
+ * @performs
+ * - `config/read`
+ * - `io/emit`
+ * - `io/read`
+ * - `manifest/get`
+ * - `manifest/update`
+ */
 export const pluginRender: Plugin = {
   name: "plugin-render",
   handlers: [

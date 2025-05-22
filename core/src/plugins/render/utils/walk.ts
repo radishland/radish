@@ -3,10 +3,7 @@ import { Kind, type MFragment, type MNode } from "@radish/htmlcrunch";
 /**
  * Recursively applies an effect function to all nodes of a component tree
  */
-export const walkTree = (
-  tree: MNode,
-  fn: (value: MNode) => void,
-) => {
+export const walkTree = (tree: MNode, fn: (value: MNode) => void) => {
   fn(tree);
 
   if ("children" in tree && tree.children?.length) {
