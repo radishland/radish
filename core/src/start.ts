@@ -7,7 +7,6 @@ import {
   manifest,
   router,
   server,
-  ws,
 } from "$effects/mod.ts";
 import * as effects from "@radish/effect-system";
 import { parseArgs } from "@std/cli";
@@ -106,9 +105,6 @@ export async function startApp(
 
     await server.start({ ...SERVER_DEFAULTS, ...config.server });
 
-    if (dev) {
-      await hmr.start();
-      await ws.create();
-    }
+    if (dev) await hmr.start();
   }
 }

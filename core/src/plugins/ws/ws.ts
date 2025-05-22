@@ -4,17 +4,17 @@ import { onDispose } from "$lib/cleanup.ts";
 import type { Plugin } from "$lib/mod.ts";
 import { handleInsertWebSocketScript } from "./hooks/render.route.ts";
 import { handleWSServerRequest } from "./hooks/server.handle-request.ts";
+import { dev } from "$lib/environment.ts";
 
-let clients: Set<WebSocket>;
+const clients = new Set<WebSocket>();
 
-const handleWSCreate = handlerFor(ws.create, () => {
-  clients = new Set<WebSocket>();
-
-  onDispose(() => {
+onDispose(() => {
+  if (clients) {
     for (const client of clients) client.close();
     clients.clear();
-    console.log("WebSocket connection closed");
-  });
+
+    if (dev) console.log("WebSocket connection closed");
+  }
 });
 
 const handleWSSend = handlerFor(ws.send, (payload) => {
@@ -52,7 +52,6 @@ const handleWSHandleSocket = handlerFor(ws.handleSocket, (socket) => {
 export const pluginWS: Plugin = {
   name: "plugin-ws",
   handlers: [
-    handleWSCreate,
     handleWSHandleSocket,
     handleWSSend,
     handleInsertWebSocketScript,
