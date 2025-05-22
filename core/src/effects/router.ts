@@ -1,5 +1,5 @@
-import { createEffect } from "@radish/effect-system";
 import type { MaybePromise } from "$lib/types.d.ts";
+import { createEffect, type EffectWithId } from "@radish/effect-system";
 
 export type Context = {
   request: Request;
@@ -22,7 +22,11 @@ interface Router {
   handleRoute: RouteHandler;
 }
 
-export const router = {
+export const router: {
+  init: EffectWithId<[], void>;
+  addRoute: EffectWithId<[route: Route], void>;
+  handleRoute: EffectWithId<[context: Context], MaybePromise<Response>>;
+} = {
   init: createEffect<Router["init"]>("router/init"),
   addRoute: createEffect<Router["addRoute"]>("router/add-route"),
   handleRoute: createEffect<Router["handleRoute"]>("router/handle-route"),
