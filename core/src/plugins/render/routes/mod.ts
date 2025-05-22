@@ -6,7 +6,7 @@ import { handleSpeculationRules } from "./speculation-rules.ts";
 /**
  * @performs
  * - `config/read`
- * - `io/emit`
+ * - `build/dest`
  * - `io/read`
  * - `manifest/get`
  */

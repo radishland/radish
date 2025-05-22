@@ -1,9 +1,9 @@
 import { io } from "$effects/io.ts";
 import { manifest } from "$effects/manifest.ts";
-import { config } from "$effects/mod.ts";
+import { build, config } from "$effects/mod.ts";
 import { render } from "$effects/render.ts";
 import { fragments } from "$lib/parser.ts";
-import { handleTransformFile } from "$lib/plugins/render/hooks/io.transformFile.ts";
+import { handleTransformFile } from "$lib/plugins/render/hooks/build.transform.ts";
 import { manifestShape } from "$lib/plugins/render/hooks/manifest.ts";
 import { handleRouteBase } from "$lib/plugins/render/routes/base.ts";
 import { handleRouteLayoutsAndHeadElements } from "$lib/plugins/render/routes/layouts-and-head.ts";
@@ -27,12 +27,12 @@ describe("ws plugin", () => {
       handleRouteLayoutsAndHeadElements,
       handleRouteBase,
       handlerFor(render.transformNode, id),
-      handlerFor(io.transformFile, id),
-      handlerFor(io.emitTo, (path) => {
+      handlerFor(build.transform, id),
+      handlerFor(build.dest, (path) => {
         if (path === "routes/_app.html") return "build/routes/_app.html";
         unreachable();
       }),
-      handlerFor(io.readFile, (path) => {
+      handlerFor(io.read, (path) => {
         if (path === "build/routes/_app.html") return app;
         unreachable();
       }),
@@ -59,7 +59,7 @@ describe("ws plugin", () => {
       }),
     );
 
-    const { content: transformed } = await io.transformFile({
+    const { content: transformed } = await build.transform({
       path: "routes/index.html",
       content: input,
     });

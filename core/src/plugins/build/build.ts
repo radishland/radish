@@ -1,28 +1,31 @@
+import { build } from "$effects/build.ts";
+import { io } from "$effects/io.ts";
+import { buildFolder } from "$lib/constants.ts";
+import type { Plugin } from "$lib/types.d.ts";
+import { id } from "$lib/utils/algebraic-structures.ts";
+import { expandGlobWorkspaceRelative } from "$lib/utils/fs.ts";
+import { workspaceRelative } from "$lib/utils/path.ts";
+import { handlerFor } from "@radish/effect-system";
 import { distinctBy } from "@std/collections";
 import { emptyDirSync, ensureDirSync, type WalkEntry } from "@std/fs";
-import { buildFolder } from "../constants.ts";
-import { build } from "$effects/build.ts";
-import { handlerFor } from "@radish/effect-system";
-import { io } from "$effects/io.ts";
-import type { Plugin } from "../types.d.ts";
-import { expandGlobWorkspaceRelative } from "../utils/fs.ts";
-import { id } from "../utils/algebraic-structures.ts";
+import { join } from "@std/path";
+import { buildHMRHook } from "./hooks/hmr.update.ts";
 
 /**
  * @performs
  * - `io/read`
- * - `io/transform`
- * - `io/emit`
+ * - `build/transform`
+ * - `build/dest`
  * - `io/write`
  */
 const handleBuildFile = handlerFor(build.file, async (path: string) => {
-  const content = await io.readFile(path);
-  const { content: transformed } = await io.transformFile({
+  const content = await io.read(path);
+  const { content: transformed } = await build.transform({
     path,
     content,
   });
-  const dest = await io.emitTo(path);
-  await io.writeFile(dest, transformed);
+  const dest = await build.dest(path);
+  await io.write(dest, transformed);
 });
 
 /**
@@ -34,7 +37,7 @@ const handleBuildFile = handlerFor(build.file, async (path: string) => {
  * @performs
  * - `build/file`
  * - `build/sort`
- * - `io/emit`
+ * - `build/dest`
  */
 const handleBuildStart = handlerFor(
   build.start,
@@ -56,7 +59,7 @@ const handleBuildStart = handlerFor(
       if (entry.isFile) {
         await build.file(entry.path);
       } else {
-        const dest = await io.emitTo(entry.path);
+        const dest = await build.dest(entry.path);
         ensureDirSync(dest);
       }
     }
@@ -69,15 +72,36 @@ const handleBuildStart = handlerFor(
 const handleBuildSort = handlerFor(build.sort, id);
 
 /**
+ * Canonically handles {@linkcode build.transform} effects as identity transforms
+ */
+export const handlerBuildTransform = handlerFor(build.transform, id);
+
+/**
+ * Handles {@linkcode build.dest} effects
+ */
+export const handleBuildDest = handlerFor(
+  build.dest,
+  (path) => join(buildFolder, workspaceRelative(path)),
+);
+
+/**
  * The build plugin
+ *
+ * @hooks
+ * - `hmr/update`
  *
  * @performs
  * - `io/read`
- * - `io/transform`
- * - `io/emit`
  * - `io/write`
  */
 export const pluginBuild: Plugin = {
   name: "plugin-build",
-  handlers: [handleBuildFile, handleBuildStart, handleBuildSort],
+  handlers: [
+    handleBuildFile,
+    handleBuildStart,
+    handleBuildSort,
+    handlerBuildTransform,
+    handleBuildDest,
+    buildHMRHook,
+  ],
 };

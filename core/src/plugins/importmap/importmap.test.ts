@@ -1,5 +1,6 @@
 import { importmapPath } from "$effects/importmap.ts";
 import { io } from "$effects/io.ts";
+import { build } from "$effects/mod.ts";
 import { id } from "$lib/utils/algebraic-structures.ts";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals } from "@std/assert";
@@ -100,7 +101,7 @@ describe("importmap generation", () => {
   test("transforms index.html files", async () => {
     using _ = new HandlerScope(
       ...pluginImportmap.handlers,
-      handlerFor(io.readFile, async (path) => {
+      handlerFor(io.read, async (path) => {
         if (path === importmapPath) {
           return await Deno.readTextFile(
             join(moduleDir, "testdata", "importmap.json"),
@@ -108,7 +109,7 @@ describe("importmap generation", () => {
         }
         return "";
       }),
-      handlerFor(io.transformFile, id),
+      handlerFor(build.transform, id),
     );
 
     const input = await Deno.readTextFile(
@@ -119,7 +120,7 @@ describe("importmap generation", () => {
       join(moduleDir, "testdata", "output.nofmt.html"),
     );
 
-    const { content } = await io.transformFile({
+    const { content } = await build.transform({
       path: "_app.html",
       content: input,
     });

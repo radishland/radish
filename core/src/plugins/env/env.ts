@@ -66,7 +66,7 @@ export const pluginEnv: Plugin = {
  */
 async function load() {
   const envPath = await getEnvPath();
-  const envFile = await io.readFile(envPath);
+  const envFile = await io.read(envPath);
   const envObject = parse(envFile);
   let envModule = "";
 
@@ -76,7 +76,7 @@ async function load() {
     Deno.env.set(key, value);
   }
 
-  await io.writeFile(envModulePath, envModule);
+  await io.write(envModulePath, envModule);
 }
 
 /**

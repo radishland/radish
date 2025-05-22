@@ -580,7 +580,7 @@ A wrapper for io operations that manages its own cache to speed-up read
 operations
 
 - `io.readFile: (path: string) => string` reads a file and returns its content
-- `io.transformFile: (option: FileTransformParam) => FileTransformParam`
+- `build.transform: (option: FileTransformParam) => FileTransformParam`
   transforms a file
 - `io.emitFile: (path: string) => string` returns the destination path of a
   given file

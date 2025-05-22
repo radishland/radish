@@ -21,10 +21,7 @@ export interface StateOps<T> {
 }
 
 /**
- * Creates a new AsyncState
- *
- * This state can be safely used without race conditions in all contexts typically subject to context loss:
- *
+ * Creates a new AsyncState that can be safely used without race conditions in all situations typically subject to context loss:
  * - `await`
  * - `Promise.then`
  * - `setTimeout`
@@ -75,7 +72,7 @@ export interface StateOps<T> {
  *    }
  * ```
  *
- * @param key A key to name the state, used to the internal storage and for debugging purposes
+ * @param key A key to name the state, used for storage and debugging purposes
  * @param initialValue The initial value of the state or `undefined` if none is provided
  *
  * @throws {MissingHandlerScopeError} If the state is created outside a {@linkcode HandlerScope}

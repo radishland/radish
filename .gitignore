@@ -3,10 +3,12 @@
 
 deno.lock
 notebook.ipynb
-
-_generated/
 node_modules/
-build/
-runtime/client/
 coverage/
 docs/
+
+
+_generated/
+build/
+!core/**/build
+runtime/client/

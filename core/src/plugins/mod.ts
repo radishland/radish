@@ -4,7 +4,7 @@
  * @module
  */
 
-export { pluginBuild } from "./build.ts";
+export { pluginBuild } from "./build/build.ts";
 export { pluginConfig } from "./config.ts";
 export { pluginEnv } from "./env/env.ts";
 export { pluginHMR } from "./hmr/hmr.ts";

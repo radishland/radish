@@ -22,7 +22,7 @@ export const pluginConfig: Plugin = {
         .find((fileName) => existsSync(fileName));
       assertExists(fileName, "deno config not found");
 
-      const content = await io.readFile(fileName);
+      const content = await io.read(fileName);
 
       return fileName.endsWith(".json")
         ? JSON.parse(content)

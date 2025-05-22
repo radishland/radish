@@ -20,8 +20,8 @@ const handlers = [
     }),
   ),
 
-  handlerFor(io.readFile, () => envFile),
-  handlerFor(io.writeFile, (_path, content) => {
+  handlerFor(io.read, () => envFile),
+  handlerFor(io.write, (_path, content) => {
     result = content;
   }),
 ];

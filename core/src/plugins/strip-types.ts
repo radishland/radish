@@ -1,8 +1,8 @@
+import { build } from "$effects/mod.ts";
 import strip from "@fcrozatier/type-strip";
+import { Handler, handlerFor } from "@radish/effect-system";
 import { extname, join } from "@std/path";
 import { buildFolder, ts_extension_regex } from "../constants.ts";
-import { Handler, handlerFor } from "@radish/effect-system";
-import { io } from "$effects/io.ts";
 import type { Plugin } from "../types.d.ts";
 
 /**
@@ -11,19 +11,19 @@ import type { Plugin } from "../types.d.ts";
  * Removes type annotations and comments and handles path rewriting
  *
  * @hooks
- * - `io/emit`
- * - `io/transform`
+ * - `build/dest`
+ * - `build/transform`
  */
 export const pluginStripTypes: Plugin = {
   name: "plugin-strip-types",
   handlers: [
-    handlerFor(io.emitTo, (path) => {
+    handlerFor(build.dest, (path) => {
       if (extname(path) === ".ts" && !path.endsWith(".d.ts")) {
         return join(buildFolder, path).replace(ts_extension_regex, ".js");
       }
       return Handler.continue(path);
     }),
-    handlerFor(io.transformFile, ({ path, content }) => {
+    handlerFor(build.transform, ({ path, content }) => {
       if (extname(path) === ".ts" && !path.endsWith(".d.ts")) {
         return {
           path,

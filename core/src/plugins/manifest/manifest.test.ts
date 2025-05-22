@@ -31,7 +31,7 @@ const createWalkEntry = (path: string): WalkEntry => {
 };
 
 using _ = new HandlerScope(
-  handlerFor(io.readFile, (path) => {
+  handlerFor(io.read, (path) => {
     const content = files[path];
     assertExists(content);
     return content;
@@ -40,7 +40,7 @@ using _ = new HandlerScope(
     { entry, manifestObject },
   ) => {
     if (entry.isFile && [".ts"].includes(extname(entry.path))) {
-      const content = await io.readFile(entry.path);
+      const content = await io.read(entry.path);
       const imports = extractImports(content);
       manifestObject.imports[entry.path] = imports;
     }
