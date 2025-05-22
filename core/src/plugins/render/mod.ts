@@ -3,7 +3,7 @@ import { handleComponents } from "./components/component.ts";
 import { handleDirectives } from "./directives/mod.ts";
 import { handleSort } from "./hooks/build.sort.ts";
 import { handleHotUpdate } from "./hooks/hmr.update.ts";
-import { handleTransformFile } from "./hooks/io.transformFile.ts";
+import { handleTransformFile } from "./hooks/build.transform.ts";
 import { handleManifest } from "./hooks/manifest.ts";
 import { handleRoutes } from "./routes/mod.ts";
 import { handleTransformNode } from "./transforms/mod.ts";
@@ -14,7 +14,7 @@ import { handleTransformNode } from "./transforms/mod.ts";
  * @hooks
  * - `build/sort`
  * - `hmr/update`
- * - `io/transform`
+ * - `build/transform`
  * - `io/write` Inserts parser imports in the generated manifest module
  * - `manifest/update`
  *

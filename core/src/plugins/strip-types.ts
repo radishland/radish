@@ -13,7 +13,7 @@ import { build } from "$effects/mod.ts";
  *
  * @hooks
  * - `build/dest`
- * - `io/transform`
+ * - `build/transform`
  */
 export const pluginStripTypes: Plugin = {
   name: "plugin-strip-types",
@@ -24,7 +24,7 @@ export const pluginStripTypes: Plugin = {
       }
       return Handler.continue(path);
     }),
-    handlerFor(io.transformFile, ({ path, content }) => {
+    handlerFor(build.transform, ({ path, content }) => {
       if (extname(path) === ".ts" && !path.endsWith(".d.ts")) {
         return {
           path,

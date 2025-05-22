@@ -62,9 +62,9 @@ export const IOWriteFileHandler = handlerFor(
 );
 
 /**
- * Canonically handles {@linkcode io.transformFile} effects as an identity transform
+ * Canonically handles {@linkcode build.transform} effects as an identity transform
  */
-export const IOTransformHandler = handlerFor(io.transformFile, id);
+export const IOTransformHandler = handlerFor(build.transform, id);
 
 /**
  * The io plugin

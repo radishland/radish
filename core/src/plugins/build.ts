@@ -11,13 +11,13 @@ import { id } from "../utils/algebraic-structures.ts";
 /**
  * @performs
  * - `io/read`
- * - `io/transform`
+ * - `build/transform`
  * - `build/dest`
  * - `io/write`
  */
 const handleBuildFile = handlerFor(build.file, async (path: string) => {
   const content = await io.read(path);
-  const { content: transformed } = await io.transformFile({
+  const { content: transformed } = await build.transform({
     path,
     content,
   });
@@ -73,7 +73,7 @@ const handleBuildSort = handlerFor(build.sort, id);
  *
  * @performs
  * - `io/read`
- * - `io/transform`
+ * - `build/transform`
  * - `build/dest`
  * - `io/write`
  */

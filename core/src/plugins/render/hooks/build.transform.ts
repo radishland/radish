@@ -1,5 +1,5 @@
-import { io } from "$effects/io.ts";
 import { manifest } from "$effects/manifest.ts";
+import { build } from "$effects/mod.ts";
 import { type Manifest, render } from "$effects/render.ts";
 import { elementsFolder, routesFolder } from "$lib/constants.ts";
 import { filename, isParent } from "$lib/utils/path.ts";
@@ -16,7 +16,7 @@ import { manifestShape } from "./manifest.ts";
  * - `render/route`
  */
 export const handleTransformFile = handlerFor(
-  io.transformFile,
+  build.transform,
   async ({ path, content }) => {
     if (extname(path) !== ".html") return Handler.continue({ path, content });
 

@@ -110,7 +110,7 @@ export { createState, type StateOps } from "./state.ts";
  * @example
  *
  * ```ts
- * const trivialHandler = handlerFor(io.transformFile, id);
+ * const trivialHandler = handlerFor(build.transform, id);
  * ```
  */
 export const id = <T>(value: T): T => value;

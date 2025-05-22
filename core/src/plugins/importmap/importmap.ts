@@ -3,7 +3,7 @@ import {
   importmap,
   importmapPath,
 } from "$effects/importmap.ts";
-import { config, denoConfig, io, manifest } from "$effects/mod.ts";
+import { build, config, denoConfig, io, manifest } from "$effects/mod.ts";
 import { target_head, ts_extension_regex } from "$lib/constants.ts";
 import { dev } from "$lib/environment.ts";
 import type { ManifestBase, Plugin } from "$lib/types.d.ts";
@@ -18,12 +18,12 @@ let importmapObject: ImportMap = {};
 
 /**
  * @hooks
- * - `io/transform` Inserts the importmap in the app skeleton
+ * - `build/transform` Inserts the importmap in the app skeleton
  *
  * @performs
  * - `io/read`
  * - `io/write`
- * - `io/transformFile`
+ * - `build/transform`
  */
 export const pluginImportmap: Plugin = {
   name: "plugin-importmap",
@@ -42,7 +42,7 @@ export const pluginImportmap: Plugin = {
     handlerFor(importmap.write, async () => {
       await io.write(importmapPath, JSON.stringify(importmapObject));
     }),
-    handlerFor(io.transformFile, async (data) => {
+    handlerFor(build.transform, async (data) => {
       let { path, content } = data;
 
       if (basename(path) === "_app.html") {

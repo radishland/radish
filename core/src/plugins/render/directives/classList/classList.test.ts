@@ -1,5 +1,5 @@
-import { io } from "$effects/io.ts";
 import { manifest } from "$effects/manifest.ts";
+import { build } from "$effects/mod.ts";
 import { globals } from "$lib/constants.ts";
 import { id } from "$lib/utils/algebraic-structures.ts";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
@@ -8,7 +8,7 @@ import { assertEquals } from "@std/assert";
 import { dirname, fromFileUrl, join } from "@std/path";
 import { describe, test } from "@std/testing/bdd";
 import { handleComponents } from "../../components/component.ts";
-import { handleTransformFile } from "../../hooks/io.transformFile.ts";
+import { handleTransformFile } from "../../hooks/build.transform.ts";
 import { manifestShape } from "../../hooks/manifest.ts";
 import { handleApplyDirectivesTransform } from "../../transforms/apply-directives.ts";
 import { handleTransformBase } from "../../transforms/mod.ts";
@@ -24,7 +24,7 @@ describe("classList directive", () => {
   test("renders", async () => {
     using _ = new HandlerScope(
       handleTransformFile,
-      handlerFor(io.transformFile, id),
+      handlerFor(build.transform, id),
       handleComponents,
       handleApplyDirectivesTransform,
       handleTransformBase,
@@ -61,7 +61,7 @@ describe("classList directive", () => {
       join(testDataDir, "output.html"),
     );
 
-    const { content: transformed } = await io.transformFile({
+    const { content: transformed } = await build.transform({
       path: "elements/my-component.html",
       content,
     });
