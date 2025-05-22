@@ -22,6 +22,13 @@ export const manifestShape = {
   routes: {},
 } satisfies Manifest;
 
+/**
+ * @hooks
+ * - `io/write` Inserts parser imports in the generated manifest module
+ *
+ * @performs
+ * - `io/read`
+ */
 export const handleManifest = [
   /**
    * Decorator for the io/write handler

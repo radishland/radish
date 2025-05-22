@@ -6,9 +6,13 @@ import { io } from "$effects/io.ts";
 import type { Plugin } from "../types.d.ts";
 
 /**
- * Strips Types
+ * The type-stripping plugin
  *
  * Removes type annotations and comments and handles path rewriting
+ *
+ * @hooks
+ * - `io/emit`
+ * - `io/transform`
  */
 export const pluginStripTypes: Plugin = {
   name: "plugin-strip-types",

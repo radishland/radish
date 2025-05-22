@@ -9,6 +9,10 @@ import {
 import { manifestShape } from "../hooks/manifest.ts";
 import { ts_extension_regex } from "../../../constants.ts";
 
+/**
+ * @performs
+ * - `manifest/get`
+ */
 export const handleAutoImport = handlerFor(
   render.route,
   async (route, insertHead, insertBody) => {

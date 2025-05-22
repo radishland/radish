@@ -77,7 +77,6 @@ const shutdown = async () => {
 /**
  * @performs
  * - `router/handle-route`
- * - `server/handle-request`
  */
 export const pluginServer: Plugin = {
   name: "plugin-server",

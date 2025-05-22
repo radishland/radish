@@ -7,6 +7,12 @@ import { io } from "$effects/io.ts";
 import { config, denoConfig } from "$effects/config.ts";
 import { id } from "../utils/algebraic-structures.ts";
 
+/**
+ * The config plugin
+ *
+ * @performs
+ * - `io/read`
+ */
 export const pluginConfig: Plugin = {
   name: "plugin-config",
   handlers: [

@@ -2,6 +2,10 @@ import { config } from "$effects/config.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { render } from "$effects/render.ts";
 
+/**
+ * @performs
+ * - `config/read`
+ */
 export const handleSpeculationRules = handlerFor(
   render.route,
   async (route, insertHead, insertBody) => {

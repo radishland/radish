@@ -15,6 +15,15 @@ import { extname, relative } from "@std/path";
 
 const hmrEventsCache = new TtlCache<string, HmrEvent>(200);
 
+/**
+ * @performs
+ * - `hmr/update`
+ * - `manifest/write`
+ * - `manifest/load`
+ * - `importmap/generate`
+ * - `build/start`
+ * - `ws/send`
+ */
 const handleHMRPipeline = handlerFor(hmr.pipeline, async (event: HmrEvent) => {
   const { paths } = await hmr.update({ event, paths: [event.path] });
 

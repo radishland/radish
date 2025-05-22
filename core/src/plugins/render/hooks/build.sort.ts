@@ -62,6 +62,10 @@ const sortComponents = <T extends ElementManifest | RouteManifest>(
   return sorted.concat(components);
 };
 
+/**
+ * @performs
+ * - `manifest/get`
+ */
 export const handleSort = handlerFor(
   build.sort,
   async (entries) => {

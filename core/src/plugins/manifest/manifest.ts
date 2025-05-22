@@ -15,6 +15,14 @@ let loader: (() => Promise<ManifestBase>) | undefined;
 
 let manifestObject: ManifestBase = { imports: {} };
 
+/**
+ * @hooks
+ * - `hmr/update`
+ *
+ * @performs
+ * - `io/read`
+ * - `io/write`
+ */
 export const pluginManifest: Plugin = {
   name: "plugin-manifest",
   handlers: [

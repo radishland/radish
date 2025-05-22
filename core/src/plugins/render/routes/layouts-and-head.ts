@@ -9,6 +9,10 @@ import { dev } from "$lib/environment.ts";
 import { isParent } from "$lib/utils/path.ts";
 import { manifestShape } from "../hooks/manifest.ts";
 
+/**
+ * @performs
+ * - `manifest/get`
+ */
 export const handleRouteLayoutsAndHeadElements = handlerFor(
   render.route,
   async (route, insertHead, insertBody) => {

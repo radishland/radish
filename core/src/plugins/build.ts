@@ -8,6 +8,13 @@ import type { Plugin } from "../types.d.ts";
 import { expandGlobWorkspaceRelative } from "../utils/fs.ts";
 import { id } from "../utils/algebraic-structures.ts";
 
+/**
+ * @performs
+ * - `io/read`
+ * - `io/transform`
+ * - `io/emit`
+ * - `io/write`
+ */
 const handleBuildFile = handlerFor(build.file, async (path: string) => {
   const content = await io.readFile(path);
   const { content: transformed } = await io.transformFile({
@@ -23,6 +30,11 @@ const handleBuildFile = handlerFor(build.file, async (path: string) => {
  *
  * @param paths Array of globs
  * @param {boolean} options.incremental Whether the build folder should be kept or emptied
+ *
+ * @performs
+ * - `build/file`
+ * - `build/sort`
+ * - `io/emit`
  */
 const handleBuildStart = handlerFor(
   build.start,
@@ -56,6 +68,15 @@ const handleBuildStart = handlerFor(
  */
 const handleBuildSort = handlerFor(build.sort, id);
 
+/**
+ * The build plugin
+ *
+ * @performs
+ * - `io/read`
+ * - `io/transform`
+ * - `io/emit`
+ * - `io/write`
+ */
 export const pluginBuild: Plugin = {
   name: "plugin-build",
   handlers: [handleBuildFile, handleBuildStart, handleBuildSort],

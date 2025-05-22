@@ -5,6 +5,10 @@ import { ws } from "$effects/ws.ts";
 import { dev } from "$lib/environment.ts";
 import { createStandardResponse } from "$lib/utils/http.ts";
 
+/**
+ * @performs
+ * - `ws/handle-socket`
+ */
 export const handleWSServerRequest = handlerFor(
   server.handleRequest,
   async (request, info) => {

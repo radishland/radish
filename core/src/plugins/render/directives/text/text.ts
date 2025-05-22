@@ -1,8 +1,7 @@
+import { render } from "$effects/render.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
 import { isElementNode, Kind, textNode } from "@radish/htmlcrunch";
 import { assert } from "@std/assert";
-
-import { Handler, handlerFor } from "@radish/effect-system";
-import { render } from "$effects/render.ts";
 import { contextLookup } from "../../state.ts";
 
 export const handleTextDirective = handlerFor(
