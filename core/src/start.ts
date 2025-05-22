@@ -1,45 +1,41 @@
-import { build } from "$effects/build.ts";
-import { env } from "$effects/env.ts";
-import { importmap } from "$effects/importmap.ts";
-import { manifest } from "$effects/manifest.ts";
+import {
+  build,
+  config as configEffect,
+  env,
+  hmr,
+  importmap,
+  manifest,
+  router,
+  server,
+} from "$effects/mod.ts";
 import * as effects from "@radish/effect-system";
 import { parseArgs } from "@std/cli";
-import { UserAgent } from "@std/http";
+import { serveDir } from "@std/http";
+import { join } from "@std/path";
 import {
+  buildFolder,
   elementsFolder,
   globals,
   libFolder,
   routesFolder,
+  staticFolder,
 } from "./constants.ts";
-import { config as configEffect } from "./effects/config.ts";
 import { dev } from "./environment.ts";
 import { generateImportmap } from "./plugins/importmap/importmap.ts";
 import { updateManifest } from "./plugins/manifest/manifest.ts";
-import { createApp, type Handle } from "./server/app.ts";
+import { SERVER_DEFAULTS } from "./plugins/server/mod.ts";
 import type { CLIArgs, Config } from "./types.d.ts";
 
 const cliArgs: CLIArgs = Object.freeze(parseArgs(Deno.args, {
   boolean: ["dev", "env", "importmap", "manifest", "build", "server"],
 }));
 
-const handle: Handle = async ({ context, resolve }) => {
-  // Avoid mime type sniffing
-  context.headers.set("X-Content-Type-Options", "nosniff");
-
-  if (!dev) {
-    const ua = new UserAgent(context.request.headers.get("user-agent") ?? "");
-    console.log("ua:", ua);
-  }
-
-  return await resolve(context);
-};
-
 export async function startApp(
   config: Config,
   getManifest: () => Promise<any>,
 ) {
   const handlers = config.plugins?.flatMap((plugin) => plugin.handlers) ?? [];
-  using _ = new effects.HandlerScope(...handlers);
+  new effects.HandlerScope(...handlers);
 
   config = await configEffect.transform({ ...config, args: cliArgs });
   const resolvedConfig: Config = Object.freeze(config);
@@ -62,25 +58,53 @@ export async function startApp(
     await manifest.write();
   }
 
-  if (cliArgs.importmap || cliArgs.build) {
+  if (cliArgs.importmap) {
+    await manifest.setLoader(getManifest);
+    await manifest.load();
+    await generateImportmap();
+    await importmap.write();
+  }
+
+  if (cliArgs.build) {
     await manifest.setLoader(getManifest);
     await manifest.load();
 
-    if (cliArgs.importmap) {
-      await generateImportmap();
-      await importmap.write();
-    }
-
-    if (cliArgs.build) {
-      await build.start([
-        `${libFolder}/**`,
-        `${elementsFolder}/**`,
-        `${routesFolder}/**`,
-      ]);
-    }
+    await build.start([
+      `${libFolder}/**`,
+      `${elementsFolder}/**`,
+      `${routesFolder}/**`,
+    ]);
   }
 
   if (cliArgs.server) {
-    await createApp(handle);
+    await manifest.setLoader(getManifest);
+    await manifest.load();
+    await router.init();
+
+    const staticRoutes: [string, string][] = [
+      [routesFolder, buildFolder],
+      [elementsFolder, buildFolder],
+      [libFolder, buildFolder],
+      [staticFolder, "."],
+      dev
+        ? [`/node_modules/*`, join(config.router?.nodeModulesRoot ?? ".")]
+        : ["", ""],
+    ];
+
+    for (const [folder, fsRoot] of staticRoutes) {
+      if (!folder || !fsRoot) continue;
+
+      await router.addRoute({
+        method: "GET",
+        pattern: new URLPattern({ pathname: `/${folder}/*` }),
+        handleRoute: async ({ request }) => {
+          return await serveDir(request, { fsRoot });
+        },
+      });
+    }
+
+    await server.start({ ...SERVER_DEFAULTS, ...config.server });
+
+    if (dev) await hmr.start();
   }
 }

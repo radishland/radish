@@ -16,6 +16,9 @@ export interface Plugin {
    * The name of the plugin
    */
   name: string;
+  /**
+   * The plugin handlers
+   */
   handlers: Handlers;
 }
 
@@ -58,6 +61,24 @@ export interface Config {
      * @default `.`
      */
     nodeModulesRoot?: string;
+  };
+  server?: {
+    /**
+     * The port to listen on.
+     *
+     * @default {1235} */
+    port?: number;
+    /**
+     * A literal IP address or host name that can be resolved to an IP address.
+     *
+     * @default {"127.0.0.1"} */
+    hostname?: string;
+    /**
+     * The callback which is called when the server starts listening.
+     *
+     * @default {() => console.log\(`Listening at localhost:1235`)}
+     */
+    onListen?: (localAddr: Deno.NetAddr) => void;
   };
   /**
    * The speculation rules of the whole site

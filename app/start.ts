@@ -1,7 +1,6 @@
 import type { Config } from "@radish/core";
 import { importmapPath, manifestPath, startApp } from "@radish/core";
-import { importmap, io } from "@radish/core/effects";
-import { handlerFor } from "@radish/effect-system";
+import { importmap, io, router, server } from "@radish/core/effects";
 import {
   pluginBuild,
   pluginConfig,
@@ -11,9 +10,44 @@ import {
   pluginIO,
   pluginManifest,
   pluginRender,
+  pluginRouter,
+  pluginServer,
   pluginStripTypes,
   pluginWS,
 } from "@radish/core/plugins";
+import { Handler, handlerFor } from "@radish/effect-system";
+import { serveDir, UserAgent } from "@std/http";
+import { join } from "@std/path";
+
+const dirname = import.meta.dirname ?? "";
+const clientRuntime = join(dirname, "..", "runtime", "client");
+
+const substituteDevRuntime = handlerFor(router.handleRoute, async (context) => {
+  const pattern = new URLPattern({ pathname: "/_radish/runtime/*" });
+  const patternResult = pattern.exec(context.request.url);
+
+  if (patternResult && "GET" === context.request.method) {
+    return await serveDir(context.request, {
+      fsRoot: clientRuntime,
+      urlRoot: "_radish/runtime",
+    });
+  }
+
+  return Handler.continue(context);
+});
+
+const hooks = handlerFor(
+  server.handleRequest,
+  (request, info) => {
+    // Avoid mime type sniffing
+    request.headers.set("X-Content-Type-Options", "nosniff");
+
+    const ua = new UserAgent(request.headers.get("user-agent") ?? "");
+    console.log("ua:", ua);
+
+    return Handler.continue(request, info);
+  },
+);
 
 const config: Config = {
   importmap: {
@@ -38,8 +72,11 @@ const config: Config = {
   },
   router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
   plugins: [
-    pluginHMR,
+    { name: "sub", handlers: [substituteDevRuntime] },
+    { name: "ua-logger", handlers: [hooks] },
     pluginWS,
+    pluginServer,
+    pluginRouter,
     pluginRender,
     {
       name: "plugin-rewrite-importmap-imports",
@@ -63,10 +100,10 @@ const config: Config = {
         }),
       ],
     },
-
     pluginBuild,
     pluginImportmap,
     pluginManifest,
+    pluginHMR,
     pluginStripTypes,
     pluginConfig,
     pluginEnv,

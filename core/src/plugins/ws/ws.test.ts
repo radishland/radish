@@ -1,7 +1,7 @@
 import { io } from "$effects/io.ts";
 import { manifest } from "$effects/manifest.ts";
+import { config } from "$effects/mod.ts";
 import { render } from "$effects/render.ts";
-import { globals } from "$lib/constants.ts";
 import { fragments } from "$lib/parser.ts";
 import { handleTransformFile } from "$lib/plugins/render/hooks/io.transformFile.ts";
 import { manifestShape } from "$lib/plugins/render/hooks/manifest.ts";
@@ -10,19 +10,14 @@ import { handleRouteLayoutsAndHeadElements } from "$lib/plugins/render/routes/la
 import { id } from "$lib/utils/algebraic-structures.ts";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals, unreachable } from "@std/assert";
-import { dirname, fromFileUrl, join } from "@std/path";
+import { join } from "@std/path";
 import { describe, test } from "@std/testing/bdd";
-import { handleInsertWebSocketScript } from "./hooks/render.ts";
-import { config } from "$effects/mod.ts";
+import { handleInsertWebSocketScript } from "./hooks/render.route.ts";
 
-const moduleDir = dirname(fromFileUrl(import.meta.url));
-const testDataDir = join(moduleDir, "testdata");
-
+const testDataDir = join(import.meta.dirname!, "testdata");
 const input = await Deno.readTextFile(join(testDataDir, "index.nofmt.html"));
 const output = await Deno.readTextFile(join(testDataDir, "output.nofmt.html"));
 const app = await Deno.readTextFile(join(testDataDir, "_app.html"));
-
-globals();
 
 describe("ws plugin", () => {
   test("insert ws script", async () => {

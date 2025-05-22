@@ -1,4 +1,14 @@
 import { type ErrorStatus, STATUS_TEXT, type StatusCode } from "@std/http";
+/**
+ * Utility to create errors
+ */
+export const error = (
+  statusCode: ErrorStatus,
+  message?: string | undefined,
+  options?: ErrorOptions | undefined,
+) => {
+  throw new AppError(statusCode, message, options);
+};
 
 export class AppError extends Error {
   public statusCode: ErrorStatus;

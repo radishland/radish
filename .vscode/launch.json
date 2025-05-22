@@ -40,7 +40,7 @@
       "experimentalNetworking": "off"
     },
     {
-      "name": "deno run in app",
+      "name": "deno run app",
       "request": "launch",
       "type": "node",
       "runtimeExecutable": "deno",
