@@ -12,7 +12,7 @@ fullstack web apps.
 - **Readable code**: Near-zero [build](#build) step and
   [no bundling](#no-bundle), making code readable and debuggable
 - **[Type Safety](#type-safety)**: Type-safe authoring
-- **Powerful [Effect System](https://jsr.io/@radish/effect-system)**
+- **Powerful [Effect System](#effect-system)**
 - **Extensible [Plugin API](#plugin-api)**
 - **Disappearing Framework**: Fades away as the platform evolves
 - **Secure by Default**: Powered by Deno
@@ -348,14 +348,12 @@ The effect-system is built around effects you perform by awaiting them, and hand
     Instead, Radish is a lightweight approach that embraces the JavaScript/TypeScript languages, with no need to wrap all your libraries and with no interop concerns: it's all standard JavaScript.
   </p>
   <p>
-    In operations signatures (see <code><a href="https://jsr.io/@radish/effect-system/doc/~/createEffect">createEffect</a></code>), asynchrony is treated like any other JS effect: it's swallowed and we don't mark it in the operation signature. This provides a uniform treatment of effects in operation signatures and provides flexibility in how handlers are implemented: an operation signature corresponds to an effect-free signature, and being async becomes an implementation detail. This also lets handlers perform other effects (by awaiting them) and is an implementing detail.
+    In operations signatures (see <code><a href="https://jsr.io/@radish/effect-system/doc/~/createEffect">createEffect</a></code>), asynchrony is treated like any other JS effect: it's swallowed and we don't mark it in the operation signature. This provides a uniform treatment of effects in operation signatures as well as flexibility in how handlers are implemented: an operation signature corresponds to an effect-free signature, and being async becomes an implementation detail. This also lets handlers perform other effects (by awaiting them) and, by the current note, this is an implementation detail too.
   </p>
   <hr>
 </details>
 
-Many effects are provided by Radish out of the box, see the
-[`core/src/effects`](https://github.com/radishland/radish/tree/main/core/src/effects)
-folder.
+The full documentation of the effect-system is available [here](https://jsr.io/@radish/effect-system)
 
 ## Plugin API
 
