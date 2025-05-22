@@ -25,7 +25,7 @@ const square_brackets_around_named_group =
  *
  * This new handler is then dynamically registered
  */
-const handleAddRoute = handlerFor(router.addRoute, (route) => {
+export const handleAddRoute = handlerFor(router.addRoute, (route) => {
   const newHandler = handlerFor(router.handleRoute, (context) => {
     const patternResult = route.pattern.exec(context.request.url);
 
@@ -49,11 +49,14 @@ const handleAddRoute = handlerFor(router.addRoute, (route) => {
  *
  * @returns A standard 404 Not Found `text/plain` response
  */
-const handleRouterDefaultRouteHandler = handlerFor(router.handleRoute, () => {
-  return createStandardResponse(STATUS_CODE.NotFound, {
-    headers: { "Content-Type": "text/plain" },
-  });
-});
+export const handleRouterDefaultRouteHandler = handlerFor(
+  router.handleRoute,
+  () => {
+    return createStandardResponse(STATUS_CODE.NotFound, {
+      headers: { "Content-Type": "text/plain" },
+    });
+  },
+);
 
 /**
  * Performs the `router/add-route` effect for each route of the manifest
