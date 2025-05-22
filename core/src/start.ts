@@ -36,7 +36,7 @@ export async function startApp(
   getManifest: () => Promise<any>,
 ) {
   const handlers = config.plugins?.flatMap((plugin) => plugin.handlers) ?? [];
-  using _ = new effects.HandlerScope(...handlers);
+  new effects.HandlerScope(...handlers);
 
   config = await configEffect.transform({ ...config, args: cliArgs });
   const resolvedConfig: Config = Object.freeze(config);
@@ -59,25 +59,27 @@ export async function startApp(
     await manifest.write();
   }
 
-  if (cliArgs.importmap || cliArgs.build) {
+  if (cliArgs.importmap) {
+    await manifest.setLoader(getManifest);
+    await manifest.load();
+    await generateImportmap();
+    await importmap.write();
+  }
+
+  if (cliArgs.build) {
     await manifest.setLoader(getManifest);
     await manifest.load();
 
-    if (cliArgs.importmap) {
-      await generateImportmap();
-      await importmap.write();
-    }
-
-    if (cliArgs.build) {
-      await build.start([
-        `${libFolder}/**`,
-        `${elementsFolder}/**`,
-        `${routesFolder}/**`,
-      ]);
-    }
+    await build.start([
+      `${libFolder}/**`,
+      `${elementsFolder}/**`,
+      `${routesFolder}/**`,
+    ]);
   }
 
   if (cliArgs.server) {
+    await manifest.setLoader(getManifest);
+    await manifest.load();
     await router.init();
 
     const staticRoutes: [string, string][] = [
@@ -102,11 +104,11 @@ export async function startApp(
       });
     }
 
+    await server.start({ ...SERVER_DEFAULTS, ...config.server });
+
     if (dev) {
       await hmr.start();
       await ws.create();
     }
-
-    await server.start({ ...SERVER_DEFAULTS, ...config.server });
   }
 }
