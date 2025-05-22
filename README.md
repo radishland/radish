@@ -318,7 +318,9 @@ layered handling.
 
 ## [Effect system](https://jsr.io/@radish/effect-system)
 
-The effect-system is built around effects you perform by awaiting them, and handlers that can be synchronous or asynchronous to interpret them, usually via [plugins](#plugin-api).
+The effect-system is built around effects you perform by awaiting them, and
+handlers that can be synchronous or asynchronous to interpret them, usually via
+[plugins](#plugin-api).
 
 <details>
   <summary>Note: awaiting effects</summary>
@@ -353,7 +355,8 @@ The effect-system is built around effects you perform by awaiting them, and hand
   <hr>
 </details>
 
-The full documentation of the effect-system is available [here](https://jsr.io/@radish/effect-system)
+The full documentation of the effect-system is available
+[here](https://jsr.io/@radish/effect-system)
 
 ## Plugin API
 
