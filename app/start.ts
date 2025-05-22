@@ -80,7 +80,7 @@ const config: Config = {
     pluginWS,
     pluginServer,
     pluginRouter,
-    pluginHMR,
+
     pluginRender,
     {
       name: "plugin-rewrite-importmap-imports",
@@ -104,10 +104,10 @@ const config: Config = {
         }),
       ],
     },
-
     pluginBuild,
     pluginImportmap,
     pluginManifest,
+    pluginHMR,
     pluginStripTypes,
     pluginConfig,
     pluginEnv,
