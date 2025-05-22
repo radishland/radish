@@ -90,7 +90,7 @@ const config: Config = {
             "radish/boot": "/_radish/runtime/boot.js",
           };
 
-          await io.writeFile(
+          await io.write(
             importmapPath,
             JSON.stringify({
               imports: { ...importmapObject.imports, ...imports },

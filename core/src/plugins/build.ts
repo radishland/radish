@@ -16,13 +16,13 @@ import { id } from "../utils/algebraic-structures.ts";
  * - `io/write`
  */
 const handleBuildFile = handlerFor(build.file, async (path: string) => {
-  const content = await io.readFile(path);
+  const content = await io.read(path);
   const { content: transformed } = await io.transformFile({
     path,
     content,
   });
   const dest = await io.emitTo(path);
-  await io.writeFile(dest, transformed);
+  await io.write(dest, transformed);
 });
 
 /**

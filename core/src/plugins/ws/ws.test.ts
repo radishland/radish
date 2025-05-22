@@ -32,7 +32,7 @@ describe("ws plugin", () => {
         if (path === "routes/_app.html") return "build/routes/_app.html";
         unreachable();
       }),
-      handlerFor(io.readFile, (path) => {
+      handlerFor(io.read, (path) => {
         if (path === "build/routes/_app.html") return app;
         unreachable();
       }),

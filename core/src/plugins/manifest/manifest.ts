@@ -45,7 +45,7 @@ export const pluginManifest: Plugin = {
       { entry, manifestObject },
     ) => {
       if (entry.isFile && [".js", ".ts"].includes(extname(entry.path))) {
-        const content = await io.readFile(entry.path);
+        const content = await io.read(entry.path);
         const imports = extractImports(content);
         manifestObject.imports[entry.path] = imports;
       }
@@ -92,5 +92,5 @@ async function writeManifest() {
   let file = "export const manifest = ";
   file += stringifyObject(manifestObject);
 
-  await io.writeFile(manifestPath, file);
+  await io.write(manifestPath, file);
 }

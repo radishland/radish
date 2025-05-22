@@ -31,7 +31,7 @@ export const pluginImportmap: Plugin = {
     handlerFor(importmap.get, async () => {
       if (!importmapObject.imports) {
         try {
-          importmapObject = JSON.parse(await io.readFile(importmapPath));
+          importmapObject = JSON.parse(await io.read(importmapPath));
         } catch (error) {
           throwUnlessNotFound(error);
         }
@@ -40,7 +40,7 @@ export const pluginImportmap: Plugin = {
       return importmapObject;
     }),
     handlerFor(importmap.write, async () => {
-      await io.writeFile(importmapPath, JSON.stringify(importmapObject));
+      await io.write(importmapPath, JSON.stringify(importmapObject));
     }),
     handlerFor(io.transformFile, async (data) => {
       let { path, content } = data;

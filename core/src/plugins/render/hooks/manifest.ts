@@ -35,7 +35,7 @@ export const handleManifest = [
    *
    * Adds the required parser imports to the generated `manifest.ts` module
    */
-  handlerFor(io.writeFile, (path, content) => {
+  handlerFor(io.write, (path, content) => {
     if (path !== manifestPath) return Handler.continue(path, content);
 
     content =
@@ -94,7 +94,7 @@ export const handleManifest = [
 
               let fragment;
               try {
-                const content = await io.readFile(entry.path);
+                const content = await io.read(entry.path);
                 fragment = shadowRoot.parseOrThrow(content);
               } catch (error) {
                 console.error(
@@ -145,7 +145,7 @@ export const handleManifest = [
         if (extname(entry.name) === ".html") {
           let fragment;
           try {
-            const content = await io.readFile(entry.path);
+            const content = await io.read(entry.path);
             fragment = fragments.parseOrThrow(content);
           } catch (error) {
             console.error(`Something went wrong while parsing ${entry.path}`);

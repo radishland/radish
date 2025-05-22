@@ -23,11 +23,11 @@ const invalidateFileCache = (path: string): boolean => {
 };
 
 /**
- * Handles {@linkcode io.readFile} effects
+ * Handles {@linkcode io.read} effects
  *
  * Caches the result of read operations for efficient file access
  */
-export const IOReadFileHandler = handlerFor(io.readFile, async (path) => {
+export const IOReadFileHandler = handlerFor(io.read, async (path) => {
   path = workspaceRelative(path);
 
   if (fileCache.has(path)) return fileCache.get(path)!;
@@ -46,12 +46,12 @@ export const IOEmitToHandler = handlerFor(
 );
 
 /**
- * Handles {@linkcode io.writeFile} effects
+ * Handles {@linkcode io.write} effects
  *
  * Invalidates the file cache after a file write
  */
 export const IOWriteFileHandler = handlerFor(
-  io.writeFile,
+  io.write,
   async (path, data) => {
     path = workspaceRelative(path);
     await ensureDir(dirname(path));

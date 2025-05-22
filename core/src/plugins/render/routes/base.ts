@@ -12,7 +12,7 @@ export const handleRouteBase = handlerFor(
   render.route,
   async (_route, insertHead, insertBody) => {
     const appSkeletonPath = await io.emitTo(appPath);
-    const appSkeleton = await io.readFile(appSkeletonPath);
+    const appSkeleton = await io.read(appSkeletonPath);
 
     return appSkeleton
       .replace("%radish.head%", insertHead)

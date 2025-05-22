@@ -100,7 +100,7 @@ describe("importmap generation", () => {
   test("transforms index.html files", async () => {
     using _ = new HandlerScope(
       ...pluginImportmap.handlers,
-      handlerFor(io.readFile, async (path) => {
+      handlerFor(io.read, async (path) => {
         if (path === importmapPath) {
           return await Deno.readTextFile(
             join(moduleDir, "testdata", "importmap.json"),
