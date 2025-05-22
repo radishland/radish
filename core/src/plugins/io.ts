@@ -1,14 +1,10 @@
 import { hmr } from "$effects/hmr.ts";
 import { io } from "$effects/io.ts";
-import { buildFolder } from "$lib/constants.ts";
 import type { Plugin } from "$lib/types.d.ts";
-import { id } from "$lib/utils/algebraic-structures.ts";
-import { throwUnlessNotFound } from "$lib/utils/io.ts";
-import { isParent, workspaceRelative } from "$lib/utils/path.ts";
+import { workspaceRelative } from "$lib/utils/path.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { ensureDir } from "@std/fs";
-import { dirname, join } from "@std/path";
-import { build } from "$effects/mod.ts";
+import { dirname } from "@std/path";
 
 /**
  * A file store caching `Deno.readTextFile` calls for efficient file access
@@ -39,14 +35,6 @@ export const IOReadFileHandler = handlerFor(io.read, async (path) => {
 });
 
 /**
- * Handles {@linkcode build.dest} effects
- */
-export const IOEmitToHandler = handlerFor(
-  build.dest,
-  (path) => join(buildFolder, workspaceRelative(path)),
-);
-
-/**
  * Handles {@linkcode io.write} effects
  *
  * Invalidates the file cache after a file write
@@ -62,11 +50,6 @@ export const IOWriteFileHandler = handlerFor(
 );
 
 /**
- * Canonically handles {@linkcode build.transform} effects as an identity transform
- */
-export const IOTransformHandler = handlerFor(build.transform, id);
-
-/**
  * The io plugin
  *
  * @hooks
@@ -76,9 +59,7 @@ export const pluginIO: Plugin = {
   name: "plugin-io",
   handlers: [
     IOReadFileHandler,
-    IOEmitToHandler,
     IOWriteFileHandler,
-    IOTransformHandler,
     /**
      * Invalidates the file cache when a file is modified or removed
      */
@@ -96,26 +77,6 @@ export const pluginIO: Plugin = {
         return Handler.continue({ event, paths });
       }
 
-      return Handler.continue({ event, paths });
-    }),
-    /**
-     * Updates files inside the build folder in a way that mirrors the source folder structure
-     */
-    handlerFor(hmr.update, async ({ event, paths }) => {
-      if (event.kind === "remove") {
-        try {
-          const target = await build.dest(event.path);
-          await Deno.remove(target, { recursive: !event.isFile });
-          console.log(`removed`, event.path);
-
-          // don't process files under the removed path
-          paths = paths.filter((f) => isParent(event.path, f));
-
-          return Handler.continue({ event, paths });
-        } catch (error) {
-          throwUnlessNotFound(error);
-        }
-      }
       return Handler.continue({ event, paths });
     }),
   ],
