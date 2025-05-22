@@ -109,11 +109,6 @@ my-rad-project/
       - [Effects in the browser](#effects-in-the-browser)
       - [Effects \& CSS](#effects--css)
   - [Effect system](#effect-system)
-    - [Effects](#effects)
-    - [Handlers](#handlers)
-      - [Sync \& Async Handlers](#sync--async-handlers)
-      - [Partial \& Total Handlers](#partial--total-handlers)
-    - [Using handlers](#using-handlers)
   - [Plugin API](#plugin-api)
   - [Routing](#routing)
     - [Dynamic routes](#dynamic-routes)
@@ -321,109 +316,29 @@ Thinking of CSS styling in terms of effects provides an insightful perspective
 on design, encouraging a mindset that embraces the cascade, style delegation and
 layered handling.
 
-## Effect system
+## [Effect system](https://jsr.io/@radish/effect-system)
 
-Radish's effect system unlocks:
-
-- **Testability**: Swap handlers in tests to mock a deep side-effect
-- **Simplicity**: Avoid passing context or callbacks just for testability makes
-  code simpler and more focused (single responsibility) with a thinner API.
-- **Modularity**: Thinner APIs implies more reuseable and composable code
-- **Extendability**: Plugins define their own effects and handlers.
-- **Flexibility**: Plugin handlers can re-interpret built-in effects, giving a
-  high level of control and customizability.
-
-The system is built around [effects](#effects) you define and perform, and
-[handlers](#handlers) that interpret them, usually via [plugins](#plugin-api).
-
-### Effects
-
-Define a new effect with `createEffect` by specifying the operation signature
-and the name of the effect:
-
-```ts
-import { createEffect } from "radish/effects";
-
-// Signatures can also be inlined directly with the `createEffect` calls
-interface IO {
-  read: (path: string) => string;
-  write: (path: string, content: string) => void;
-}
-
-// We group related operations in an object to prevent conflicting names eg. with io.read and config.read
-const io = {
-  // We pass the signature as the type argument of `createEffect`
-  read: createEffect<IO['read']>("io/read");
-  write: createEffect<IO['write']>("io/write");
-}
-```
-
-Notice that we haven't implement any handlers yet. This cleanly separates
-definition from implementation.
-
-We can already use our effects type-safely:
-
-```ts
-// `content` is of type string
-const content = await io.read("path/to/file"); // await to perform an effect
-await io.write(content); // we can sequence effects in direct style
-```
-
-We perform an effect operation by awaiting it. Calling effects without handlers
-will throw an "Unhandled effect" error, similarly to unhandled exceptions.
+The effect-system is built around effects you perform by awaiting them, and
+handlers that can be synchronous or asynchronous to interpret them, usually via
+[plugins](#plugin-api).
 
 <details>
-  <summary>Advanced note</summary>
+  <summary>Note: awaiting effects</summary>
   <hr>
   <p>
     Effects are often sequenced in pipelines like read -> transform -> write, hinting at their <a href="https://www.sciencedirect.com/science/article/pii/0890540191900524">monadic</a> nature.
   </p>
   <p>
-   In Radish, handlers interpret the `Effect&ltT&gt` monad into the `Promise&ltT&gt` monad letting us <code>await</code> for clean, direct sequencing.
+   In Radish, handlers interpret the `Effect&ltT&gt` monad into the `Promise&ltT&gt` monad letting us <code>await</code> them for clean, direct sequencing.
   </p>
   <p>
-    Here <code>await</code> is just the syntax sugar offered by the `PromiseLike` interface. It's the JS equivalent of Haskell's <a href="https://en.wikibooks.org/wiki/Haskell/do_notation">do-notation</a>
+    <code>await</code> is just syntax sugar offered by the `PromiseLike` interface. It's the JS equivalent of Haskell's <a href="https://en.wikibooks.org/wiki/Haskell/do_notation">do-notation</a>
   </p>
   <hr>
 </details>
 
-### Handlers
-
-#### Sync & Async Handlers
-
-Use `handlerFor` to implement an effect operation:
-
-```ts
-import { handlerFor } from "@radish/effect-system";
-
-// Let's log every time we read a file
-const IOReadHandler = handlerFor(io.read, async (path: string) => {
-  console.log(`reading ${path}`);
-  return await Deno.readTextFile(path);
-});
-
-// This handler is synchronous
-const IOWriteHandler = handlerFor(io.write, (path: string, content: string) => {
-  console.log(`writing ${path}`);
-  return Deno.writeTextFileSync(content);
-});
-
-// In a testing context we could swap our `IOReadHandler` for a `IOReadHandlerMock` instead:
-const files = new Map([["notes.txt", "TODO"]]);
-
-const IOReadHandlerMock = handlerFor(io.read, (path: string) => {
-  return files.get(path) ?? "";
-});
-```
-
-Handlers can be synchronous or asynchronous.
-
-The operation signature (_e.g._ `A -> B`) is the minimal, effect-free contract.
-Handlers are free to perform their own effects, and asynchrony being an effect,
-async handlers (_e.g._ `A -> Promise<B>`) are allowed.
-
 <details>
-  <summary>Note</summary>
+  <summary>Note: JS async marker and handler types</summary>
   <hr>
   <p>
     In JavaScript/TypeScript, asynchrony is the only effect we have markers for, with the `async` keyword and the `Promise` return type. Other effects (throwing, logging) have no markers.
@@ -432,90 +347,16 @@ async handlers (_e.g._ `A -> Promise<B>`) are allowed.
     One approach would be to encode all effects in types. This is the approach taken by the <a href="https://effect.website/">Effect framework</a>.
   </p>
   <p>
-    Instead, Radish is lightweight approach and we embrace the JavaScript/TypeScript languages, with no need to wrap all your libraries and with no interop concerns as it's all standard JavaScript.
+    Instead, Radish is a lightweight approach that embraces the JavaScript/TypeScript languages, with no need to wrap all your libraries and with no interop concerns: it's all standard JavaScript.
   </p>
   <p>
-    Asynchrony is treated like any other effect, and we don't mark it in an effect operation signature. This provides a uniform treatment of effects in operation signatures. This also gives us more flexibility in how we implement handlers as an operation signature is in fact an effect-free signature.
+    In operations signatures (see <code><a href="https://jsr.io/@radish/effect-system/doc/~/createEffect">createEffect</a></code>), asynchrony is treated like any other JS effect: it's swallowed and we don't mark it in the operation signature. This provides a uniform treatment of effects in operation signatures as well as flexibility in how handlers are implemented: an operation signature corresponds to an effect-free signature, and being async becomes an implementation detail. This also lets handlers perform other effects (by awaiting them) and, by the current note, this is an implementation detail too.
   </p>
   <hr>
 </details>
 
-#### Partial & Total Handlers
-
-A handler doesn't have to be a total function. It can be **partial**, handling
-only specific cases, and delegating the rest to other handlers.
-
-```ts
-import { Handler } from "radish/effects";
-
-// This handler relies on delegation
-const IOReadTXTOnly = handlerFor(io.read, (path: string) => {
-  if (path.endsWith(".txt")) {
-    return "I can only handle .txt files";
-  }
-  return Handler.continue(path); // delegates to other handlers
-});
-
-// A decorator handler that modifies content before writing
-const IODecorateTXT = handlerFor(io.write, (path: string, content: string) => {
-  if (path.endsWith(".txt")) {
-    content = "/** Copyright notice **/" + content;
-  }
-  return Handler.continue(path, content);
-});
-
-let count = 0;
-// A listener that performs orthogonal logic
-const IOCountTXTReads = handlerFor(io.read, (path: string) => {
-  if (path.endsWith(".txt")) {
-    count += 1;
-  }
-  return Handler.continue(path);
-});
-```
-
-To delegate the handling we use `Handler.continue(...)` as shown above. You can
-also modify arguments before forwarding them.
-
-This enables several powerful patterns:
-
-- **Delegation**: Focus on handling a specific case
-- **Decoration**: Wrap or augment behavior
-- **Observation**: React to effects and do something orthogonal to the handling
-
-Handlers can also perform other effects while handling their own operation, as
-long as a handler in scope for those as well.
-
-In summary, handlers for the same effect can be:
-
-- **Synchronous** or **asynchronous**
-- **Total** (handle all inputs) or **partial** (handle selectively)
-
-and they can be freely mixed and composed as needed.
-
-### Using handlers
-
-To execute code with handlers you have a few options:
-
-1. **Use a plugin** (see [Plugin API](#plugin-api)) the common way to group
-   handlers
-2. **Use `runWith` directly** to create a new scope for handlers
-3. **Use `addHandlers`** to attach handlers dynamically
-
-```ts
-import { runWith } from "radish/effects";
-
-runWith(async () => {
-  const txtFile = await io.read("hello.txt"); // "I can only handle .txt files"
-  const jsonFile = await io.read("hello.json"); // ...
-}, [IOHandleTXTOnly, IOReadHandler]);
-```
-
-The order of the handlers matters as `IOHandleTXTOnly` relies on delegation.
-
-Many effects are provided by Radish out of the box, see the
-[`core/src/effects`](https://github.com/radishland/radish/tree/main/core/src/effects)
-folder. They can be imported from `radish/effects`
+The full documentation of the effect-system is available
+[here](https://jsr.io/@radish/effect-system)
 
 ## Plugin API
 
@@ -553,50 +394,6 @@ extend, override, or layer on top of them with the plugin API.
 The provided plugins can be imported from `radish/plugins`, see the
 [core/src/plugins](https://github.com/radishland/radish/tree/main/core/src/plugins)
 folder. Here's an overview
-
-**config**
-
-Manages operations around the user config
-
-- `config.transform: (config: Config) => Config` modifies the user config
-- `config.read: () => ResolvedConfig` returns the resolved config.
-
-**hot-update**
-
-- `hot.update: (param: HotUpdateParam) => HotUpdateParam` triggered in dev mode
-  when a file is created, modified or deleted. Handlers of this effect help keep
-  the internal representation of the project in sync with the code
-
-**importmap**
-
-This plugin is in charge of generating the [importmap](#importmap)
-
-- `importmap.get: () => ImportMap` returns the importmap object
-- `importmap.write: () => void` writes the generate importmap to disk
-
-**io**
-
-A wrapper for io operations that manages its own cache to speed-up read
-operations
-
-- `io.readFile: (path: string) => string` reads a file and returns its content
-- `build.transform: (option: FileTransformParam) => FileTransformParam`
-  transforms a file
-- `io.emitFile: (path: string) => string` returns the destination path of a
-  given file
-- `io.writeFile: (path: string, content: string) => void` writes a file to disk
-
-**manifest**
-
-In charge of building a representation of the app imports, routes, elements etc.
-
-- `setLoader: (loader: () => Promise<ManifestBase>) => void` sets the manifest
-  loader
-- `load: () => void` loads the manifest file in memory
-- `get: () => ManifestBase` returns the manifest object
-- `update: (param: UpdateManifestParam) => UpdateManifestParam` update the
-  manifest object
-- `write: () => void` writes the manifest on disk
 
 ## Routing
 
