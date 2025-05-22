@@ -1,3 +1,9 @@
+/**
+ * All plugins
+ *
+ * @module
+ */
+
 export { pluginBuild } from "./build.ts";
 export { pluginConfig } from "./config.ts";
 export { pluginEnv } from "./env/env.ts";

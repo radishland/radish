@@ -23,6 +23,9 @@ export const manifestShape = {
 } satisfies Manifest;
 
 /**
+ * @hooks
+ * - `io/write` Inserts parser imports in the generated manifest module
+ *
  * @performs
  * - `io/read`
  */

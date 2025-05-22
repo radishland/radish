@@ -1,13 +1,13 @@
-import { extname } from "@std/path";
-import { Handler, handlerFor } from "@radish/effect-system";
 import { io } from "$effects/io.ts";
-import { type Manifest, render } from "$effects/render.ts";
 import { manifest } from "$effects/manifest.ts";
-import { manifestShape } from "./manifest.ts";
+import { type Manifest, render } from "$effects/render.ts";
+import { elementsFolder, routesFolder } from "$lib/constants.ts";
+import { filename, isParent } from "$lib/utils/path.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
 import { assertObjectMatch } from "@std/assert";
+import { extname } from "@std/path";
 import { assertEmptyHandlerRegistryStack } from "../state.ts";
-import { filename, isParent } from "../../../utils/path.ts";
-import { elementsFolder, routesFolder } from "../../../constants.ts";
+import { manifestShape } from "./manifest.ts";
 
 /**
  * @performs

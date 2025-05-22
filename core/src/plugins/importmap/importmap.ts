@@ -17,6 +17,9 @@ import { findLongestMatchingPrefix } from "../resolve.ts";
 let importmapObject: ImportMap = {};
 
 /**
+ * @hooks
+ * - `io/transform` Inserts the importmap in the app skeleton
+ *
  * @performs
  * - `io/read`
  * - `io/write`

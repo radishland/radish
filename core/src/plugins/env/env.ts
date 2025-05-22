@@ -35,6 +35,9 @@ const envModulePath = join(generatedFolder, "env.ts");
  * This gives autocompletion on keys and will allow further refinements like preventing leaking
  * variables in the browser by specifying rules or inlining public env imports
  *
+ * @hooks
+ * - `hmr/update`
+ *
  * @performs
  * - `config/read`
  * - `io/read`
@@ -57,6 +60,10 @@ export const pluginEnv: Plugin = {
   ],
 };
 
+/**
+ * @performs
+ * - `io/read`
+ */
 async function load() {
   const envPath = await getEnvPath();
   const envFile = await io.readFile(envPath);
@@ -94,6 +101,10 @@ const parseValue = (value: string | undefined) => {
   }
 };
 
+/**
+ * @performs
+ * - `config/read`
+ */
 const getEnvPath = async () => {
   const { env } = await config.read();
   return env?.envPath ?? ".env";
