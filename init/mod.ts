@@ -113,9 +113,8 @@ try {
 Deno.rename(join(projectPath, "env"), join(projectPath, ".env"));
 
 console.log(
-  `
-${green(bold("Project Ready!"))} 🌱
-`,
+  // deno-lint-ignore prefer-ascii
+  `\n${green(bold("Project Ready!"))} 🌱\n`,
 );
 
 console.log(`
