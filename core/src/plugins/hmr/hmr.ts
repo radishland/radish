@@ -1,8 +1,5 @@
-import { build } from "$effects/build.ts";
-import type { HmrEvent } from "$effects/hmr.ts";
-import { hmr } from "$effects/hmr.ts";
-import { manifest } from "$effects/manifest.ts";
-import { ws } from "$effects/ws.ts";
+import type { HmrEvent } from "$effects/mod.ts";
+import { build, config, hmr, io, manifest, router, ws } from "$effects/mod.ts";
 import { onDispose } from "$lib/cleanup.ts";
 import {
   elementsFolder,
@@ -13,8 +10,11 @@ import {
 import type { Plugin } from "$lib/mod.ts";
 import { generateImportmap } from "$lib/plugins/importmap/importmap.ts";
 import { TtlCache } from "$lib/utils/cache.ts";
+import { isParent } from "$lib/utils/path.ts";
 import { handlerFor } from "@radish/effect-system";
-import { extname, relative } from "@std/path";
+import { assertExists } from "@std/assert";
+import { basename, dirname, extname, relative } from "@std/path";
+import { serveFile } from "@std/http";
 
 const hmrEventsCache = new TtlCache<string, HmrEvent>(200);
 
@@ -26,6 +26,38 @@ const handleHMRPipeline = handlerFor(hmr.pipeline, async (event: HmrEvent) => {
   await generateImportmap();
   await build.start(paths, { incremental: true });
   await ws.send("reload");
+
+  if (
+    event.kind === "create" && isParent(routesFolder, event.path) &&
+    basename(event.path) === "index.html"
+  ) {
+    const rootPath = new RegExp(`^${routesFolder}/?`);
+    const { router: routerConfig } = await config.read();
+    const pathname = dirname(event.path)
+      .replace(rootPath, "/")
+      .replace(
+        /\[([^\]=]+)\]|\[([^\]=]+)=([^\]]+)\]/,
+        (_match, _, namedGroup, matcherName) => {
+          if (matcherName) {
+            const matcher = routerConfig?.matchers?.[matcherName];
+            assertExists(matcher, `Regex matcher not found: ${matcherName}`);
+
+            return `:${namedGroup}(${matcher.source})`;
+          }
+          return `:${namedGroup}`;
+        },
+      );
+
+    const destPath = await io.emitTo(event.path);
+
+    await router.addRoute({
+      method: "GET",
+      pattern: new URLPattern({ pathname }),
+      handler: async ({ request }) => {
+        return await serveFile(request, destPath);
+      },
+    });
+  }
 });
 
 export const pluginHMR: Plugin = {
@@ -65,17 +97,6 @@ export const pluginHMR: Plugin = {
             hmrEventsCache.set(key, hmrEvent);
             await hmr.pipeline(hmrEvent);
           }
-
-          // TODO: update router
-          // if (!throttle.has("route")) {
-          //   // Update routes
-          //   if (
-          //     event.paths.some((p) => common([routesPath, p]) === routesPath)
-          //   ) {
-          //     router.generateFileBasedRoutes();
-          //   }
-          //   throttle.add("route");
-          // }
         }
       }
     }),

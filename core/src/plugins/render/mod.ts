@@ -1,4 +1,4 @@
-import type { Plugin } from "../../types.d.ts";
+import type { Plugin } from "$lib/types.d.ts";
 import { handleComponents } from "./components/component.ts";
 import { handleDirectives } from "./directives/mod.ts";
 import { handleSort } from "./hooks/build.sort.ts";
