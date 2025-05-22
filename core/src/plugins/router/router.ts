@@ -2,7 +2,7 @@ import { config } from "$effects/config.ts";
 import { io } from "$effects/io.ts";
 import { manifest } from "$effects/manifest.ts";
 import type { Manifest } from "$effects/render.ts";
-import { type Context, type Route, router } from "$effects/router.ts";
+import { type Route, type RouteContext, router } from "$effects/router.ts";
 import { routesFolder } from "$lib/constants.ts";
 import type { Plugin } from "$lib/mod.ts";
 import { manifestShape } from "$lib/plugins/render/hooks/manifest.ts";
@@ -22,9 +22,7 @@ const square_brackets_around_named_group =
 /**
  * Convenient way to create a new route.
  *
- * Dynamically creates a {@linkcode Handler} for `router/handle-route`. If both the route method and pattern match on a given request, the provided callback runs.
- *
- * This new handler is then dynamically registered
+ * Dynamically creates and registers a handler for `router/handle-route`. If both the route method and pattern match on a given request, the provided callback runs.
  */
 export const handleAddRoute: Handler<[route: Route], void> = handlerFor(
   router.addRoute,
@@ -38,7 +36,7 @@ export const handleAddRoute: Handler<[route: Route], void> = handlerFor(
           ? route.method.includes(context.request.method)
           : route.method === context.request.method)
       ) {
-        return route.handler({ ...context, params: patternResult });
+        return route.handleRoute({ ...context, params: patternResult });
       }
 
       return Handler.continue(context);
@@ -54,7 +52,7 @@ export const handleAddRoute: Handler<[route: Route], void> = handlerFor(
  * @returns A standard 404 Not Found `text/plain` response
  */
 export const handleRouterDefaultRouteHandler: Handler<
-  [context: Context],
+  [context: RouteContext],
   MaybePromise<Response>
 > = handlerFor(
   router.handleRoute,
@@ -104,7 +102,7 @@ export const handleRouterInit: Handler<[], void> = handlerFor(
       await router.addRoute({
         method: "GET",
         pattern: new URLPattern({ pathname }),
-        handler: async ({ request }) => {
+        handleRoute: async ({ request }) => {
           return await serveFile(request, destPath);
         },
       });

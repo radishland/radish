@@ -20,6 +20,10 @@ export const SERVER_DEFAULTS: Config["server"] = {
   },
 };
 
+/**
+ * @performs
+ * - `router/handle-request`
+ */
 export const handleServerRequest = handlerFor(
   server.handleRequest,
   async (request) => {
@@ -47,7 +51,8 @@ export const handleServerRequest = handlerFor(
 /**
  * Handles the server/start effect.
  *
- * Depends on `server/handle-request`
+ * @performs
+ * - `server/handle-request`
  */
 export const handleServerStart = handlerFor(server.start, (options) => {
   const httpServer = Deno.serve(options, async (request, info) => {
@@ -69,6 +74,11 @@ const shutdown = async () => {
   Deno.exit();
 };
 
+/**
+ * @performs
+ * - `router/handle-route`
+ * - `server/handle-request`
+ */
 export const pluginServer: Plugin = {
   name: "plugin-server",
   handlers: [handleServerStart, handleServerRequest],
