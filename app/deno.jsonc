@@ -7,7 +7,8 @@
   },
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"],
-    "noImplicitOverride": true
+    "noImplicitOverride": true,
+    "checkJs": false
   },
   "imports": {
     "$env": "_generated/env.ts",
