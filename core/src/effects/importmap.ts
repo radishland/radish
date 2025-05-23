@@ -1,6 +1,6 @@
 import { join } from "@std/path";
 import { generatedFolder } from "../constants.ts";
-import { createEffect, type EffectWithId } from "@radish/effect-system";
+import { createEffect, type Effect } from "@radish/effect-system";
 
 export interface ImportMap {
   imports?: Record<string, string>;
@@ -12,17 +12,17 @@ export interface ImportMap {
   };
 }
 
-interface ImportmapOperations {
+interface ImportmapOps {
   get: () => ImportMap;
   write: () => void;
 }
 
 export const importmap: {
-  get: EffectWithId<[], ImportMap>;
-  write: EffectWithId<[], void>;
+  get: () => Effect<ImportMap>;
+  write: () => Effect<void>;
 } = {
-  get: createEffect<ImportmapOperations["get"]>("importmap/get"),
-  write: createEffect<ImportmapOperations["write"]>("importmap/write"),
+  get: createEffect<ImportmapOps["get"]>("importmap/get"),
+  write: createEffect<ImportmapOps["write"]>("importmap/write"),
 };
 
 export const importmapPath: string = join(generatedFolder, "importmap.json");

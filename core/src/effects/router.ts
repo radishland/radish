@@ -1,5 +1,5 @@
 import type { MaybePromise } from "$lib/types.d.ts";
-import { createEffect, type EffectWithId } from "@radish/effect-system";
+import { createEffect, type Effect } from "@radish/effect-system";
 
 export type RouteContext = {
   request: Request;
@@ -14,21 +14,27 @@ export type Route = {
   handleRoute: (context: RouteContext) => MaybePromise<Response>;
 };
 
-interface Router {
+interface RouterOps {
   init: () => void;
   addRoute: (route: Route) => void;
   handleRoute: (context: RouteContext) => MaybePromise<Response>;
 }
 
 export const router: {
-  init: EffectWithId<[], void>;
-  addRoute: EffectWithId<[route: Route], void>;
-  handleRoute: EffectWithId<
-    [context: RouteContext],
-    MaybePromise<Response>
-  >;
+  /**
+   * Initializes the router
+   */
+  init: () => Effect<void>;
+  /**
+   * Adds a route
+   */
+  addRoute: (route: Route) => Effect<void>;
+  /**
+   * Handles a requested route
+   */
+  handleRoute: (context: RouteContext) => Effect<MaybePromise<Response>>;
 } = {
-  init: createEffect<Router["init"]>("router/init"),
-  addRoute: createEffect<Router["addRoute"]>("router/add-route"),
-  handleRoute: createEffect<Router["handleRoute"]>("router/handle-route"),
+  init: createEffect<RouterOps["init"]>("router/init"),
+  addRoute: createEffect<RouterOps["addRoute"]>("router/add-route"),
+  handleRoute: createEffect<RouterOps["handleRoute"]>("router/handle-route"),
 };

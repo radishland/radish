@@ -1,4 +1,4 @@
-import { createEffect, type EffectWithId, handlerFor } from "./effects.ts";
+import { createEffect, type Effect, handlerFor } from "./effects.ts";
 import { MissingHandlerScopeError } from "./errors.ts";
 import { handlerScopes } from "./handlers.ts";
 
@@ -78,9 +78,9 @@ export interface StateOps<T> {
  * @throws {MissingHandlerScopeError} If the state is created outside a {@linkcode HandlerScope}
  */
 export const createState = <T>(key: string, initialValue?: T): {
-  get: EffectWithId<[], T | undefined>;
-  set: EffectWithId<[state: T], void>;
-  update: EffectWithId<[updater: (old: T) => T], void>;
+  get: () => Effect<T | undefined>;
+  set: (state: T) => Effect<void>;
+  update: (updater: (old: T) => T) => Effect<void>;
 } => {
   const scope = handlerScopes.at(-1);
   if (!scope) throw new MissingHandlerScopeError();

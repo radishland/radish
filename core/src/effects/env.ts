@@ -1,20 +1,20 @@
-import { createEffect, type EffectWithId } from "@radish/effect-system";
+import { createEffect, type Effect } from "@radish/effect-system";
 
-interface Env {
+interface EnvOps {
   load: () => void;
   get: (key: string) => unknown;
 }
 
 export const env: {
-  load: EffectWithId<[], void>;
-  get: EffectWithId<[key: string], unknown>;
-} = {
   /**
    * Makes the environment variables available
    */
-  load: createEffect<Env["load"]>("env/load"),
+  load: () => Effect<void>;
   /**
    * Returns the parsed value of an environment variable
    */
-  get: createEffect<Env["get"]>("env/get"),
+  get: (key: string) => Effect<unknown>;
+} = {
+  load: createEffect<EnvOps["load"]>("env/load"),
+  get: createEffect<EnvOps["get"]>("env/get"),
 };

@@ -4,7 +4,7 @@ import { describe, test } from "@std/testing/bdd";
 import { MissingHandlerScopeError } from "../errors.ts";
 import { Snapshot } from "../handlers.ts";
 import { HandlerScope } from "../mod.ts";
-import { handleRandom, random } from "./setup.ts";
+import { handleRandom, random } from "./setup.test.ts";
 
 describe("effects snapshots", () => {
   test("setTimeout executes after HandlerScope is disposed of", async () => {

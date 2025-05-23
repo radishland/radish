@@ -2,7 +2,7 @@ import type { WalkEntry } from "@std/fs";
 import { join } from "@std/path";
 import { generatedFolder } from "../constants.ts";
 import type { ManifestBase } from "../types.d.ts";
-import { createEffect, type EffectWithId } from "@radish/effect-system";
+import { createEffect, type Effect } from "@radish/effect-system";
 
 /**
  * The path to the manifest file
@@ -23,34 +23,34 @@ interface ManifestOperations {
  * The manifest effect
  */
 export const manifest: {
-  setLoader: EffectWithId<[loader: () => Promise<ManifestBase>], void>;
-  load: EffectWithId<[], void>;
-  get: EffectWithId<[], ManifestBase>;
-  update: EffectWithId<[param: UpdateManifestParam], UpdateManifestParam>;
-  write: EffectWithId<[], void>;
-} = {
   /**
    * Sets the loader function used by `manifest/load`
    */
-  setLoader: createEffect<ManifestOperations["setLoader"]>(
-    "manifest/setLoader",
-  ),
+  setLoader: (loader: () => Promise<ManifestBase>) => Effect<void>;
   /**
    * Reads the manifest.ts file and loads its content in memory
    */
-  load: createEffect<ManifestOperations["load"]>("manifest/load"),
+  load: () => Effect<void>;
   /**
    * Returns the manifest object
    */
-  get: createEffect<ManifestOperations["get"]>("manifest/get"),
+  get: () => Effect<ManifestBase>;
   /**
    * Updates the manifest object in memory
    */
-  update: createEffect<ManifestOperations["update"]>(
-    "manifest/update",
-  ),
+  update: (param: UpdateManifestParam) => Effect<UpdateManifestParam>;
   /**
    * Serializes the manifest object and saves it to disk
    */
+  write: () => Effect<void>;
+} = {
+  setLoader: createEffect<ManifestOperations["setLoader"]>(
+    "manifest/setLoader",
+  ),
+  load: createEffect<ManifestOperations["load"]>("manifest/load"),
+  get: createEffect<ManifestOperations["get"]>("manifest/get"),
+  update: createEffect<ManifestOperations["update"]>(
+    "manifest/update",
+  ),
   write: createEffect<ManifestOperations["write"]>("manifest/write"),
 };

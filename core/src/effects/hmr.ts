@@ -1,4 +1,4 @@
-import { createEffect, type EffectWithId } from "@radish/effect-system";
+import { createEffect, type Effect } from "@radish/effect-system";
 
 export type HmrEvent = {
   /**
@@ -39,22 +39,22 @@ interface Hmr {
 }
 
 export const hmr: {
-  start: EffectWithId<[], void>;
-  pipeline: EffectWithId<[HmrEvent], void>;
-  update: EffectWithId<[param: HotUpdateParam], HotUpdateParam>;
-} = {
   /**
    * Starts the hmr server
    */
-  start: createEffect<Hmr["start"]>("hmr/start"),
+  start: () => Effect<void>;
   /**
    * Runs the hmr pipeline: performs an hmr/update, then updates the manifest and importmap, rebuilds relevant files and send a ws message
    */
-  pipeline: createEffect<Hmr["pipeline"]>("hmr/pipeline"),
+  pipeline: (event: HmrEvent) => Effect<void>;
   /**
    * Lets other plugins hook into the hot update transform on an {@linkcode HmrEvent}
    *
    * This is part of the hmr/pipeline
    */
+  update: (param: HotUpdateParam) => Effect<HotUpdateParam>;
+} = {
+  start: createEffect<Hmr["start"]>("hmr/start"),
+  pipeline: createEffect<Hmr["pipeline"]>("hmr/pipeline"),
   update: createEffect<Hmr["update"]>("hmr/update"),
 };

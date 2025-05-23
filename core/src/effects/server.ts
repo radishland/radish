@@ -1,4 +1,4 @@
-import { createEffect, type EffectWithId } from "@radish/effect-system";
+import { createEffect, type Effect } from "@radish/effect-system";
 
 interface Server {
   start: (
@@ -13,18 +13,15 @@ interface Server {
 }
 
 export const server: {
-  start: EffectWithId<
-    [
-      options:
-        | Deno.ServeTcpOptions
-        | (Deno.ServeTcpOptions & Deno.TlsCertifiedKeyPem),
-    ],
-    void
-  >;
-  handleRequest: EffectWithId<
-    [request: Request, info: Deno.ServeHandlerInfo],
-    Response
-  >;
+  start: (
+    options:
+      | Deno.ServeTcpOptions
+      | (Deno.ServeTcpOptions & Deno.TlsCertifiedKeyPem),
+  ) => Effect<void>;
+  handleRequest: (
+    request: Request,
+    info: Deno.ServeHandlerInfo,
+  ) => Effect<Response>;
 } = {
   start: createEffect<Server["start"]>("server/start"),
   handleRequest: createEffect<Server["handleRequest"]>("server/handle-request"),

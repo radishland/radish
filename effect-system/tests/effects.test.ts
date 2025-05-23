@@ -6,8 +6,9 @@ import {
   unreachable,
 } from "@std/assert";
 import { afterEach, beforeEach, describe, test } from "@std/testing/bdd";
-import { handlerFor } from "../effects.ts";
+import { Effect, handlerFor } from "../effects.ts";
 import {
+  IllFormedEffectError,
   MissingHandlerScopeError,
   MissingTerminalHandlerError,
   UnhandledEffectError,
@@ -24,7 +25,7 @@ import {
   io,
   logs,
   random,
-} from "./setup.ts";
+} from "./setup.test.ts";
 
 /**
  * Tests
@@ -49,6 +50,46 @@ describe("effect system", () => {
     } catch (error) {
       assertInstanceOf(error, UnhandledEffectError);
     }
+  });
+
+  test("ill-formed effect", () => {
+    try {
+      handlerFor(() => new Effect(() => Promise.resolve(1)), () => 1);
+      unreachable();
+    } catch (error) {
+      assertInstanceOf(error, IllFormedEffectError);
+    }
+  });
+
+  test("scope cleanup", () => {
+    const logs: string[] = [];
+
+    {
+      using scope = new HandlerScope(handleRandom);
+      scope.onDispose(() => {
+        logs.push("clean");
+      });
+    }
+
+    assertEquals(logs, ["clean"]);
+  });
+
+  test("scope cleanup is idempotent", () => {
+    const logs: string[] = [];
+
+    {
+      using scope = new HandlerScope(handleRandom);
+
+      scope.onDispose(() => {
+        logs.push("clean");
+      });
+
+      scope[Symbol.dispose]();
+      scope[Symbol.dispose]();
+      scope[Symbol.dispose]();
+    }
+
+    assertEquals(logs, ["clean"]);
   });
 
   test("simple handling", async () => {

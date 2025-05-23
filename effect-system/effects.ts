@@ -1,20 +1,13 @@
+import { IllFormedEffectError } from "./errors.ts";
 import { type BaseHandler, Handler, perform } from "./handlers.ts";
 
 /**
- * `EffectWithId` describes an effect runner and its corresponding id, as returned by {@linkcode createEffect}
- */
-export interface EffectWithId<P extends any[], R> {
-  /**
-   * The effect runner
-   */
-  (...payload: P): Effect<R>;
-  /**
-   * The unique `id` the the effect
-   */
-  readonly id: string;
-}
-
-/**
+ * The effect class
+ *
+ * You don't interact directly with this class, effects are created with {@linkcode createEffect}
+ *
+ * @see {@linkcode createEffect}
+ *
  * @internal
  */
 export class Effect<A> implements PromiseLike<A> {
@@ -35,18 +28,6 @@ export class Effect<A> implements PromiseLike<A> {
       | undefined,
   ): PromiseLike<TResult1 | TResult2> {
     return this.perform().then(onfulfilled, onrejected);
-  }
-
-  static resolve<A>(a: A): Effect<A> {
-    return new Effect(() => Promise.resolve(a));
-  }
-
-  bind<B>(f: (a: A) => Effect<B>): Effect<B> {
-    return new Effect(() => this.perform().then((a) => f(a).perform()));
-  }
-
-  map<B>(f: (a: A) => B): Effect<B> {
-    return this.bind((a) => Effect.resolve(f(a)));
   }
 }
 
@@ -90,14 +71,13 @@ export class Effect<A> implements PromiseLike<A> {
  */
 export function createEffect<Op extends (...payload: any[]) => any>(
   id: string,
-): EffectWithId<Parameters<Op>, ReturnType<Op>> {
+): (...payload: Parameters<Op>) => Effect<ReturnType<Op>> {
   const effect = (...payload: Parameters<Op>): Effect<ReturnType<Op>> => {
     return new Effect(() => perform(id, ...payload));
   };
 
   Object.defineProperty(effect, "id", { value: id, writable: false });
-
-  return effect as EffectWithId<Parameters<Op>, ReturnType<Op>>;
+  return effect;
 }
 
 /**
@@ -206,9 +186,12 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  * @see {@linkcode Handler.continue}
  */
 export const handlerFor = <P extends any[], R>(
-  effect: EffectWithId<P, R>,
+  effect: (...params: P) => Effect<R>,
   handler: NoInfer<BaseHandler<P, R>>,
 ): Handler<P, R> => {
+  if (!Object.hasOwn(effect, "id")) throw new IllFormedEffectError();
+
+  // @ts-ignore id is there
   const { id } = effect;
   return new Handler(id, handler);
 };

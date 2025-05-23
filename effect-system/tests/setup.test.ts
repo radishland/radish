@@ -8,10 +8,19 @@ interface ConsoleOps {
   log: (message: string) => void;
 }
 
+/**
+ * @internal
+ */
 export const Console = { log: createEffect<ConsoleOps["log"]>("console/log") };
 
+/**
+ * @internal
+ */
 export const logs: string[] = [];
 
+/**
+ * @internal
+ */
 export const handleConsole = handlerFor(Console.log, (message: string) => {
   logs.push(message);
 });
@@ -26,6 +35,9 @@ interface StateOps<S> {
   update: (updater: (old: S) => S) => void;
 }
 
+/**
+ * @internal
+ */
 export const createState = <S>(initialState: S) => {
   const get = createEffect<StateOps<S>["get"]>("state/get");
   const set = createEffect<StateOps<S>["set"]>("state/set");
@@ -57,8 +69,14 @@ interface RandomOps {
   random: () => number;
 }
 
+/**
+ * @internal
+ */
 export const random = createEffect<RandomOps["random"]>("random");
 
+/**
+ * @internal
+ */
 export const handleRandom = handlerFor(random, () => Math.random());
 
 /**
@@ -73,6 +91,9 @@ interface IO {
   ) => { path: string; data: string };
 }
 
+/**
+ * @internal
+ */
 export const io = {
   readFile: createEffect<IO["readFile"]>("io/read"),
   writeFile: createEffect<IO["writeFile"]>("io/write"),
@@ -81,6 +102,9 @@ export const io = {
   >("io/transform"),
 };
 
+/**
+ * @internal
+ */
 export const handleIoReadTXT = handlerFor(io.readFile, (path: string) => {
   if (path.endsWith(".txt")) {
     return "txt content";
@@ -88,6 +112,9 @@ export const handleIoReadTXT = handlerFor(io.readFile, (path: string) => {
   return Handler.continue(path);
 });
 
+/**
+ * @internal
+ */
 export const handleIOReadBase = handlerFor(io.readFile, () => {
   return "file content";
 });
