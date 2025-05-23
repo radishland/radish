@@ -25,7 +25,7 @@ import {
   io,
   logs,
   random,
-} from "./setup.ts";
+} from "./setup.test.ts";
 
 /**
  * Tests
