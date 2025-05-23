@@ -1,8 +1,8 @@
 import { config, render } from "$effects/mod.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
-import { dirname, fromFileUrl, join } from "@std/path";
+import { dirname, join } from "@std/path";
 
-const moduleDir = dirname(fromFileUrl(import.meta.url));
+const moduleDir = dirname(new URL(import.meta.url).pathname);
 const rawScript = Deno.readTextFileSync(join(moduleDir, "./script.nofmt.ts"));
 
 /**
