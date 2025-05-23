@@ -9,7 +9,7 @@ import { describe, test } from "@std/testing/bdd";
 import { handleRenderComponents } from "../../components/component.ts";
 import { handleTransformFile } from "../../hooks/build.transform.ts";
 import { manifestShape } from "../../hooks/manifest.ts";
-import { handleApplyDirectivesTransform } from "../../transforms/apply-directives.ts";
+import { handleRenderTransformApplyDirectives } from "../../transforms/apply-directives.ts";
 import { handleRenderTransformTerminal } from "../../transforms/mod.ts";
 import { handleDirectiveBase } from "../mod.ts";
 import { handleAttrDirective } from "./attr.ts";
@@ -25,7 +25,7 @@ describe("attr directive", () => {
       handleTransformFile,
       handlerFor(build.transform, (_, content) => content),
       handleRenderComponents,
-      handleApplyDirectivesTransform,
+      handleRenderTransformApplyDirectives,
       handleRenderTransformTerminal,
       handleAttrDirective,
       handleDirectiveBase,

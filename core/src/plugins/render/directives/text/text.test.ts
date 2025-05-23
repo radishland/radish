@@ -10,7 +10,7 @@ import { describe, test } from "@std/testing/bdd";
 import { handleRenderComponents } from "../../components/component.ts";
 import { handleTransformFile } from "../../hooks/build.transform.ts";
 import { manifestShape } from "../../hooks/manifest.ts";
-import { handleApplyDirectivesTransform } from "../../transforms/apply-directives.ts";
+import { handleRenderTransformApplyDirectives } from "../../transforms/apply-directives.ts";
 import { handleRenderTransformTerminal } from "../../transforms/mod.ts";
 import { handleDirectiveBase } from "../mod.ts";
 import { handleTextDirective } from "./text.ts";
@@ -26,7 +26,7 @@ describe("text directive", () => {
       handleTransformFile,
       handleBuildTransformCanonical,
       handleRenderComponents,
-      handleApplyDirectivesTransform,
+      handleRenderTransformApplyDirectives,
       handleRenderTransformTerminal,
       handleTextDirective,
       handleDirectiveBase,
