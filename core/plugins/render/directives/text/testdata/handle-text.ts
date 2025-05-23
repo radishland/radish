@@ -1,4 +1,4 @@
-import { computed, HandlerRegistry, signal } from "radish";
+import { computed, HandlerRegistry, signal } from "@radish/runtime";
 
 export class HandleHtml extends HandlerRegistry {
   bool = signal(true);

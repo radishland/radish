@@ -1,6 +1,6 @@
 import { Handler, handlerFor } from "@radish/effect-system";
 import { server } from "$effects/server.ts";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@std/http";
 import { ws } from "$effects/ws.ts";
 import { dev } from "$lib/environment.ts";
 import { createStandardResponse } from "$lib/utils/http.ts";

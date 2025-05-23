@@ -2,7 +2,6 @@
   "name": "@radish/runtime",
   "version": "0.3.1",
   "tasks": {
-    "check": "deno fmt --check && deno lint && deno check **/*.ts",
     "build": "pnpm build"
   },
   "compilerOptions": {
@@ -12,11 +11,11 @@
       "dom.asynciterable",
       "deno.ns"
     ],
-    "checkJs": true,
+    "checkJs": false,
     "noImplicitOverride": true
   },
   "exports": {
-    ".": "./src/handler-registry.ts",
+    ".": "./src/index.ts",
     "./reactivity": "./src/reactivity.ts",
     "./utils": "./src/utils.ts"
   }

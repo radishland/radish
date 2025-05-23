@@ -1,4 +1,4 @@
-import { HandlerRegistry, signal } from "radish";
+import { HandlerRegistry, signal } from "@radish/runtime";
 
 export class HandleSl extends HandlerRegistry {
   // Rating

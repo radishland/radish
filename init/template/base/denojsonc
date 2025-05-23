@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "check": "deno fmt --check && deno lint && deno check **/*.ts",
+    "check": "deno fmt --check && deno lint && deno check",
     "generate": "deno run -A start.ts",
     "build": "deno run --allow-read --allow-write --allow-env start.ts --manifest && deno run --allow-read --allow-write --allow-env --allow-net start.ts --importmap && deno run --allow-read --allow-write --allow-env start.ts --build && deno fmt build",
     "start": "deno run -A start.ts --server"

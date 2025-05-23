@@ -5,6 +5,9 @@
   "exports": {
     ".": "./mod.ts"
   },
+  "compilerOptions": {
+    "checkJs": false
+  },
   "publish": {
     "exclude": [
       "**/*.test.ts",
