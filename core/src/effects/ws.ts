@@ -1,4 +1,4 @@
-import { createEffect, type EffectWithId } from "@radish/effect-system";
+import { createEffect, type Effect } from "@radish/effect-system";
 
 interface WS {
   handleSocket: (socket: WebSocket) => void;
@@ -6,15 +6,15 @@ interface WS {
 }
 
 export const ws: {
-  handleSocket: EffectWithId<[WebSocket], void>;
-  send: EffectWithId<[string], void>;
-} = {
   /**
    * Handles a WebSocket
    */
-  handleSocket: createEffect<WS["handleSocket"]>("ws/socket"),
+  handleSocket: (socket: WebSocket) => Effect<void>;
   /**
    * Sends a message
    */
+  send: (message: string) => Effect<void>;
+} = {
+  handleSocket: createEffect<WS["handleSocket"]>("ws/socket"),
   send: createEffect<WS["send"]>("ws/send"),
 };

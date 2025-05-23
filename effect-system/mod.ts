@@ -91,7 +91,7 @@
  * @module
  */
 
-export { createEffect, type EffectWithId, handlerFor } from "./effects.ts";
+export { createEffect, type Effect, handlerFor } from "./effects.ts";
 export {
   addHandlers,
   type BaseHandler,
