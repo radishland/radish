@@ -16,6 +16,8 @@ type MaybePromise<T> = T | Promise<T>;
  * A `BaseHandler` can be synchronous, asynchronous, partial or total
  *
  * @see {@linkcode handlerFor}
+ *
+ * @internal
  */
 export type BaseHandler<P extends any[], R> = (...payload: P) => MaybePromise<
   R | Continue<P>
