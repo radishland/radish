@@ -15,8 +15,8 @@
     "@material/web": "npm:@material/web@^2.3.0",
     "@shoelace-style/shoelace": "npm:@shoelace-style/shoelace@^2.20.1",
     "@std/text": "jsr:@std/text@^1.0.12",
-    // "radish": "npm:@radishland/runtime@^0.1.0"
-    "ts-helpers": "npm:@fcrozatier/ts-helpers@^2.10.0",
-    "wired-elements": "npm:wired-elements@^3.0.0-rc.6"
+    "wired-elements": "npm:wired-elements@^3.0.0-rc.6",
+
+    "ts-helpers": "npm:@fcrozatier/ts-helpers@^2.10.0"
   }
 }
