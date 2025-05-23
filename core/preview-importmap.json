@@ -5,7 +5,7 @@
     "@radish/core": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/mod.ts",
     "@radish/core/effects": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/effects/mod.ts",
     "@radish/core/plugins": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/plugins/mod.ts",
-    "@radish/parser": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/parser.ts",
+    "@radish/core/parser": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/parser.ts",
     "@radish/environment": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/core/environment.ts",
     "@radish/effect-system": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/effect-system/mod.ts",
     "@radish/runtime": "https://raw.githubusercontent.com/radishland/radish/refs/heads/main/runtime/src/index.ts",
