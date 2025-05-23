@@ -1,3 +1,3 @@
-import { generateCSS } from "../core/src/css.ts";
+import { generateCSS } from "../core/css.ts";
 
 await generateCSS();
