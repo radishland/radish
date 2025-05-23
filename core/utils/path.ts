@@ -1,13 +1,5 @@
 import { assert } from "@std/assert";
-import {
-  basename,
-  common,
-  extname,
-  isAbsolute,
-  normalize,
-  relative,
-  resolve,
-} from "@std/path";
+import { basename, common, extname, relative, resolve } from "@std/path";
 
 /**
  * Returns the file name without the extension
@@ -22,11 +14,8 @@ export function filename(path: string): string {
  * Normalizes paths relative to the project workspace
  */
 export const workspaceRelative = (path: string) => {
-  const normalized = normalize(path);
-  if (isAbsolute(normalized)) {
-    return relative(Deno.cwd(), normalized);
-  }
-  return normalized;
+  const resolved = resolve(path);
+  return relative(Deno.cwd(), resolved);
 };
 
 /**
