@@ -3,16 +3,16 @@
   "version": "1.0.0-alpha.39",
   "license": "MIT",
   "exports": {
-    ".": "./src/mod.ts",
-    "./effects": "./src/effects/mod.ts",
-    "./plugins": "./src/plugins/mod.ts",
-    "./plugins/router": "./src/plugins/router/router.ts",
-    "./parser": "./src/parser.ts",
-    "./environment": "./src/environment.ts"
+    ".": "./mod.ts",
+    "./effects": "./effects/mod.ts",
+    "./plugins": "./plugins/mod.ts",
+    "./plugins/router": "./plugins/router/router.ts",
+    "./parser": "./parser.ts",
+    "./environment": "./environment.ts"
   },
   "imports": {
-    "$effects/": "./src/effects/",
-    "$lib/": "./src/",
+    "$effects/": "./effects/",
+    "$lib/": "./",
     "@fcrozatier/type-strip": "jsr:@fcrozatier/type-strip@^1.2.0"
   }
 }
