@@ -3,11 +3,15 @@ import {
   pluginBuild,
   pluginConfig,
   pluginEnv,
+  pluginHMR,
   pluginImportmap,
   pluginIO,
   pluginManifest,
   pluginRender,
+  pluginRouter,
+  pluginServer,
   pluginStripTypes,
+  pluginWS,
 } from "@radish/core/plugins";
 import type { Config } from "@radish/core";
 
@@ -22,13 +26,17 @@ const config: Config = {
     ],
   },
   plugins: [
+    pluginWS,
+    pluginServer,
+    pluginRouter,
     pluginRender,
-    pluginBuild,
     pluginImportmap,
     pluginManifest,
+    pluginHMR,
     pluginStripTypes,
-    pluginConfig,
+    pluginBuild,
     pluginEnv,
+    pluginConfig,
     pluginIO,
   ],
   // speculationRules: {
