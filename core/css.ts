@@ -29,7 +29,7 @@ const extractCSSVars = (code: string) => {
   for (const size of sizes) {
     if (!size?.groups || CSSVarSizesMap.has(size[0])) continue;
 
-    const { size100, size010, size001, unit } = size.groups;
+    const { size100 = 0, size010 = 0, size001 = 0, unit } = size.groups;
 
     CSSVarSizesMap.set(
       `--${size100}${size010}${size001}${unit ?? ""}`,
