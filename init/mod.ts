@@ -111,6 +111,7 @@ try {
 }
 
 Deno.rename(join(projectPath, "env"), join(projectPath, ".env"));
+Deno.rename(join(projectPath, "gitignore"), join(projectPath, ".gitignore"));
 Deno.rename(join(projectPath, "denojsonc"), join(projectPath, "deno.jsonc"));
 
 console.log(
