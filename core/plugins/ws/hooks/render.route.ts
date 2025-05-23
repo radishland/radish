@@ -1,9 +1,8 @@
-import { config, render } from "$effects/mod.ts";
+import { config, io, render } from "$effects/mod.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { dirname, join } from "@std/path";
 
-const moduleDir = dirname(new URL(import.meta.url).pathname);
-const rawScript = Deno.readTextFileSync(join(moduleDir, "./script.nofmt.ts"));
+const moduleDir = dirname(import.meta.url);
 
 /**
  * Inserts WebSocket script in the head of routes to initiate a WebSocket connection to enable HMR
@@ -15,6 +14,8 @@ export const handleInsertWebSocketScript = handlerFor(
   render.route,
   async (route, insertHead, insertBody) => {
     const { args } = await config.read();
+    // the script can be remote in preview contexts
+    const rawScript = await io.read(join(moduleDir, "./script.nofmt.ts"));
 
     if (args?.dev) {
       insertHead += `<script>\n${

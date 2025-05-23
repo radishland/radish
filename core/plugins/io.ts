@@ -3,8 +3,9 @@ import { io } from "$effects/io.ts";
 import type { Plugin } from "$lib/types.d.ts";
 import { workspaceRelative } from "$lib/utils/path.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
+import { unimplemented } from "@std/assert";
 import { ensureDir } from "@std/fs";
-import { dirname } from "@std/path";
+import { dirname, fromFileUrl } from "@std/path";
 
 /**
  * A file store caching `Deno.readTextFile` calls for efficient file access
@@ -19,12 +20,7 @@ const invalidateFileCache = (path: string): boolean => {
   return fileCache.delete(path);
 };
 
-/**
- * Handles {@linkcode io.read} effects
- *
- * Caches the result of read operations for efficient file access
- */
-export const IOReadFileHandler = handlerFor(io.read, async (path) => {
+const readLocalTextFile = async (path: string) => {
   path = workspaceRelative(path);
 
   if (fileCache.has(path)) return fileCache.get(path)!;
@@ -32,6 +28,46 @@ export const IOReadFileHandler = handlerFor(io.read, async (path) => {
   const content = await Deno.readTextFile(path);
   fileCache.set(path, content);
   return content;
+};
+
+/**
+ * Handles {@linkcode io.read} and returns the content of a local or remote file
+ *
+ * Caches the result of read operations for efficient file access
+ *
+ * Local paths are resolved relative to the project root for better caching.
+ *
+ * @param path The path to a local or remote file. Can be a relative or absolute path, or a URL
+ *
+ * @throws {AssertionError Unimplemented} If the the path URL is not on the `file:` or `https:` protocol
+ */
+export const handleIORead = handlerFor(io.read, async (path) => {
+  try {
+    const url = new URL(path);
+
+    switch (url.protocol) {
+      case "file:":
+        path = fromFileUrl(url);
+        return readLocalTextFile(path);
+      case "https:": {
+        const res = await fetch(url);
+        const content = await res.text();
+        fileCache.set(path, content);
+        return content;
+      }
+
+      default:
+        unimplemented(
+          " protocol. URL paths must be on the file: or https: protocol",
+        );
+    }
+  } catch (error) {
+    // not a url
+    if (error instanceof TypeError) {
+      return await readLocalTextFile(path);
+    }
+    throw error;
+  }
 });
 
 /**
@@ -39,7 +75,7 @@ export const IOReadFileHandler = handlerFor(io.read, async (path) => {
  *
  * Invalidates the file cache after a file write
  */
-export const IOWriteFileHandler = handlerFor(
+export const handleIOWrite = handlerFor(
   io.write,
   async (path, data) => {
     path = workspaceRelative(path);
@@ -58,8 +94,8 @@ export const IOWriteFileHandler = handlerFor(
 export const pluginIO: Plugin = {
   name: "plugin-io",
   handlers: [
-    IOReadFileHandler,
-    IOWriteFileHandler,
+    handleIORead,
+    handleIOWrite,
     /**
      * Invalidates the file cache when a file is modified or removed
      */
