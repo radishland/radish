@@ -4,7 +4,14 @@ import { render } from "$effects/render.ts";
 import { transformNode } from "../transforms/transform-node.ts";
 import { assertExists } from "@std/assert";
 
-export const handleComponents = handlerFor(
+/**
+ * Renders a component
+ *
+ * @performs
+ * - `manifest/get`
+ * - `render/transformNode`
+ */
+export const handleRenderComponents = handlerFor(
   render.component,
   async (element) => {
     assertExists(element.templateLoader);

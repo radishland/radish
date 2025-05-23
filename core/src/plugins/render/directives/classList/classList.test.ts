@@ -7,11 +7,11 @@ import { fragments } from "@radish/htmlcrunch";
 import { assertEquals } from "@std/assert";
 import { dirname, fromFileUrl, join } from "@std/path";
 import { describe, test } from "@std/testing/bdd";
-import { handleComponents } from "../../components/component.ts";
+import { handleRenderComponents } from "../../components/component.ts";
 import { handleTransformFile } from "../../hooks/build.transform.ts";
 import { manifestShape } from "../../hooks/manifest.ts";
-import { handleApplyDirectivesTransform } from "../../transforms/apply-directives.ts";
-import { handleTransformBase } from "../../transforms/mod.ts";
+import { handleRenderTransformApplyDirectives } from "../../transforms/apply-directives.ts";
+import { handleRenderTransformTerminal } from "../../transforms/mod.ts";
 import { handleDirectiveBase } from "../mod.ts";
 import { handleClassListDirective } from "./classList.ts";
 
@@ -25,9 +25,9 @@ describe("classList directive", () => {
     using _ = new HandlerScope(
       handleTransformFile,
       handleBuildTransformCanonical,
-      handleComponents,
-      handleApplyDirectivesTransform,
-      handleTransformBase,
+      handleRenderComponents,
+      handleRenderTransformApplyDirectives,
+      handleRenderTransformTerminal,
       handleClassListDirective,
       handleDirectiveBase,
       handlerFor(manifest.get, () => {
