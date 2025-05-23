@@ -17,8 +17,8 @@ import { manifestShape } from "./manifest.ts";
  */
 export const handleTransformFile = handlerFor(
   build.transform,
-  async ({ path, content }) => {
-    if (extname(path) !== ".html") return Handler.continue({ path, content });
+  async (path, content) => {
+    if (extname(path) !== ".html") return Handler.continue(path, content);
 
     const manifestObject = await manifest.get() as Manifest;
     assertObjectMatch(manifestObject, manifestShape);
@@ -29,21 +29,21 @@ export const handleTransformFile = handlerFor(
       const tagName = filename(path);
       const element = manifestObject.elements[tagName];
 
-      if (!element?.templateLoader) return Handler.continue({ path, content });
+      if (!element?.templateLoader) return Handler.continue(path, content);
 
       const rendered = await render.component(element);
-      return Handler.continue({ path, content: rendered });
+      return Handler.continue(path, rendered);
     }
 
     if (isParent(routesFolder, path)) {
       const route = manifestObject.routes[path];
 
-      if (!route) return Handler.continue({ path, content });
+      if (!route) return Handler.continue(path, content);
 
       const rendered = await render.route(route, "", "");
-      return Handler.continue({ path, content: rendered });
+      return Handler.continue(path, rendered);
     }
 
-    return Handler.continue({ path, content });
+    return Handler.continue(path, content);
   },
 );

@@ -42,9 +42,7 @@ export const pluginImportmap: Plugin = {
     handlerFor(importmap.write, async () => {
       await io.write(importmapPath, JSON.stringify(importmapObject));
     }),
-    handlerFor(build.transform, async (data) => {
-      let { path, content } = data;
-
+    handlerFor(build.transform, async (path, content) => {
       if (basename(path) === "_app.html") {
         const pageHeadContent = dedent`
         <script type="importmap">
@@ -60,7 +58,7 @@ export const pluginImportmap: Plugin = {
         content = content.replace(target_head, "\n" + pageHeadContent);
       }
 
-      return Handler.continue({ path, content });
+      return Handler.continue(path, content);
     }),
   ],
 };

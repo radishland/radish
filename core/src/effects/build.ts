@@ -2,13 +2,12 @@ import type { WalkEntry } from "@std/fs";
 import { createEffect, type EffectWithId } from "@radish/effect-system";
 
 type BuildOptions = { incremental?: boolean };
-type FileTransformParam = { path: string; content: string };
 
 interface Build {
   sort: (entries: WalkEntry[]) => WalkEntry[];
   file: (path: string) => void;
   start: (paths: string[], options?: BuildOptions) => void;
-  transform: (option: FileTransformParam) => FileTransformParam;
+  transform: (path: string, content: string) => string;
   dest: (path: string) => string;
 }
 
@@ -19,7 +18,7 @@ export const build: {
     [paths: string[], options?: BuildOptions | undefined],
     void
   >;
-  transform: EffectWithId<[option: FileTransformParam], FileTransformParam>;
+  transform: EffectWithId<[path: string, content: string], string>;
   dest: EffectWithId<[path: string], string>;
 } = {
   /**
