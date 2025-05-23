@@ -1,5 +1,5 @@
 import type { Plugin } from "$lib/types.d.ts";
-import { handleComponents } from "./components/component.ts";
+import { handleRenderComponents } from "./components/component.ts";
 import { handleDirectives } from "./directives/mod.ts";
 import { handleSort } from "./hooks/build.sort.ts";
 import { handleHotUpdate } from "./hooks/hmr.update.ts";
@@ -33,7 +33,7 @@ export const pluginRender: Plugin = {
     ...handleDirectives,
     ...handleTransformNode,
     ...handleManifest,
-    handleComponents,
+    handleRenderComponents,
     ...handleRoutes,
     handleHotUpdate,
   ],
