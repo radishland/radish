@@ -9,7 +9,7 @@ const moduleDir = dirname(import.meta.url);
  *
  * @performs
  * - `config/read`
- * - `io/read` Retrieve the ws script to insert
+ * - `io/read` Retrieves the ws script to insert
  */
 export const handleInsertWebSocketScript = handlerFor(
   render.route,
