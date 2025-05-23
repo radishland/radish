@@ -19,17 +19,17 @@ import { Handler, handlerFor } from "@radish/effect-system";
 import { serveDir, UserAgent } from "@std/http";
 import { join } from "@std/path";
 
-const dirname = import.meta.dirname ?? "";
+const dirname = import.meta.dirname!;
 const clientRuntime = join(dirname, "..", "runtime", "client");
 
 const substituteDevRuntime = handlerFor(router.handleRoute, async (context) => {
-  const pattern = new URLPattern({ pathname: "/_radish/runtime/*" });
+  const pattern = new URLPattern({ pathname: "/@radish/runtime*" });
   const patternResult = pattern.exec(context.request.url);
 
   if (patternResult && "GET" === context.request.method) {
     return await serveDir(context.request, {
       fsRoot: clientRuntime,
-      urlRoot: "_radish/runtime",
+      urlRoot: "@radish/runtime",
     });
   }
 
@@ -40,7 +40,7 @@ const hooks = handlerFor(
   server.handleRequest,
   (request, info) => {
     // Avoid mime type sniffing
-    request.headers.set("X-Content-Type-Options", "nosniff");
+    // request.headers.set("X-Content-Type-Options", "nosniff");
 
     const ua = new UserAgent(request.headers.get("user-agent") ?? "");
     console.log("ua:", ua);
@@ -72,22 +72,21 @@ const config: Config = {
   },
   router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
   plugins: [
-    { name: "sub", handlers: [substituteDevRuntime] },
-    { name: "ua-logger", handlers: [hooks] },
-    pluginWS,
-    pluginServer,
-    pluginRouter,
-    pluginRender,
     {
-      name: "plugin-rewrite-importmap-imports",
+      name: "router-handle-route-serve-runtime",
+      handlers: [substituteDevRuntime],
+    },
+    { name: "server-handle-request-ua-logger", handlers: [hooks] },
+    {
+      name: "importmap-resolve-@radish/runtime",
       handlers: [
         // rewrites the importmap when using the development runtime version
         handlerFor(importmap.write, async () => {
           const importmapObject = await importmap.get();
 
           const imports = {
-            "radish": "/_radish/runtime/index.js",
-            "radish/boot": "/_radish/runtime/boot.js",
+            "@radish/runtime": "/@radish/runtime/index.js",
+            "@radish/runtime/boot": "/@radish/runtime/boot.js",
           };
 
           await io.write(
@@ -100,13 +99,17 @@ const config: Config = {
         }),
       ],
     },
-    pluginBuild,
+    pluginWS,
+    pluginServer,
+    pluginRouter,
+    pluginRender,
     pluginImportmap,
     pluginManifest,
     pluginHMR,
     pluginStripTypes,
-    pluginConfig,
+    pluginBuild,
     pluginEnv,
+    pluginConfig,
     pluginIO,
   ],
   // speculationRules: {
