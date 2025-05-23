@@ -115,12 +115,17 @@ interface Install {
 
 export interface ImportMapOptions {
   /**
-   * Array of packages of the deno.json importmap to manually add to the importmap.
+   * Manually adds packages of your `deno.json` importmap to the browser importmap by specifying the alias and entrypoints
+   *
    * Falsy values are skipped
    */
   include?: (Include | boolean)[];
   /**
-   * Array of packages to manually add to the importmap. Falsy values are skipped
+   * Manually adds packages to the importmap. Falsy values are skipped
+   *
+   * Packages are resolved from the `esm.sh` CDN
+   *
+   * Falsy values are skipped
    */
   install?: (Install | boolean)[];
 }
