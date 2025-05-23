@@ -23,17 +23,14 @@ export const pluginStripTypes: Plugin = {
       }
       return Handler.continue(path);
     }),
-    handlerFor(build.transform, ({ path, content }) => {
+    handlerFor(build.transform, (path, content) => {
       if (extname(path) === ".ts" && !path.endsWith(".d.ts")) {
-        return {
-          path,
-          content: strip(content, {
-            removeComments: true,
-            pathRewriting: true,
-          }),
-        };
+        return strip(content, {
+          removeComments: true,
+          pathRewriting: true,
+        });
       }
-      return Handler.continue({ path, content });
+      return Handler.continue(path, content);
     }),
   ],
 };

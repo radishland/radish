@@ -3,6 +3,7 @@ import { manifest } from "$effects/manifest.ts";
 import { build, config } from "$effects/mod.ts";
 import { render } from "$effects/render.ts";
 import { fragments } from "$lib/parser.ts";
+import { handleBuildTransformCanonical } from "$lib/plugins/build/build.ts";
 import { handleTransformFile } from "$lib/plugins/render/hooks/build.transform.ts";
 import { manifestShape } from "$lib/plugins/render/hooks/manifest.ts";
 import { handleRouteBase } from "$lib/plugins/render/routes/base.ts";
@@ -27,7 +28,7 @@ describe("ws plugin", () => {
       handleRouteLayoutsAndHeadElements,
       handleRouteBase,
       handlerFor(render.transformNode, id),
-      handlerFor(build.transform, id),
+      handleBuildTransformCanonical,
       handlerFor(build.dest, (path) => {
         if (path === "routes/_app.html") return "build/routes/_app.html";
         unreachable();
@@ -59,11 +60,7 @@ describe("ws plugin", () => {
       }),
     );
 
-    const { content: transformed } = await build.transform({
-      path: "routes/index.html",
-      content: input,
-    });
-
+    const transformed = await build.transform("routes/index.html", input);
     assertEquals(transformed, output);
   });
 });

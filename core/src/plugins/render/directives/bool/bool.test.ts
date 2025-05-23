@@ -1,7 +1,7 @@
 import { manifest } from "$effects/manifest.ts";
 import { build } from "$effects/mod.ts";
 import { globals } from "$lib/constants.ts";
-import { id } from "$lib/utils/algebraic-structures.ts";
+import { handleBuildTransformCanonical } from "$lib/plugins/build/build.ts";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { fragments } from "@radish/htmlcrunch";
 import { assertEquals } from "@std/assert";
@@ -24,7 +24,7 @@ describe("bool directive", () => {
   test("renders", async () => {
     using _ = new HandlerScope(
       handleTransformFile,
-      handlerFor(build.transform, id),
+      handleBuildTransformCanonical,
       handleComponents,
       handleApplyDirectivesTransform,
       handleTransformBase,
@@ -59,10 +59,10 @@ describe("bool directive", () => {
       join(testDataDir, "output.nofmt.html"),
     );
 
-    const { content: transformed } = await build.transform({
-      path: "elements/my-component.html",
+    const transformed = await build.transform(
+      "elements/my-component.html",
       content,
-    });
+    );
 
     assertEquals(transformed, output);
   });

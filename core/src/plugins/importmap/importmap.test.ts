@@ -1,7 +1,6 @@
 import { importmapPath } from "$effects/importmap.ts";
 import { io } from "$effects/io.ts";
 import { build } from "$effects/mod.ts";
-import { id } from "$lib/utils/algebraic-structures.ts";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals } from "@std/assert";
 import { dirname, fromFileUrl, join } from "@std/path";
@@ -109,7 +108,7 @@ describe("importmap generation", () => {
         }
         return "";
       }),
-      handlerFor(build.transform, id),
+      handlerFor(build.transform, (_, content) => content),
     );
 
     const input = await Deno.readTextFile(
@@ -120,10 +119,7 @@ describe("importmap generation", () => {
       join(moduleDir, "testdata", "output.nofmt.html"),
     );
 
-    const { content } = await build.transform({
-      path: "_app.html",
-      content: input,
-    });
+    const content = await build.transform("_app.html", input);
 
     assertEquals(content, output);
   });

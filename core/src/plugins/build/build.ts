@@ -20,10 +20,7 @@ import { buildHMRHook } from "./hooks/hmr.update.ts";
  */
 const handleBuildFile = handlerFor(build.file, async (path: string) => {
   const content = await io.read(path);
-  const { content: transformed } = await build.transform({
-    path,
-    content,
-  });
+  const transformed = await build.transform(path, content);
   const dest = await build.dest(path);
   await io.write(dest, transformed);
 });
@@ -72,9 +69,12 @@ const handleBuildStart = handlerFor(
 const handleBuildSort = handlerFor(build.sort, id);
 
 /**
- * Canonically handles {@linkcode build.transform} effects as identity transforms
+ * Canonically handles {@linkcode build.transform} as an identity transform
  */
-export const handlerBuildTransform = handlerFor(build.transform, id);
+export const handleBuildTransformCanonical = handlerFor(
+  build.transform,
+  (_, content) => content,
+);
 
 /**
  * Handles {@linkcode build.dest} effects
@@ -100,7 +100,7 @@ export const pluginBuild: Plugin = {
     handleBuildFile,
     handleBuildStart,
     handleBuildSort,
-    handlerBuildTransform,
+    handleBuildTransformCanonical,
     handleBuildDest,
     buildHMRHook,
   ],
