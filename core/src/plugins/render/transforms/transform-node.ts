@@ -10,6 +10,7 @@ import { mountHandlerRegistry } from "../state.ts";
  *
  * @performs
  * - `manifest/get`
+ * - `render/transformNode`
  */
 export async function transformNode(node: MNode): Promise<MNode> {
   if (!isElementNode(node)) return node;
