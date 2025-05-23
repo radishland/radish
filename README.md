@@ -101,7 +101,8 @@ my-rad-project/
   - [Try-out the alpha](#try-out-the-alpha)
     - [Examples](#examples)
     - [Project structure](#project-structure)
-  - [Overview](#overview)
+  - [One philosophy: Right Abstraction Design](#one-philosophy-right-abstraction-design)
+  - [Overview \& Mental model](#overview--mental-model)
     - [Effects as in algebraic effects](#effects-as-in-algebraic-effects)
     - [A unified approach](#a-unified-approach)
     - [Modeling effects for the web](#modeling-effects-for-the-web)
@@ -140,7 +141,11 @@ my-rad-project/
     - [No bundle](#no-bundle)
   - [Resources](#resources)
 
-## Overview
+## One philosophy: Right Abstraction Design
+
+Stop over-engineering. Stop under-engineering. Just be RAD.
+
+## Overview & Mental model
 
 The design of Radish is heavily inspired by algebraic effects[^alg-effects].
 You've probably heard of "effects" before, but the word is overloaded, so let's
