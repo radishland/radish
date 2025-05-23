@@ -22,7 +22,8 @@
       // Debug command args: "--build", "--importmap" etc.
       "args": [],
       "env": {},
-      "attachSimplePort": 9229
+      "attachSimplePort": 9229,
+      "experimentalNetworking": "off"
     }
   ]
 }
