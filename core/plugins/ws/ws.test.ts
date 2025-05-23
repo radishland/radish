@@ -1,6 +1,5 @@
-import { io } from "$effects/io.ts";
 import { manifest } from "$effects/manifest.ts";
-import { build, config } from "$effects/mod.ts";
+import { build, config, io } from "$effects/mod.ts";
 import { render } from "$effects/render.ts";
 import { fragments } from "$lib/parser.ts";
 import { handleBuildTransformCanonical } from "$lib/plugins/build/build.ts";
@@ -9,10 +8,11 @@ import { manifestShape } from "$lib/plugins/render/hooks/manifest.ts";
 import { handleRouteBase } from "$lib/plugins/render/routes/base.ts";
 import { handleRouteLayoutsAndHeadElements } from "$lib/plugins/render/routes/layouts-and-head.ts";
 import { id } from "$lib/utils/algebraic-structures.ts";
-import { handlerFor, HandlerScope } from "@radish/effect-system";
+import { Handler, handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals, unreachable } from "@std/assert";
 import { join } from "@std/path";
 import { describe, test } from "@std/testing/bdd";
+import { handleIORead } from "../io.ts";
 import { handleInsertWebSocketScript } from "./hooks/render.route.ts";
 
 const testDataDir = join(import.meta.dirname!, "testdata");
@@ -35,8 +35,10 @@ describe("ws plugin", () => {
       }),
       handlerFor(io.read, (path) => {
         if (path === "build/routes/_app.html") return app;
-        unreachable();
+        return Handler.continue(path);
       }),
+      // Needs to retrieve the ws script to insert
+      handleIORead,
       // Runs in dev mode
       handlerFor(config.read, () => {
         return { args: { dev: true } };
