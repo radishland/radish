@@ -40,3 +40,13 @@ export class MissingHandlerScopeError extends Error {
   override message =
     "No HandlerScope. Make sure to perform effects in the context of a HandlerScope";
 }
+
+/**
+ * Error thrown when an effect runner was created with {@linkcode createEffect}
+ *
+ * @internal
+ */
+export class IllFormedEffectError extends Error {
+  override message =
+    `Effect id not found while creating an effect handler. Use "createEffect"`;
+}

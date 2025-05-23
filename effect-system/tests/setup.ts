@@ -1,3 +1,5 @@
+// deno-coverage-ignore-file
+
 import { createEffect, Handler, handlerFor } from "../mod.ts";
 
 /**
