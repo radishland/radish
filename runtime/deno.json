@@ -16,7 +16,7 @@
     "noImplicitOverride": true
   },
   "exports": {
-    ".": "./src/handler-registry.ts",
+    ".": "./src/index.ts",
     "./reactivity": "./src/reactivity.ts",
     "./utils": "./src/utils.ts"
   }
