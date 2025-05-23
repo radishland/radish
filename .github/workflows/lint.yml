@@ -1,11 +1,12 @@
-name: Deno publish check
+name: lint
 
 on:
   pull_request:
     branches:
       - main
+
 jobs:
-  dry-run:
+  lint:
     runs-on: ubuntu-latest
 
     permissions:
@@ -19,5 +20,8 @@ jobs:
       - name: Set up Deno
         uses: denoland/setup-deno@v2
 
-      - name: Run deno publish --dry-run
-        run: deno publish --dry-run
+      - name: Format
+        run: deno fmt --check
+
+      - name: Lint
+        run: deno lint
