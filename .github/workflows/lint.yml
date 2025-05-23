@@ -25,3 +25,6 @@ jobs:
 
       - name: Lint
         run: deno lint
+
+      - name: Type checking
+        run: deno check
