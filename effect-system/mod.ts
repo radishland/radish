@@ -94,7 +94,6 @@
 export { createEffect, type Effect, handlerFor } from "./effects.ts";
 export {
   addHandlers,
-  type BaseHandler,
   Handler,
   type Handlers,
   HandlerScope,
@@ -110,7 +109,7 @@ export { createState, type StateOps } from "./state.ts";
  * @example
  *
  * ```ts
- * const trivialHandler = handlerFor(some.transform, id);
+ * const trivialHandler = handlerFor(transformEffect, id);
  * ```
  */
 export const id = <T>(value: T): T => value;
