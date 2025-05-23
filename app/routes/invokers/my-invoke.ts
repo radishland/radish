@@ -1,5 +1,4 @@
-import { HandlerRegistry } from "radish";
-import { effect, signal } from "radish";
+import { effect, HandlerRegistry, signal } from "@radish/runtime";
 
 export class MyInvoke extends HandlerRegistry {
   state = signal(0);

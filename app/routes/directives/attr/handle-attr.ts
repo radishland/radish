@@ -1,5 +1,4 @@
-import { computed, HandlerRegistry } from "radish";
-import { signal } from "radish";
+import { computed, HandlerRegistry, signal } from "@radish/runtime";
 
 export class HandleAttr extends HandlerRegistry {
   state = signal("red");

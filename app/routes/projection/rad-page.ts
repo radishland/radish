@@ -1,4 +1,4 @@
-import { HandlerRegistry } from "radish";
+import { HandlerRegistry } from "@radish/runtime";
 
 export class RadPage extends HandlerRegistry {
 }
