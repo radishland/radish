@@ -69,7 +69,7 @@ const handleBuildStart = handlerFor(
 const handleBuildSort = handlerFor(build.sort, id);
 
 /**
- * Canonically handles {@linkcode build.transform} effects as identity transforms
+ * Canonically handles {@linkcode build.transform} as an identity transform
  */
 export const handleBuildTransformCanonical = handlerFor(
   build.transform,
