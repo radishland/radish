@@ -18,12 +18,12 @@ import { HandlerScope, id } from "../mod.ts";
 import {
   Console,
   createState,
-  handleConsole,
   handleIOReadBase,
   handleIoReadTXT,
   handleRandom,
   io,
   logs,
+  pluginConsole,
   random,
 } from "./setup.test.ts";
 
@@ -37,7 +37,7 @@ beforeEach(() => {
 
 afterEach(() => {
   assertEquals(handlerScopes.length, 0, "the scope wasn't flushed");
-  logs.length = 0;
+  assertEquals(logs.length, 0, "the logs weren't flushed");
 });
 
 describe("effect system", () => {
@@ -100,6 +100,20 @@ describe("effect system", () => {
     assertEquals(typeof number, "number");
     assertGreaterOrEqual(number, 0);
     assertLessOrEqual(number, 1);
+  });
+
+  test("plugin clean up when leaving scope", async () => {
+    assertEquals(logs.length, 0);
+    {
+      using _ = new HandlerScope(pluginConsole);
+      await Console.log("first");
+    }
+    assertEquals(logs.length, 0);
+    {
+      using _ = new HandlerScope(pluginConsole);
+      await Console.log("first");
+    }
+    assertEquals(logs.length, 0);
   });
 
   test("delegation", async () => {
@@ -192,7 +206,7 @@ describe("effect system", () => {
       return `content of ${path}`;
     });
 
-    using _ = new HandlerScope(readAndLog, handleConsole);
+    using _ = new HandlerScope(readAndLog, pluginConsole);
 
     const res = await io.readFile("/path/to/file");
     assertEquals(logs, ["reading /path/to/file..."]);
@@ -236,7 +250,7 @@ describe("effect system", () => {
       countWrites,
       handleWrite,
       ...state.handlers,
-      handleConsole,
+      pluginConsole,
     );
 
     await io.writeFile("todo.txt", "garden");

@@ -1,4 +1,4 @@
-import { createEffect, Handler, handlerFor } from "../mod.ts";
+import { createEffect, Handler, handlerFor, type Plugin } from "../mod.ts";
 
 /**
  * Console
@@ -21,9 +21,17 @@ export const logs: string[] = [];
 /**
  * @internal
  */
-export const handleConsole = handlerFor(Console.log, (message: string) => {
+const handleConsole = handlerFor(Console.log, (message: string) => {
   logs.push(message);
 });
+
+export const pluginConsole: Plugin = {
+  name: "plugin-console",
+  handlers: [handleConsole],
+  onDispose: () => {
+    logs.length = 0;
+  },
+};
 
 /**
  * State

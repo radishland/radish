@@ -91,6 +91,8 @@
  * @module
  */
 
+import type { Handlers } from "./handlers.ts";
+
 export { createEffect, type Effect, handlerFor } from "./effects.ts";
 export {
   addHandlers,
@@ -100,6 +102,24 @@ export {
   Snapshot,
 } from "./handlers.ts";
 export { createState, type StateOps } from "./state.ts";
+
+/**
+ * An effect plugin is a named list of handlers with an optional cleanup function
+ */
+export type Plugin = {
+  /**
+   * The name of the plugin
+   */
+  name: string;
+  /**
+   * The list of handlers related to a service or effect
+   */
+  handlers: Handlers;
+  /**
+   * Optional cleanup to run when leaving the scope
+   */
+  onDispose?: () => void | PromiseLike<void>;
+};
 
 /**
  * The polymorphic identity
