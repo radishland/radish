@@ -24,13 +24,13 @@ export const logs: string[] = [];
 const handleConsole = handlerFor(Console.log, (message: string) => {
   logs.push(message);
 });
+handleConsole[Symbol.dispose] = () => {
+  logs.length = 0;
+};
 
 export const pluginConsole: Plugin = {
   name: "plugin-console",
   handlers: [handleConsole],
-  onDispose: () => {
-    logs.length = 0;
-  },
 };
 
 /**

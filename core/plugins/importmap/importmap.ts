@@ -16,6 +16,21 @@ import { findLongestMatchingPrefix } from "../resolve.ts";
 
 let importmapObject: ImportMap = {};
 
+const handleImportmapGet = handlerFor(importmap.get, async () => {
+  if (!importmapObject.imports) {
+    try {
+      importmapObject = JSON.parse(await io.read(importmapPath));
+    } catch (error) {
+      throwUnlessNotFound(error);
+    }
+  }
+
+  return importmapObject;
+});
+handleImportmapGet[Symbol.dispose] = () => {
+  importmapObject = {};
+};
+
 /**
  * @hooks
  * - `build/transform` Inserts the importmap in the app skeleton
@@ -28,17 +43,7 @@ let importmapObject: ImportMap = {};
 export const pluginImportmap: Plugin = {
   name: "plugin-importmap",
   handlers: [
-    handlerFor(importmap.get, async () => {
-      if (!importmapObject.imports) {
-        try {
-          importmapObject = JSON.parse(await io.read(importmapPath));
-        } catch (error) {
-          throwUnlessNotFound(error);
-        }
-      }
-
-      return importmapObject;
-    }),
+    handleImportmapGet,
     handlerFor(importmap.write, async () => {
       await io.write(importmapPath, JSON.stringify(importmapObject));
     }),
@@ -61,9 +66,6 @@ export const pluginImportmap: Plugin = {
       return Handler.continue(path, content);
     }),
   ],
-  onDispose: () => {
-    importmapObject = {};
-  },
 };
 
 /**

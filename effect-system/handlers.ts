@@ -9,7 +9,7 @@ import type { Plugin } from "./mod.ts";
 /**
  * @internal
  */
-type MaybePromise<T> = T | Promise<T>;
+export type MaybePromise<T> = T | Promise<T>;
 
 /**
  * Type of base handlers used in {@linkcode handlerFor}
@@ -97,6 +97,16 @@ export class Handler<P extends any[], R> {
       return f(...result.getPayload());
     });
   }
+
+  /**
+   * Cleanup function to run when leaving the {@linkcode HandlerScope}
+   */
+  [Symbol.dispose]() {}
+
+  /**
+   * Async cleanup function to run when leaving the {@linkcode HandlerScope}
+   */
+  [Symbol.asyncDispose]() {}
 
   /**
    * Turns a list of handlers into a single handler by sequencing them with {@linkcode flatMap}
@@ -211,18 +221,14 @@ export class HandlerScope {
     this.#parent = currentScope;
     handlerScopes.push(this);
 
-    for (const handler of handlers) {
-      if (handler instanceof Handler) {
-        this.addHandler(handler, "end");
+    for (const singleHandler of handlers) {
+      if (singleHandler instanceof Handler) {
+        this.addHandler(singleHandler, "end");
         continue;
       }
 
-      for (const pluginHandler of handler.handlers) {
+      for (const pluginHandler of singleHandler.handlers) {
         this.addHandler(pluginHandler, "end");
-      }
-
-      if (handler?.onDispose) {
-        this.onDispose(handler.onDispose);
       }
     }
   }
@@ -262,6 +268,18 @@ export class HandlerScope {
     position: "start" | "end" = "start",
   ): void {
     assert(!this.#disposed, "Can't add a handler to a disposed HandlerScope");
+
+    if (Symbol.dispose in handler) {
+      this.#stack.defer(() => {
+        handler[Symbol.dispose]();
+      });
+    }
+
+    if (Symbol.asyncDispose in handler) {
+      this.#stack.defer(() => {
+        handler[Symbol.dispose]();
+      });
+    }
 
     const { id } = handler;
     const currentHandler = this.handlers.get(id);

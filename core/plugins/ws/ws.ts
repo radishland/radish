@@ -32,6 +32,14 @@ const handleWSHandleSocket = handlerFor(ws.handleSocket, (socket) => {
     console.log("WebSocket error", e);
   });
 });
+handleWSHandleSocket[Symbol.dispose] = () => {
+  if (clients) {
+    for (const client of clients) client.close();
+    clients.clear();
+
+    if (dev) console.log("WebSocket connection closed");
+  }
+};
 
 /**
  * The WebSocket plugin
@@ -51,12 +59,4 @@ export const pluginWS: Plugin = {
     handleInsertWebSocketScript,
     handleWSServerRequest,
   ],
-  onDispose: (() => {
-    if (clients) {
-      for (const client of clients) client.close();
-      clients.clear();
-
-      if (dev) console.log("WebSocket connection closed");
-    }
-  }),
 };

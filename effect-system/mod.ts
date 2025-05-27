@@ -104,9 +104,9 @@ export {
 export { createState, type StateOps } from "./state.ts";
 
 /**
- * An effect plugin is a named list of handlers with an optional cleanup function
+ * An effect plugin is a named list of handlers with an optional `[Symbol.dispose]` cleanup method
  */
-export type Plugin = {
+export interface Plugin {
   /**
    * The name of the plugin
    */
@@ -115,11 +115,7 @@ export type Plugin = {
    * The list of handlers related to a service or effect
    */
   handlers: Handlers;
-  /**
-   * Optional cleanup to run when leaving the scope
-   */
-  onDispose?: () => void | PromiseLike<void>;
-};
+}
 
 /**
  * The polymorphic identity

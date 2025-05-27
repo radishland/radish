@@ -14,6 +14,39 @@ import { extname } from "@std/path";
 let loader: (() => Promise<ManifestBase>) | undefined;
 let manifestObject: ManifestBase = { imports: {} };
 
+const handleManifestSetLoader = handlerFor(
+  manifest.setLoader,
+  (manifestLoader) => {
+    loader = manifestLoader;
+  },
+);
+handleManifestSetLoader[Symbol.dispose] = () => {
+  loader = undefined;
+};
+
+const handleManifestLoad = handlerFor(manifest.load, async () => {
+  assertExists(
+    loader,
+    "Manifest loader used before it's defined. Use the manifest.setLoader effect",
+  );
+  manifestObject = await loader();
+});
+handleManifestLoad[Symbol.dispose] = () => {
+  manifestObject = { imports: {} };
+};
+
+const handleManifestUpdate = handlerFor(manifest.update, async (
+  { entry, manifestObject },
+) => {
+  if (entry.isFile && [".js", ".ts"].includes(extname(entry.path))) {
+    const content = await io.read(entry.path);
+    const imports = extractImports(content);
+    manifestObject.imports[entry.path] = imports;
+  }
+
+  return { entry, manifestObject };
+});
+
 /**
  * @hooks
  * - `hmr/update`
@@ -25,32 +58,14 @@ let manifestObject: ManifestBase = { imports: {} };
 export const pluginManifest: Plugin = {
   name: "plugin-manifest",
   handlers: [
-    handlerFor(manifest.setLoader, (manifestLoader) => {
-      loader = manifestLoader;
-    }),
-    handlerFor(manifest.load, async () => {
-      assertExists(
-        loader,
-        "Manifest loader used before it's defined. Use the manifest.setLoader effect",
-      );
-      manifestObject = await loader();
-    }),
+    handleManifestSetLoader,
+    handleManifestLoad,
     handlerFor(manifest.get, () => manifestObject),
     handlerFor(manifest.write, writeManifest),
     /**
      * Extracts imports from .js & .ts files into the manifest for the importmap generation
      */
-    handlerFor(manifest.update, async (
-      { entry, manifestObject },
-    ) => {
-      if (entry.isFile && [".js", ".ts"].includes(extname(entry.path))) {
-        const content = await io.read(entry.path);
-        const imports = extractImports(content);
-        manifestObject.imports[entry.path] = imports;
-      }
-
-      return { entry, manifestObject };
-    }),
+    handleManifestUpdate,
     handlerFor(hmr.update, async ({ event, paths }) => {
       if (event.isFile) {
         const manifestObject = await manifest.get();
@@ -65,10 +80,6 @@ export const pluginManifest: Plugin = {
       return Handler.continue({ event, paths });
     }),
   ],
-  onDispose: () => {
-    loader = undefined;
-    manifestObject = { imports: {} };
-  },
 };
 
 /**

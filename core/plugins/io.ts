@@ -68,6 +68,9 @@ export const handleIORead = handlerFor(io.read, async (path) => {
     throw error;
   }
 });
+handleIORead[Symbol.dispose] = () => {
+  fileCache.clear();
+};
 
 /**
  * Handles {@linkcode io.write} effects
@@ -115,7 +118,4 @@ export const pluginIO: Plugin = {
       return Handler.continue({ event, paths });
     }),
   ],
-  onDispose: () => {
-    fileCache.clear();
-  },
 };

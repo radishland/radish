@@ -64,6 +64,10 @@ export const handleServerStart = handlerFor(server.start, (options) => {
   Deno.addSignalListener("SIGINT", shutdown);
   Deno.addSignalListener("SIGTERM", shutdown);
 });
+handleServerStart[Symbol.asyncDispose] = async () => {
+  await httpServer?.shutdown();
+  console.log("Server closed");
+};
 
 const shutdown = async () => {
   console.log("\nShutting down gracefully...");
@@ -78,8 +82,4 @@ const shutdown = async () => {
 export const pluginServer: Plugin = {
   name: "plugin-server",
   handlers: [handleServerStart, handleServerRequest],
-  onDispose: async () => {
-    await httpServer?.shutdown();
-    console.log("Server closed");
-  },
 };
