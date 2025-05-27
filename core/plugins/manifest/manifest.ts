@@ -1,19 +1,51 @@
 import { hmr } from "$effects/hmr.ts";
 import { io } from "$effects/io.ts";
 import { manifest, manifestPath } from "$effects/manifest.ts";
-import { Handler, handlerFor } from "@radish/effect-system";
+import { generatedFolder } from "$lib/constants.ts";
+import type { ManifestBase } from "$lib/types.d.ts";
+import { expandGlobWorkspaceRelative } from "$lib/utils/fs.ts";
+import { extractImports } from "$lib/utils/parse.ts";
+import { stringifyObject } from "$lib/utils/stringify.ts";
+import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
 import { assertExists } from "@std/assert";
 import { ensureDirSync, type ExpandGlobOptions } from "@std/fs";
 import { extname } from "@std/path";
-import { generatedFolder } from "../../constants.ts";
-import type { ManifestBase, Plugin } from "../../types.d.ts";
-import { expandGlobWorkspaceRelative } from "../../utils/fs.ts";
-import { extractImports } from "../../utils/parse.ts";
-import { stringifyObject } from "../../utils/stringify.ts";
 
 let loader: (() => Promise<ManifestBase>) | undefined;
-
 let manifestObject: ManifestBase = { imports: {} };
+
+const handleManifestSetLoader = handlerFor(
+  manifest.setLoader,
+  (manifestLoader) => {
+    loader = manifestLoader;
+  },
+);
+handleManifestSetLoader[Symbol.dispose] = () => {
+  loader = undefined;
+};
+
+const handleManifestLoad = handlerFor(manifest.load, async () => {
+  assertExists(
+    loader,
+    "Manifest loader used before it's defined. Use the manifest.setLoader effect",
+  );
+  manifestObject = await loader();
+});
+handleManifestLoad[Symbol.dispose] = () => {
+  manifestObject = { imports: {} };
+};
+
+const handleManifestUpdate = handlerFor(manifest.update, async (
+  { entry, manifestObject },
+) => {
+  if (entry.isFile && [".js", ".ts"].includes(extname(entry.path))) {
+    const content = await io.read(entry.path);
+    const imports = extractImports(content);
+    manifestObject.imports[entry.path] = imports;
+  }
+
+  return { entry, manifestObject };
+});
 
 /**
  * @hooks
@@ -26,32 +58,14 @@ let manifestObject: ManifestBase = { imports: {} };
 export const pluginManifest: Plugin = {
   name: "plugin-manifest",
   handlers: [
-    handlerFor(manifest.setLoader, (manifestLoader) => {
-      loader = manifestLoader;
-    }),
-    handlerFor(manifest.load, async () => {
-      assertExists(
-        loader,
-        "Manifest loader used before it's defined. Use the manifest.setLoader effect",
-      );
-      manifestObject = await loader();
-    }),
+    handleManifestSetLoader,
+    handleManifestLoad,
     handlerFor(manifest.get, () => manifestObject),
     handlerFor(manifest.write, writeManifest),
     /**
      * Extracts imports from .js & .ts files into the manifest for the importmap generation
      */
-    handlerFor(manifest.update, async (
-      { entry, manifestObject },
-    ) => {
-      if (entry.isFile && [".js", ".ts"].includes(extname(entry.path))) {
-        const content = await io.read(entry.path);
-        const imports = extractImports(content);
-        manifestObject.imports[entry.path] = imports;
-      }
-
-      return { entry, manifestObject };
-    }),
+    handleManifestUpdate,
     handlerFor(hmr.update, async ({ event, paths }) => {
       if (event.isFile) {
         const manifestObject = await manifest.get();

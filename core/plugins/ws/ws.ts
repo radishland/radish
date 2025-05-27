@@ -1,21 +1,10 @@
 import { ws } from "$effects/ws.ts";
-import { handlerFor } from "@radish/effect-system";
-import { onDispose } from "$lib/cleanup.ts";
-import type { Plugin } from "$lib/mod.ts";
+import { dev } from "$lib/environment.ts";
+import { handlerFor, type Plugin } from "@radish/effect-system";
 import { handleInsertWebSocketScript } from "./hooks/render.route.ts";
 import { handleWSServerRequest } from "./hooks/server.handle-request.ts";
-import { dev } from "$lib/environment.ts";
 
 const clients = new Set<WebSocket>();
-
-onDispose(() => {
-  if (clients) {
-    for (const client of clients) client.close();
-    clients.clear();
-
-    if (dev) console.log("WebSocket connection closed");
-  }
-});
 
 const handleWSSend = handlerFor(ws.send, (payload) => {
   console.log("Hot-Reloading...");
@@ -43,6 +32,14 @@ const handleWSHandleSocket = handlerFor(ws.handleSocket, (socket) => {
     console.log("WebSocket error", e);
   });
 });
+handleWSHandleSocket[Symbol.dispose] = () => {
+  if (clients) {
+    for (const client of clients) client.close();
+    clients.clear();
+
+    if (dev) console.log("WebSocket connection closed");
+  }
+};
 
 /**
  * The WebSocket plugin

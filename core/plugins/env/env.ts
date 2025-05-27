@@ -1,8 +1,7 @@
 import { config, env, hmr, io } from "$effects/mod.ts";
 import { generatedFolder } from "$lib/constants.ts";
-import type { Plugin } from "$lib/types.d.ts";
 import { stringifyObject } from "$lib/utils/stringify.ts";
-import { Handler, handlerFor } from "@radish/effect-system";
+import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
 import { parse } from "@std/dotenv";
 import { join } from "@std/path";
 

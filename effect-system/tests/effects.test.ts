@@ -22,9 +22,11 @@ import {
   handleIOReadBase,
   handleIoReadTXT,
   handleRandom,
+  handlerServerStart,
   io,
   logs,
   random,
+  serverStart,
 } from "./setup.test.ts";
 
 /**
@@ -37,7 +39,7 @@ beforeEach(() => {
 
 afterEach(() => {
   assertEquals(handlerScopes.length, 0, "the scope wasn't flushed");
-  logs.length = 0;
+  assertEquals(logs.length, 0, "the logs weren't flushed");
 });
 
 describe("effect system", () => {
@@ -74,6 +76,38 @@ describe("effect system", () => {
     assertEquals(logs, ["clean"]);
   });
 
+  test("handler cleanup", async () => {
+    assertEquals(logs.length, 0);
+    {
+      using _ = new HandlerScope(handleConsole);
+      await Console.log("first");
+    }
+    assertEquals(logs.length, 0);
+
+    {
+      using _ = new HandlerScope(handleConsole);
+      await Console.log("second");
+    }
+    assertEquals(logs.length, 0);
+  });
+
+  test("handler async cleanup", async () => {
+    using _ = new HandlerScope(handleConsole);
+
+    {
+      assertEquals(logs, []);
+      await using _ = new HandlerScope(handlerServerStart);
+      await serverStart();
+      assertEquals(logs, ["Starting server..."]);
+    }
+
+    assertEquals(logs, [
+      "Starting server...",
+      "Closing server...",
+      "Server closed",
+    ]);
+  });
+
   test("scope cleanup is idempotent", () => {
     const logs: string[] = [];
 
@@ -100,6 +134,19 @@ describe("effect system", () => {
     assertEquals(typeof number, "number");
     assertGreaterOrEqual(number, 0);
     assertLessOrEqual(number, 1);
+  });
+
+  test("plugin", async () => {
+    using _ = new HandlerScope({
+      name: "plugin-io",
+      handlers: [handleIoReadTXT, handleIOReadBase],
+    });
+
+    const txt = await io.readFile("note.txt");
+    assertEquals(txt, "txt content");
+
+    const ts = await io.readFile("script.ts");
+    assertEquals(ts, "file content");
   });
 
   test("delegation", async () => {

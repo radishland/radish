@@ -4,11 +4,12 @@ import {
   MissingTerminalHandlerError,
   UnhandledEffectError,
 } from "./errors.ts";
+import type { Plugin } from "./mod.ts";
 
 /**
  * @internal
  */
-type MaybePromise<T> = T | Promise<T>;
+export type MaybePromise<T> = T | Promise<T>;
 
 /**
  * Type of base handlers used in {@linkcode handlerFor}
@@ -98,6 +99,16 @@ export class Handler<P extends any[], R> {
   }
 
   /**
+   * Cleanup function to run when leaving the {@linkcode HandlerScope}
+   */
+  [Symbol.dispose]?: () => void;
+
+  /**
+   * Async cleanup function to run when leaving the {@linkcode HandlerScope}
+   */
+  [Symbol.asyncDispose]?: () => void | PromiseLike<void>;
+
+  /**
    * Turns a list of handlers into a single handler by sequencing them with {@linkcode flatMap}
    *
    * @throws {AssertionError} Throws if all handlers are not handling the same effect
@@ -178,6 +189,7 @@ export class Continue<P extends any[]> {
 export class HandlerScope {
   #parent: HandlerScope | undefined;
   #stack = new DisposableStack();
+  #asyncStack = new AsyncDisposableStack();
   #disposed = false;
 
   /**
@@ -201,44 +213,85 @@ export class HandlerScope {
   /**
    * Creates a new {@linkcode HandlerScope}
    *
-   * @param handlers {@linkcode Handler Handlers} to add to this scope
+   * @param handlers {@linkcode Handler Handlers} or {@linkcode Plugin Plugins} to append to this scope
    *
    * @see {@linkcode addHandlers}
    */
-  constructor(...handlers: Handlers) {
+  constructor(...handlers: (Handler<any, any> | Plugin)[]) {
     const currentScope = handlerScopes.at(-1);
     this.#parent = currentScope;
     handlerScopes.push(this);
 
-    if (handlers.length) {
-      this.addHandlers(...handlers);
+    for (const singleHandler of handlers) {
+      if (singleHandler instanceof Handler) {
+        this.addHandler(singleHandler, "end");
+        continue;
+      }
+
+      for (const pluginHandler of singleHandler.handlers) {
+        this.addHandler(pluginHandler, "end");
+      }
     }
   }
 
   /**
-   * Registers handlers in the {@linkcode HandlerScope} instance
+   * Prepends handlers to the {@linkcode HandlerScope}
    *
-   * @param handlers Handlers to register
+   * @param handlers Handlers to prepend
+   *
+   * @see {@linkcode addHandler}
    *
    * @internal
    */
   addHandlers(...handlers: Handlers) {
     assert(!this.#disposed, "Can't add handlers to a disposed HandlerScope");
 
-    const handlersById = Object.groupBy(handlers, ({ id }) => id);
-    const handlersEntries = Object.entries(handlersById)
-      .filter(([_k, v]) => v !== undefined)
-      .map(([key, _handlers]): [string, Handler<any, any>[]] => {
-        return [key, _handlers!];
-      });
-
-    for (let [id, _handlers] of handlersEntries) {
-      const currentHandler = this.handlers.get(id);
-      _handlers = currentHandler ? [..._handlers, currentHandler] : _handlers;
-
-      const newHandler = Handler.fold(_handlers);
-      this.handlers.set(id, newHandler);
+    for (const handler of handlers) {
+      this.addHandler(handler);
     }
+  }
+
+  /**
+   * Adds an effect handler to the current {@linkcode HandlerScope}
+   *
+   * Most of the time you want to prepend handlers in order to override, decorate or delegate to other handlers. Use `position = "start"` to prepend a handler.
+   *
+   * Sometimes you may have a dynamically defined terminal handler for example. In that case, append the handler using `position = "end"`
+   *
+   * Looping over handlers is another use-case for `position="end"` to preserve the order
+   *
+   * @param handler The {@linkcode Handler} to add
+   * @param position Whether to add the handler at the start or end of the sequence of handlers
+   * @default "start"
+   */
+  addHandler(
+    handler: Handler<any, any>,
+    position: "start" | "end" = "start",
+  ): void {
+    assert(!this.#disposed, "Can't add a handler to a disposed HandlerScope");
+
+    if (handler[Symbol.dispose]) {
+      this.#stack.defer(handler[Symbol.dispose]!);
+    }
+
+    if (handler[Symbol.asyncDispose]) {
+      this.#asyncStack.defer(handler[Symbol.asyncDispose]!);
+    }
+
+    const { id } = handler;
+    const currentHandler = this.handlers.get(id);
+
+    if (!currentHandler) {
+      this.handlers.set(id, handler);
+      return;
+    }
+
+    const handlers = position === "start"
+      ? [handler, currentHandler]
+      : [currentHandler, handler];
+
+    const newHandler = Handler.fold(handlers);
+    this.handlers.set(id, newHandler);
   }
 
   /**
@@ -290,12 +343,24 @@ export class HandlerScope {
   [Symbol.dispose]() {
     if (this.#disposed) return;
 
-    this.#disposed = true;
     handlerScopes.pop();
-
-    this.#parent = undefined;
     this.handlers.clear();
     this.#stack.dispose();
+    this.#parent = undefined;
+    this.#disposed = true;
+  }
+
+  /**
+   * Asynchronously cleans up the {@linkcode HandlerScope} and restores its parent scope as the current scope
+   *
+   * @internal
+   */
+  async [Symbol.asyncDispose]() {
+    if (!this.#disposed) {
+      this[Symbol.dispose]();
+
+      await this.#asyncStack.disposeAsync();
+    }
   }
 }
 
@@ -372,11 +437,11 @@ export const Snapshot = (): () => HandlerScope => {
 };
 
 /**
- * Adds handlers to the current {@linkcode HandlersScope}
+ * Appends handlers to the current {@linkcode HandlersScope}
  *
- * @param handlers Any number of handlers to add to the current scope
+ * @param handlers Any number of handlers to append to the current scope
  *
- * @throws {MissingHandlerScopeError} It there is no {@linkcode HandlerScope} to register handlers to
+ * @throws {MissingHandlerScopeError} If there is no {@linkcode HandlerScope} to append handlers to
  */
 export const addHandlers = (...handlers: Handlers): void => {
   const currentScope = handlerScopes.at(-1);

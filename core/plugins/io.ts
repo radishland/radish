@@ -1,8 +1,7 @@
 import { hmr } from "$effects/hmr.ts";
 import { io } from "$effects/io.ts";
-import type { Plugin } from "$lib/types.d.ts";
 import { workspaceRelative } from "$lib/utils/path.ts";
-import { Handler, handlerFor } from "@radish/effect-system";
+import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
 import { unimplemented } from "@std/assert";
 import { ensureDir } from "@std/fs";
 import { dirname, fromFileUrl } from "@std/path";
@@ -69,6 +68,9 @@ export const handleIORead = handlerFor(io.read, async (path) => {
     throw error;
   }
 });
+handleIORead[Symbol.dispose] = () => {
+  fileCache.clear();
+};
 
 /**
  * Handles {@linkcode io.write} effects

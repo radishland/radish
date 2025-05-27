@@ -4,11 +4,15 @@ import { build } from "$effects/mod.ts";
 import type { Manifest } from "$effects/render.ts";
 import { type Route, type RouteContext, router } from "$effects/router.ts";
 import { routesFolder } from "$lib/constants.ts";
-import type { Plugin } from "$lib/mod.ts";
 import { manifestShape } from "$lib/plugins/render/hooks/manifest.ts";
 import type { MaybePromise } from "$lib/types.d.ts";
 import { createStandardResponse } from "$lib/utils/http.ts";
-import { addHandlers, Handler, handlerFor } from "@radish/effect-system";
+import {
+  addHandlers,
+  Handler,
+  handlerFor,
+  type Plugin,
+} from "@radish/effect-system";
 import { assertExists, assertObjectMatch } from "@std/assert";
 import { serveFile, STATUS_CODE } from "@std/http";
 import { dirname } from "@std/path";

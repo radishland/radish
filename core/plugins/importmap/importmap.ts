@@ -6,15 +6,30 @@ import {
 import { build, config, denoConfig, io, manifest } from "$effects/mod.ts";
 import { target_head, ts_extension_regex } from "$lib/constants.ts";
 import { dev } from "$lib/environment.ts";
-import type { ManifestBase, Plugin } from "$lib/types.d.ts";
+import type { ManifestBase } from "$lib/types.d.ts";
 import { throwUnlessNotFound } from "$lib/utils/io.ts";
-import { Handler, handlerFor } from "@radish/effect-system";
+import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
 import { assert, assertExists, assertMatch, unimplemented } from "@std/assert";
 import { basename, extname } from "@std/path";
 import { dedent } from "@std/text/unstable-dedent";
 import { findLongestMatchingPrefix } from "../resolve.ts";
 
 let importmapObject: ImportMap = {};
+
+const handleImportmapGet = handlerFor(importmap.get, async () => {
+  if (!importmapObject.imports) {
+    try {
+      importmapObject = JSON.parse(await io.read(importmapPath));
+    } catch (error) {
+      throwUnlessNotFound(error);
+    }
+  }
+
+  return importmapObject;
+});
+handleImportmapGet[Symbol.dispose] = () => {
+  importmapObject = {};
+};
 
 /**
  * @hooks
@@ -28,17 +43,7 @@ let importmapObject: ImportMap = {};
 export const pluginImportmap: Plugin = {
   name: "plugin-importmap",
   handlers: [
-    handlerFor(importmap.get, async () => {
-      if (!importmapObject.imports) {
-        try {
-          importmapObject = JSON.parse(await io.read(importmapPath));
-        } catch (error) {
-          throwUnlessNotFound(error);
-        }
-      }
-
-      return importmapObject;
-    }),
+    handleImportmapGet,
     handlerFor(importmap.write, async () => {
       await io.write(importmapPath, JSON.stringify(importmapObject));
     }),
