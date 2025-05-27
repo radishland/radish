@@ -13,7 +13,6 @@
       "program": "${file}",
       "runtimeArgs": [
         "run",
-        "--unstable",
         "--inspect-wait",
         "--allow-all"
       ],
@@ -30,7 +29,6 @@
       "program": "${file}",
       "runtimeArgs": [
         "test",
-        "--unstable",
         "--inspect-wait",
         "--allow-all",
         "--no-check"
@@ -48,7 +46,6 @@
       "program": "${file}",
       "runtimeArgs": [
         "run",
-        "--unstable",
         "--inspect-wait",
         "--allow-all",
         "--config",
