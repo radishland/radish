@@ -1,4 +1,5 @@
-import { createEffect, Handler, handlerFor, type Plugin } from "../mod.ts";
+import { createEffect, Handler, handlerFor } from "../mod.ts";
+import { delay } from "@std/async";
 
 /**
  * Console
@@ -21,16 +22,11 @@ export const logs: string[] = [];
 /**
  * @internal
  */
-const handleConsole = handlerFor(Console.log, (message: string) => {
+export const handleConsole = handlerFor(Console.log, (message: string) => {
   logs.push(message);
 });
 handleConsole[Symbol.dispose] = () => {
   logs.length = 0;
-};
-
-export const pluginConsole: Plugin = {
-  name: "plugin-console",
-  handlers: [handleConsole],
 };
 
 /**
@@ -126,3 +122,18 @@ export const handleIoReadTXT = handlerFor(io.readFile, (path: string) => {
 export const handleIOReadBase = handlerFor(io.readFile, () => {
   return "file content";
 });
+
+/**
+ * Server
+ */
+
+export const serverStart = createEffect<() => void>("server/start");
+
+export const handlerServerStart = handlerFor(serverStart, async () => {
+  await Console.log("Starting server...");
+});
+handlerServerStart[Symbol.asyncDispose] = async () => {
+  await Console.log("Closing server...");
+  await delay(100);
+  await Console.log("Server closed");
+};

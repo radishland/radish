@@ -101,12 +101,12 @@ export class Handler<P extends any[], R> {
   /**
    * Cleanup function to run when leaving the {@linkcode HandlerScope}
    */
-  [Symbol.dispose]() {}
+  [Symbol.dispose]?: () => void;
 
   /**
    * Async cleanup function to run when leaving the {@linkcode HandlerScope}
    */
-  [Symbol.asyncDispose]() {}
+  [Symbol.asyncDispose]?: () => void | PromiseLike<void>;
 
   /**
    * Turns a list of handlers into a single handler by sequencing them with {@linkcode flatMap}
@@ -189,6 +189,7 @@ export class Continue<P extends any[]> {
 export class HandlerScope {
   #parent: HandlerScope | undefined;
   #stack = new DisposableStack();
+  #asyncStack = new AsyncDisposableStack();
   #disposed = false;
 
   /**
@@ -269,16 +270,12 @@ export class HandlerScope {
   ): void {
     assert(!this.#disposed, "Can't add a handler to a disposed HandlerScope");
 
-    if (Symbol.dispose in handler) {
-      this.#stack.defer(() => {
-        handler[Symbol.dispose]();
-      });
+    if (handler[Symbol.dispose]) {
+      this.#stack.defer(handler[Symbol.dispose]!);
     }
 
-    if (Symbol.asyncDispose in handler) {
-      this.#stack.defer(() => {
-        handler[Symbol.dispose]();
-      });
+    if (handler[Symbol.asyncDispose]) {
+      this.#asyncStack.defer(handler[Symbol.asyncDispose]!);
     }
 
     const { id } = handler;
@@ -346,12 +343,24 @@ export class HandlerScope {
   [Symbol.dispose]() {
     if (this.#disposed) return;
 
-    this.#disposed = true;
     handlerScopes.pop();
-
-    this.#parent = undefined;
     this.handlers.clear();
     this.#stack.dispose();
+    this.#parent = undefined;
+    this.#disposed = true;
+  }
+
+  /**
+   * Asynchronously cleans up the {@linkcode HandlerScope} and restores its parent scope as the current scope
+   *
+   * @internal
+   */
+  async [Symbol.asyncDispose]() {
+    if (!this.#disposed) {
+      this[Symbol.dispose]();
+
+      await this.#asyncStack.disposeAsync();
+    }
   }
 }
 

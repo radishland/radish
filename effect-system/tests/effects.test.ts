@@ -18,13 +18,15 @@ import { HandlerScope, id } from "../mod.ts";
 import {
   Console,
   createState,
+  handleConsole,
   handleIOReadBase,
   handleIoReadTXT,
   handleRandom,
+  handlerServerStart,
   io,
   logs,
-  pluginConsole,
   random,
+  serverStart,
 } from "./setup.test.ts";
 
 /**
@@ -74,6 +76,38 @@ describe("effect system", () => {
     assertEquals(logs, ["clean"]);
   });
 
+  test("handler cleanup", async () => {
+    assertEquals(logs.length, 0);
+    {
+      using _ = new HandlerScope(handleConsole);
+      await Console.log("first");
+    }
+    assertEquals(logs.length, 0);
+
+    {
+      using _ = new HandlerScope(handleConsole);
+      await Console.log("second");
+    }
+    assertEquals(logs.length, 0);
+  });
+
+  test("handler async cleanup", async () => {
+    using _ = new HandlerScope(handleConsole);
+
+    {
+      assertEquals(logs, []);
+      await using _ = new HandlerScope(handlerServerStart);
+      await serverStart();
+      assertEquals(logs, ["Starting server..."]);
+    }
+
+    assertEquals(logs, [
+      "Starting server...",
+      "Closing server...",
+      "Server closed",
+    ]);
+  });
+
   test("scope cleanup is idempotent", () => {
     const logs: string[] = [];
 
@@ -102,18 +136,17 @@ describe("effect system", () => {
     assertLessOrEqual(number, 1);
   });
 
-  test("plugin clean up when leaving scope", async () => {
-    assertEquals(logs.length, 0);
-    {
-      using _ = new HandlerScope(pluginConsole);
-      await Console.log("first");
-    }
-    assertEquals(logs.length, 0);
-    {
-      using _ = new HandlerScope(pluginConsole);
-      await Console.log("first");
-    }
-    assertEquals(logs.length, 0);
+  test("plugin", async () => {
+    using _ = new HandlerScope({
+      name: "plugin-io",
+      handlers: [handleIoReadTXT, handleIOReadBase],
+    });
+
+    const txt = await io.readFile("note.txt");
+    assertEquals(txt, "txt content");
+
+    const ts = await io.readFile("script.ts");
+    assertEquals(ts, "file content");
   });
 
   test("delegation", async () => {
@@ -206,7 +239,7 @@ describe("effect system", () => {
       return `content of ${path}`;
     });
 
-    using _ = new HandlerScope(readAndLog, pluginConsole);
+    using _ = new HandlerScope(readAndLog, handleConsole);
 
     const res = await io.readFile("/path/to/file");
     assertEquals(logs, ["reading /path/to/file..."]);
@@ -250,7 +283,7 @@ describe("effect system", () => {
       countWrites,
       handleWrite,
       ...state.handlers,
-      pluginConsole,
+      handleConsole,
     );
 
     await io.writeFile("todo.txt", "garden");
