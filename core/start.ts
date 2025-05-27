@@ -37,7 +37,7 @@ export async function startApp(
 ) {
   const plugins = config.plugins ?? [];
   const scope = new effects.HandlerScope(...plugins);
-  onDispose(() => scope[Symbol.dispose]());
+  onDispose(scope[Symbol.asyncDispose]);
 
   config = await configEffect.transform({ ...config, args: cliArgs });
   const resolvedConfig: Config = Object.freeze(config);
