@@ -125,7 +125,7 @@ describe("effect system", () => {
 
   test("dynamic handling", async () => {
     using _ = new HandlerScope();
-    addHandlers([handleIoReadTXT]);
+    addHandlers(handleIoReadTXT);
 
     const txt = await io.readFile("note.txt");
     assertEquals(txt, "txt content");
@@ -133,7 +133,7 @@ describe("effect system", () => {
 
   test("dynamic delegation", async () => {
     using _ = new HandlerScope(handleIOReadBase);
-    addHandlers([handleIoReadTXT]);
+    addHandlers(handleIoReadTXT);
 
     const txt = await io.readFile("note.txt");
     assertEquals(txt, "txt content");
@@ -144,7 +144,7 @@ describe("effect system", () => {
 
   test("unscoped dynamic handling", () => {
     try {
-      addHandlers([handleIoReadTXT]);
+      addHandlers(handleIoReadTXT);
       unreachable();
     } catch (error) {
       assertInstanceOf(error, MissingHandlerScopeError);

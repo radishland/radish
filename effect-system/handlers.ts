@@ -60,7 +60,7 @@ export const perform = <P extends any[], R>(
 /**
  * This class implements the monadic sequencing of handlers with {@linkcode flatMap} and {@linkcode fold}
  *
- * Developer-facing code will primarily interact with this class through the {@linkcode continue} method
+ * You only interact directly with this class when using the {@linkcode continue} static method
  */
 export class Handler<P extends any[], R> {
   /**
@@ -201,7 +201,7 @@ export class HandlerScope {
   /**
    * Creates a new {@linkcode HandlerScope}
    *
-   * @param handlers A list of handlers
+   * @param handlers {@linkcode Handler Handlers} to add to this scope
    *
    * @see {@linkcode addHandlers}
    */
@@ -210,17 +210,19 @@ export class HandlerScope {
     this.#parent = currentScope;
     handlerScopes.push(this);
 
-    this.addHandlers(handlers);
+    if (handlers.length) {
+      this.addHandlers(...handlers);
+    }
   }
 
   /**
-   * Registers a list of handlers in the {@linkcode HandlerScope} instance
+   * Registers handlers in the {@linkcode HandlerScope} instance
    *
-   * @param handlers the handlers to register
+   * @param handlers Handlers to register
    *
    * @internal
    */
-  addHandlers(handlers: Handlers) {
+  addHandlers(...handlers: Handlers) {
     assert(!this.#disposed, "Can't add handlers to a disposed HandlerScope");
 
     const handlersById = Object.groupBy(handlers, ({ id }) => id);
@@ -370,15 +372,15 @@ export const Snapshot = (): () => HandlerScope => {
 };
 
 /**
- * Adds a list of handlers to the current {@linkcode HandlersScope}
+ * Adds handlers to the current {@linkcode HandlersScope}
  *
- * @param handlers The list of handlers to attach to the current scope
+ * @param handlers Any number of handlers to add to the current scope
  *
  * @throws {MissingHandlerScopeError} It there is no {@linkcode HandlerScope} to register handlers to
  */
-export const addHandlers = (handlers: Handlers): void => {
+export const addHandlers = (...handlers: Handlers): void => {
   const currentScope = handlerScopes.at(-1);
   if (!currentScope) throw new MissingHandlerScopeError();
 
-  currentScope.addHandlers(handlers);
+  currentScope.addHandlers(...handlers);
 };
