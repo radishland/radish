@@ -1,4 +1,4 @@
-import type { Plugin } from "../types.d.ts";
+import type { Plugin } from "@radish/effect-system";
 
 export const pluginResolveModule: Plugin = {
   name: "plugin-resolve",

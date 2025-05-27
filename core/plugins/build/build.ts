@@ -1,11 +1,10 @@
 import { build } from "$effects/build.ts";
 import { io } from "$effects/io.ts";
 import { buildFolder } from "$lib/constants.ts";
-import type { Plugin } from "$lib/types.d.ts";
 import { id } from "$lib/utils/algebraic-structures.ts";
 import { expandGlobWorkspaceRelative } from "$lib/utils/fs.ts";
 import { workspaceRelative } from "$lib/utils/path.ts";
-import { handlerFor } from "@radish/effect-system";
+import { handlerFor, type Plugin } from "@radish/effect-system";
 import { distinctBy } from "@std/collections";
 import { emptyDirSync, ensureDirSync, type WalkEntry } from "@std/fs";
 import { join } from "@std/path";

@@ -1,10 +1,12 @@
 import { router } from "$effects/router.ts";
 import { server } from "$effects/server.ts";
-import { dispose, onDispose } from "$lib/cleanup.ts";
-import type { Config, Plugin } from "$lib/types.d.ts";
+import { dispose } from "$lib/cleanup.ts";
+import type { Config } from "$lib/types.d.ts";
 import { AppError, createStandardResponse } from "$lib/utils/http.ts";
-import { handlerFor } from "@radish/effect-system";
+import { handlerFor, type Plugin } from "@radish/effect-system";
 import { getCookies, STATUS_CODE } from "@std/http";
+
+let httpServer: Deno.HttpServer<Deno.Addr> | undefined;
 
 /**
  * Default server options
@@ -55,13 +57,8 @@ export const handleServerRequest = handlerFor(
  * - `server/handle-request`
  */
 export const handleServerStart = handlerFor(server.start, (options) => {
-  const httpServer = Deno.serve(options, async (request, info) => {
+  httpServer = Deno.serve(options, async (request, info) => {
     return await server.handleRequest(request, info);
-  });
-
-  onDispose(async () => {
-    await httpServer.shutdown();
-    console.log("Server closed");
   });
 
   Deno.addSignalListener("SIGINT", shutdown);
@@ -81,4 +78,8 @@ const shutdown = async () => {
 export const pluginServer: Plugin = {
   name: "plugin-server",
   handlers: [handleServerStart, handleServerRequest],
+  onDispose: async () => {
+    await httpServer?.shutdown();
+    console.log("Server closed");
+  },
 };

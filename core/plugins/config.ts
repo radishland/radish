@@ -1,8 +1,7 @@
 import { assertExists } from "@std/assert";
 import { existsSync } from "@std/fs";
 import * as JSONC from "@std/jsonc";
-import { handlerFor } from "@radish/effect-system";
-import type { Plugin } from "../types.d.ts";
+import { handlerFor, type Plugin } from "@radish/effect-system";
 import { io } from "$effects/io.ts";
 import { config, denoConfig } from "$effects/config.ts";
 import { id } from "../utils/algebraic-structures.ts";

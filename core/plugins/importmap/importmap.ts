@@ -6,9 +6,9 @@ import {
 import { build, config, denoConfig, io, manifest } from "$effects/mod.ts";
 import { target_head, ts_extension_regex } from "$lib/constants.ts";
 import { dev } from "$lib/environment.ts";
-import type { ManifestBase, Plugin } from "$lib/types.d.ts";
+import type { ManifestBase } from "$lib/types.d.ts";
 import { throwUnlessNotFound } from "$lib/utils/io.ts";
-import { Handler, handlerFor } from "@radish/effect-system";
+import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
 import { assert, assertExists, assertMatch, unimplemented } from "@std/assert";
 import { basename, extname } from "@std/path";
 import { dedent } from "@std/text/unstable-dedent";
@@ -61,6 +61,9 @@ export const pluginImportmap: Plugin = {
       return Handler.continue(path, content);
     }),
   ],
+  onDispose: () => {
+    importmapObject = {};
+  },
 };
 
 /**

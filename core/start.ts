@@ -25,6 +25,7 @@ import { generateImportmap } from "./plugins/importmap/importmap.ts";
 import { updateManifest } from "./plugins/manifest/manifest.ts";
 import { SERVER_DEFAULTS } from "./plugins/server/mod.ts";
 import type { CLIArgs, Config } from "./types.d.ts";
+import { onDispose } from "./mod.ts";
 
 const cliArgs: CLIArgs = Object.freeze(parseArgs(Deno.args, {
   boolean: ["dev", "env", "importmap", "manifest", "build", "server"],
@@ -34,8 +35,9 @@ export async function startApp(
   config: Config,
   getManifest: () => Promise<any>,
 ) {
-  const handlers = config.plugins?.flatMap((plugin) => plugin.handlers) ?? [];
-  new effects.HandlerScope(...handlers);
+  const plugins = config.plugins ?? [];
+  const scope = new effects.HandlerScope(...plugins);
+  onDispose(() => scope[Symbol.dispose]());
 
   config = await configEffect.transform({ ...config, args: cliArgs });
   const resolvedConfig: Config = Object.freeze(config);

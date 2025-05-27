@@ -1,18 +1,17 @@
 import { hmr } from "$effects/hmr.ts";
 import { io } from "$effects/io.ts";
 import { manifest, manifestPath } from "$effects/manifest.ts";
-import { Handler, handlerFor } from "@radish/effect-system";
+import { generatedFolder } from "$lib/constants.ts";
+import type { ManifestBase } from "$lib/types.d.ts";
+import { expandGlobWorkspaceRelative } from "$lib/utils/fs.ts";
+import { extractImports } from "$lib/utils/parse.ts";
+import { stringifyObject } from "$lib/utils/stringify.ts";
+import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
 import { assertExists } from "@std/assert";
 import { ensureDirSync, type ExpandGlobOptions } from "@std/fs";
 import { extname } from "@std/path";
-import { generatedFolder } from "../../constants.ts";
-import type { ManifestBase, Plugin } from "../../types.d.ts";
-import { expandGlobWorkspaceRelative } from "../../utils/fs.ts";
-import { extractImports } from "../../utils/parse.ts";
-import { stringifyObject } from "../../utils/stringify.ts";
 
 let loader: (() => Promise<ManifestBase>) | undefined;
-
 let manifestObject: ManifestBase = { imports: {} };
 
 /**
@@ -66,6 +65,10 @@ export const pluginManifest: Plugin = {
       return Handler.continue({ event, paths });
     }),
   ],
+  onDispose: () => {
+    loader = undefined;
+    manifestObject = { imports: {} };
+  },
 };
 
 /**

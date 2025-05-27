@@ -1,4 +1,4 @@
-import type { Handlers } from "@radish/effect-system";
+import type { Plugin } from "@radish/effect-system";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
 import type { ImportMapOptions } from "./plugins/importmap/importmap.ts";
 
@@ -9,17 +9,6 @@ export interface ManifestBase extends Record<string, any> {
    * Maps module paths to their import specifiers
    */
   imports: Record<string, string[]>;
-}
-
-export interface Plugin {
-  /**
-   * The name of the plugin
-   */
-  name: string;
-  /**
-   * The plugin handlers
-   */
-  handlers: Handlers;
 }
 
 export interface Config {
