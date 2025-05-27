@@ -171,13 +171,31 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  *
  * let count = 0;
  * // A listener that performs orthogonal logic
- * const IOCountTXTReads = handlerFor(io.read, (path: string)=>{
+ * const IOCountTXTReads = handlerFor(io.read, (path: string) => {
  *   if(path.endsWith(".txt")) {
- *     count += 1
+ *     count += 1;
  *   }
- *   return Handler.continue(path)
+ *   return Handler.continue(path);
  * })
  *
+ * ```
+ *
+ * @example Handler cleanup with `Symbol.dispose` and `Symbol.asyncDispose`
+ *
+ * Handlers can receive a `Symbol.dispose` or `Symbol.asyncDispose` to attach cleanup logic to the {@linkcode HandlerScope} using the handler.
+ *
+ * ```ts
+ * let count = 0;
+ *
+ * const handleIORead = handlerFor(io.read, (path: string) => {
+ *   if(path.endsWith(".txt")) {
+ *     count += 1;
+ *   }
+ *   return Handler.continue(path);
+ * });
+ * handleIORead[Symbol.dispose] = () => {
+ *   count = 0;
+ * }
  * ```
  *
  * @param effect The effect we're implementing a handler for
