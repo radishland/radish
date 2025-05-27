@@ -40,9 +40,9 @@ export async function startApp(
   config = await configEffect.transform({ ...config, args: cliArgs });
   const resolvedConfig: Config = Object.freeze(config);
 
-  effects.addHandlers([
+  effects.addHandlers(
     effects.handlerFor(configEffect.read, () => resolvedConfig),
-  ]);
+  );
 
   globals();
 

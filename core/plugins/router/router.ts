@@ -42,7 +42,7 @@ export const handleAddRoute: Handler<[route: Route], void> = handlerFor(
       return Handler.continue(context);
     });
 
-    addHandlers([newHandler]);
+    addHandlers(newHandler);
   },
 );
 
