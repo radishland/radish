@@ -1,9 +1,9 @@
 /**
- * Structuring code with [Radish](https://github.com/radishland/radish) effect-system unlocks **testability**, **simplicity**, **modularity**, **customizability**.
+ * [Radish](https://github.com/radishland/radish) effect-system unlocks **modularity**, **testability**, **simplicity**, **customizability**.
  *
+ * - **Modularity**: Decouple effects descriptions from their interpretations
  * - **Testability**: Swap handlers in a test environment to easily mock deep side-effects without modifying your API for testing purposes
- * - **Simplicity**: Avoiding the need to pass context objects or callbacks solely for testing makes code simpler and more focused, with thinner, single responsibility APIs
- * - **Modularity**: Thinner APIs with focused responsibilities make code more reuseable and composable
+ * - **Simplicity**: Think in terms of operations. And avoiding the need to pass context objects or callbacks solely for testing makes code simpler and more focused, with thinner, single responsibility APIs
  * - **Customizability**: Consumers of your library or framework can override effect handlers to suit their needs
  *
  * ## Powerful Handler Patterns
