@@ -22,9 +22,9 @@
  *
  * See {@linkcode Snapshot} and {@linkcode createState}
  *
- * ## Zero-effort Plugin API
+ * ## Out-of-the-box Plugin API
  *
- * As a bonus, you get a plugin API out of the box: define your own effects and handlers, and allow consumers to extend and override them with their own handlers to suit their needs. This provides flexibility and a high level of control to your users
+ * As a bonus, you get a {@linkcode Plugin} API out-of-the-box: define your own effects and handlers, and allow consumers to extend and override them with their own handlers to suit their needs. This provides flexibility and a high level of control to your users.
  *
  * @example Create a new effect
  *
@@ -88,6 +88,28 @@
  * }
  * ```
  *
+ * @example Create a plugin
+ *
+ * Export your handlers as a {@linkcode Plugin} for the reusability of related functionality. The {@linkcode HandlerScope} constructor also accepts plugins as arguments.
+ *
+ * ```ts
+ * const pluginIO = {
+ *   name: "plugin-io",
+ *   handlers: [handleIORead, handleIOTransform, handleIOWrite]
+ * };
+ *
+ * // Usage
+ * {
+ *  using _ = new HandlerScope(pluginIO);
+ *
+ *  const content = await io.read("/path/to/input");
+ *  const transformed = await io.transform(content);
+ *  await io.write("/path/to/output", transformed);
+ *  // logs "writing to /path/to/output: MY CONTENT"
+ * }
+ *
+ * ```
+ *
  * @module
  */
 
@@ -104,7 +126,7 @@ export {
 export { createState, type StateOps } from "./state.ts";
 
 /**
- * An effect plugin is a named list of handlers with an optional `[Symbol.dispose]` cleanup method
+ * A plugin is a named list of handlers
  */
 export interface Plugin {
   /**
