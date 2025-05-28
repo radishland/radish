@@ -323,7 +323,7 @@ export class HandlerScope {
    *
    * @internal
    */
-  [Symbol.dispose]() {
+  [Symbol.dispose] = () => {
     if (this.#disposed) return;
 
     handlerScopes.pop();
@@ -331,20 +331,20 @@ export class HandlerScope {
     this.#stack.dispose();
     this.#parent = undefined;
     this.#disposed = true;
-  }
+  };
 
   /**
    * Asynchronously cleans up the {@linkcode HandlerScope} and restores its parent scope as the current scope
    *
    * @internal
    */
-  async [Symbol.asyncDispose]() {
+  [Symbol.asyncDispose] = async () => {
     if (!this.#disposed) {
       this[Symbol.dispose]();
 
       await this.#asyncStack.disposeAsync();
     }
-  }
+  };
 }
 
 /**

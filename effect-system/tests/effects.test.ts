@@ -1,3 +1,4 @@
+import { assertSpyCalls, spy } from "@std/testing/mock";
 import {
   assertEquals,
   assertGreaterOrEqual,
@@ -74,6 +75,28 @@ describe("effect system", () => {
     }
 
     assertEquals(logs, ["clean"]);
+  });
+
+  test("HandlerScope Symbol.dispose is lexically bound", () => {
+    const resources = new DisposableStack();
+    const scope = new HandlerScope();
+
+    const disposeSpy = spy(scope[Symbol.dispose]);
+    resources.defer(disposeSpy);
+    resources.dispose();
+
+    assertSpyCalls(disposeSpy, 1);
+  });
+
+  test("HandlerScope Symbol.asyncDispose function is lexically bound", async () => {
+    const resources = new AsyncDisposableStack();
+    const scope = new HandlerScope();
+
+    const asyncDisposeSpy = spy(scope[Symbol.asyncDispose]);
+    resources.defer(asyncDisposeSpy);
+    await resources.disposeAsync();
+
+    assertSpyCalls(asyncDisposeSpy, 1);
   });
 
   test("handler cleanup", async () => {
