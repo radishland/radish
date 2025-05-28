@@ -3,6 +3,8 @@ import { join } from "@std/path";
 /**
  * This module exports all the conventions used throughout the framework
  *
+ * You can use this module to create plugins relying on the framework conventions
+ *
  * @module
  */
 
