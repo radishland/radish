@@ -1,6 +1,6 @@
 import type { WalkEntry } from "@std/fs";
 import { join } from "@std/path";
-import { generatedFolder } from "../constants.ts";
+import { generatedFolder } from "$lib/conventions.ts";
 import type { ManifestBase } from "../types.d.ts";
 import { createEffect, type Effect } from "@radish/effect-system";
 

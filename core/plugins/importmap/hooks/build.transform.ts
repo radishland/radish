@@ -1,6 +1,6 @@
 import { importmap } from "$effects/importmap.ts";
 import { build } from "$effects/mod.ts";
-import { target_head } from "$lib/constants.ts";
+import { target_head } from "$lib/conventions.ts";
 import { Handler, handlerFor } from "$lib/effect-system.ts";
 import { indent } from "$lib/utils/text.ts";
 import { assertMatch } from "@std/assert/match";

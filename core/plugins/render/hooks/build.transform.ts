@@ -1,7 +1,7 @@
 import { manifest } from "$effects/manifest.ts";
 import { build } from "$effects/mod.ts";
 import { type Manifest, render } from "$effects/render.ts";
-import { elementsFolder, routesFolder } from "$lib/constants.ts";
+import { elementsFolder, routesFolder } from "$lib/conventions.ts";
 import { filename, isParent } from "$lib/utils/path.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { assertObjectMatch } from "@std/assert";

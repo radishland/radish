@@ -2,7 +2,7 @@ import { parseArgs } from "@std/cli";
 import { promptSelect } from "@std/cli/unstable-prompt-select";
 import { copySync, emptyDirSync, ensureDirSync, existsSync } from "@std/fs";
 import { extname, relative } from "@std/path";
-import { elementsFolder, routesFolder } from "../core/constants.ts";
+import { elementsFolder, routesFolder } from "../core/conventions.ts";
 import { toKebabCase, toPascalCase } from "@std/text";
 
 const args = parseArgs(Deno.args, {

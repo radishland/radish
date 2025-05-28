@@ -9,6 +9,7 @@
     "./plugins/router": "./plugins/router/router.ts",
     "./parser": "./parser.ts",
     "./environment": "./environment.ts",
+    "./conventions": "./conventions.ts",
     "./effect-system": "./effect-system.ts"
   },
   "imports": {

@@ -1,6 +1,6 @@
 import { manifest } from "$effects/manifest.ts";
 import { build } from "$effects/mod.ts";
-import { globals } from "$lib/constants.ts";
+import { globals } from "$lib/globals.ts";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { fragments } from "@radish/htmlcrunch";
 import { assertEquals } from "@std/assert";

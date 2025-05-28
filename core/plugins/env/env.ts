@@ -1,5 +1,5 @@
 import { config, env, hmr, io } from "$effects/mod.ts";
-import { generatedFolder } from "$lib/constants.ts";
+import { generatedFolder } from "$lib/conventions.ts";
 import { stringifyObject } from "$lib/utils/stringify.ts";
 import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
 import { parse } from "@std/dotenv";

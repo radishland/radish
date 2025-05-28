@@ -5,7 +5,7 @@ import {
   elementsFolder,
   generatedFolder,
   routesFolder,
-} from "$lib/constants.ts";
+} from "$lib/conventions.ts";
 import { setScope } from "$lib/utils/stringify.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { fragments, shadowRoot } from "@radish/htmlcrunch";

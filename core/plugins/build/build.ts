@@ -1,6 +1,6 @@
 import { build } from "$effects/build.ts";
 import { io } from "$effects/io.ts";
-import { buildFolder } from "$lib/constants.ts";
+import { buildFolder } from "$lib/conventions.ts";
 import { id } from "$lib/utils/algebraic-structures.ts";
 import { expandGlobWorkspaceRelative } from "$lib/utils/fs.ts";
 import { workspaceRelative } from "$lib/utils/path.ts";

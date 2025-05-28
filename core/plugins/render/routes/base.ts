@@ -1,4 +1,4 @@
-import { appPath, target_head } from "$lib/constants.ts";
+import { appPath, target_head } from "$lib/conventions.ts";
 import { handlerFor } from "@radish/effect-system";
 import { io } from "$effects/io.ts";
 import { render } from "$effects/render.ts";
