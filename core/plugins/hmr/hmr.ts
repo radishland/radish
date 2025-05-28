@@ -64,14 +64,17 @@ const handleHMRStart = handlerFor(hmr.start, async (): Promise<void> => {
   }
 });
 handleHMRStart[Symbol.dispose] = () => {
-  hmrEventsCache.clear();
-  watcher?.close();
-  console.log("HMR closed");
+  if (watcher) {
+    hmrEventsCache.clear();
+    watcher.close();
+    console.log("HMR closed");
+  }
 };
 
 export const pluginHMR: Plugin = {
   name: "plugin-hmr",
   handlers: [
+    handleHMRStart,
     handleHMRPipeline,
     handlerFor(hmr.update, id),
   ],
