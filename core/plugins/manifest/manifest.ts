@@ -1,7 +1,7 @@
 import { hmr } from "$effects/hmr.ts";
 import { io } from "$effects/io.ts";
 import { manifest, manifestPath } from "$effects/manifest.ts";
-import { generatedFolder } from "$lib/constants.ts";
+import { generatedFolder } from "$lib/conventions.ts";
 import type { ManifestBase } from "$lib/types.d.ts";
 import { expandGlobWorkspaceRelative } from "$lib/utils/fs.ts";
 import { extractImports } from "$lib/utils/parse.ts";

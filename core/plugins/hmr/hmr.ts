@@ -5,7 +5,7 @@ import {
   libFolder,
   routesFolder,
   staticFolder,
-} from "$lib/constants.ts";
+} from "$lib/conventions.ts";
 import { generateImportmap } from "$lib/plugins/importmap/importmap.ts";
 import { TtlCache } from "$lib/utils/cache.ts";
 import { handlerFor, id, type Plugin } from "@radish/effect-system";

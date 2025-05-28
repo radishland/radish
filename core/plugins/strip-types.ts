@@ -1,8 +1,9 @@
 import { build } from "$effects/mod.ts";
+import { ts_extension_regex } from "$lib/constants.ts";
+import { buildFolder } from "$lib/conventions.ts";
 import strip from "@fcrozatier/type-strip";
 import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
 import { extname, join } from "@std/path";
-import { buildFolder, ts_extension_regex } from "../constants.ts";
 
 /**
  * The type-stripping plugin

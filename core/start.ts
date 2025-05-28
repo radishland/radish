@@ -7,19 +7,19 @@ import {
   router,
   server,
 } from "$effects/mod.ts";
+import {
+  buildFolder,
+  elementsFolder,
+  libFolder,
+  routesFolder,
+  staticFolder,
+} from "$lib/conventions.ts";
+import { dev } from "$lib/environment.ts";
+import { globals } from "$lib/globals.ts";
 import * as effects from "@radish/effect-system";
 import { parseArgs } from "@std/cli";
 import { serveDir } from "@std/http";
 import { join } from "@std/path";
-import {
-  buildFolder,
-  elementsFolder,
-  globals,
-  libFolder,
-  routesFolder,
-  staticFolder,
-} from "./constants.ts";
-import { dev } from "./environment.ts";
 import { generateImportmap } from "./plugins/importmap/importmap.ts";
 import { updateManifest } from "./plugins/manifest/manifest.ts";
 import type { CLIArgs, Config } from "./types.d.ts";

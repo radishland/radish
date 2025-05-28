@@ -1,7 +1,7 @@
 import { assertExists, assertObjectMatch, unreachable } from "@std/assert";
 import type { WalkEntry } from "@std/fs";
 import { basename, extname } from "@std/path";
-import { appPath, elementsFolder, routesFolder } from "../../../constants.ts";
+import { appPath, elementsFolder, routesFolder } from "$lib/conventions.ts";
 import { build } from "$effects/build.ts";
 import { handlerFor } from "@radish/effect-system";
 import { manifest } from "$effects/manifest.ts";
