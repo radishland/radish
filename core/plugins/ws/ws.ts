@@ -1,5 +1,4 @@
 import { ws } from "$effects/ws.ts";
-import { dev } from "$lib/environment.ts";
 import { handlerFor, type Plugin } from "@radish/effect-system";
 import { handleInsertWebSocketScript } from "./hooks/render.route.ts";
 import { handleWSServerRequest } from "./hooks/server.handle-request.ts";
@@ -33,11 +32,11 @@ const handleWSHandleSocket = handlerFor(ws.handleSocket, (socket) => {
   });
 });
 handleWSHandleSocket[Symbol.dispose] = () => {
-  if (clients) {
+  if (clients.size) {
     for (const client of clients) client.close();
     clients.clear();
 
-    if (dev) console.log("WebSocket connection closed");
+    console.log("WebSocket connection closed");
   }
 };
 
