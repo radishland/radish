@@ -323,7 +323,7 @@ export class HandlerScope {
    *
    * @internal
    */
-  [Symbol.dispose] = () => {
+  [Symbol.dispose] = (): void => {
     if (this.#disposed) return;
 
     handlerScopes.pop();
@@ -338,7 +338,7 @@ export class HandlerScope {
    *
    * @internal
    */
-  [Symbol.asyncDispose] = async () => {
+  [Symbol.asyncDispose] = async (): Promise<void> => {
     if (!this.#disposed) {
       this[Symbol.dispose]();
 

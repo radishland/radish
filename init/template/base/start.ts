@@ -1,4 +1,7 @@
-import { manifestPath, startApp } from "@radish/core";
+import type { Config } from "@radish/core";
+import { manifestPath, onDispose, startApp } from "@radish/core";
+import { hmr, manifest } from "@radish/core/effects";
+import { dev } from "@radish/core/environment";
 import {
   pluginBuild,
   pluginConfig,
@@ -13,7 +16,7 @@ import {
   pluginStripTypes,
   pluginWS,
 } from "@radish/core/plugins";
-import type { Config } from "@radish/core";
+import { HandlerScope } from "@radish/effect-system";
 
 const config: Config = {
   importmap: {
@@ -25,20 +28,6 @@ const config: Config = {
       },
     ],
   },
-  plugins: [
-    pluginWS,
-    pluginServer,
-    pluginRouter,
-    pluginRender,
-    pluginImportmap,
-    pluginManifest,
-    pluginHMR,
-    pluginStripTypes,
-    pluginBuild,
-    pluginEnv,
-    pluginConfig,
-    pluginIO,
-  ],
   // speculationRules: {
   //   prerender: [{
   //     where: {
@@ -60,7 +49,26 @@ const config: Config = {
   // },
 };
 
-await startApp(
-  config,
-  async () => (await import("./" + manifestPath))["manifest"],
+const scope = new HandlerScope(
+  pluginWS,
+  pluginServer,
+  pluginRouter,
+  pluginRender,
+  pluginImportmap,
+  pluginManifest,
+  pluginHMR,
+  pluginStripTypes,
+  pluginBuild,
+  pluginEnv,
+  pluginConfig,
+  pluginIO,
 );
+onDispose(scope[Symbol.asyncDispose]);
+
+await manifest.setLoader(async () =>
+  (await import("./" + manifestPath))["manifest"]
+);
+
+await startApp(config);
+
+if (dev) await hmr.start();
