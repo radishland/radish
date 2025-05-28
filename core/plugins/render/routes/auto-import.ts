@@ -33,11 +33,10 @@ export const handleAutoImport = handlerFor(
       }).filter((i) => i !== undefined);
 
     if (imports.length > 0) {
-      insertHead += `
+      insertHead += `\n
       <script type="module">
         ${imports.map((i) => `import "/${i}";`).join("\n\t")}
-      </script>
-      `;
+      </script>\n`;
     }
     return Handler.continue(route, insertHead, insertBody);
   },
