@@ -69,9 +69,12 @@ export const handleServerRequest = handlerFor(
  * - `server/handle-request`
  */
 export const handleServerStart = handlerFor(server.start, (options) => {
-  httpServer = Deno.serve(options, async (request, info) => {
-    return await server.handleRequest(request, info);
-  });
+  httpServer = Deno.serve(
+    { ...SERVER_DEFAULTS, ...options },
+    async (request, info) => {
+      return await server.handleRequest(request, info);
+    },
+  );
 
   Deno.addSignalListener("SIGINT", shutdown);
   Deno.addSignalListener("SIGTERM", shutdown);
@@ -79,6 +82,8 @@ export const handleServerStart = handlerFor(server.start, (options) => {
 handleServerStart[Symbol.asyncDispose] = async () => {
   if (httpServer) {
     await httpServer.shutdown();
+    Deno.removeSignalListener("SIGINT", shutdown);
+    Deno.removeSignalListener("SIGTERM", shutdown);
     console.log("Server closed");
   }
 };
@@ -90,6 +95,32 @@ const shutdown = async () => {
 };
 
 /**
+ * The server plugin
+ *
+ * This plugin has an async cleanup, so a {@linkcode HandlerScope} using this plugin needs `await using`
+ *
+ * @example Start the server
+ *
+ * ```ts
+ * await using _ = new HandlerScope(pluginServer, handleRouterAddRoute);
+ *
+ * await router.addRoute({
+ *   method: "GET",
+ *   pattern: new URLPattern({ pathname: "/about" }),
+ *   handleRoute: () => {
+ *     return new Response("hi", {
+ *       headers: { "content-type": "text/plain" },
+ *     });
+ *   },
+ * });
+ *
+ * await server.start({ port: 1235 });
+ * const res = await fetch("http://localhost:1235/about");
+ * const text = await res.text();
+ *
+ * assertEquals(text, "hi");
+ * ```
+ *
  * @performs
  * - `router/handle-route`
  */

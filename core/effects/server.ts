@@ -2,7 +2,7 @@ import { createEffect, type Effect } from "@radish/effect-system";
 
 interface Server {
   start: (
-    options:
+    options?:
       | Deno.ServeTcpOptions
       | (Deno.ServeTcpOptions & Deno.TlsCertifiedKeyPem),
   ) => void;
@@ -14,7 +14,7 @@ interface Server {
 
 export const server: {
   start: (
-    options:
+    options?:
       | Deno.ServeTcpOptions
       | (Deno.ServeTcpOptions & Deno.TlsCertifiedKeyPem),
   ) => Effect<void>;
