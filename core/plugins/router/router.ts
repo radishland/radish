@@ -8,7 +8,7 @@ import { manifestShape } from "$lib/plugins/render/hooks/manifest.ts";
 import type { MaybePromise } from "$lib/types.d.ts";
 import { createStandardResponse } from "$lib/utils/http.ts";
 import {
-  addHandlers,
+  addHandler,
   Handler,
   handlerFor,
   type Plugin,
@@ -28,7 +28,7 @@ const square_brackets_around_named_group =
  *
  * Dynamically creates and registers a handler for `router/handle-route`. If both the route method and pattern match on a given request, the provided callback runs.
  */
-export const handleAddRoute: Handler<[route: Route], void> = handlerFor(
+export const handleRouterAddRoute: Handler<[route: Route], void> = handlerFor(
   router.addRoute,
   (route) => {
     const newHandler = handlerFor(router.handleRoute, (context) => {
@@ -46,16 +46,16 @@ export const handleAddRoute: Handler<[route: Route], void> = handlerFor(
       return Handler.continue(context);
     });
 
-    addHandlers(newHandler);
+    addHandler(newHandler);
   },
 );
 
 /**
  * Default handler for `router/handle-route`
  *
- * @returns A standard 404 Not Found `text/plain` response
+ * @returns A standard 404 NotFound `text/plain` response
  */
-export const handleRouterDefaultRouteHandler: Handler<
+export const handleRouterHandleRouteTerminal: Handler<
   [context: RouteContext],
   MaybePromise<Response>
 > = handlerFor(
@@ -72,7 +72,7 @@ export const handleRouterDefaultRouteHandler: Handler<
  *
  * @performs
  * - `config/read`
- * - `build/dest`
+ * - `build/dest` Knows where to find the actual route html
  * - `manifest/get`
  * - `router/add-route`
  */
@@ -125,8 +125,8 @@ export const handleRouterInit: Handler<[], void> = handlerFor(
 export const pluginRouter: Plugin = {
   name: "plugin-router",
   handlers: [
-    handleAddRoute,
-    handleRouterDefaultRouteHandler,
+    handleRouterAddRoute,
+    handleRouterHandleRouteTerminal,
     handleRouterInit,
   ],
 };
