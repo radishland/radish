@@ -13,8 +13,8 @@ import {
   MissingTerminalHandlerError,
   UnhandledEffectError,
 } from "../errors.ts";
-import { addHandlers, Handler, handlerScopes } from "../handlers.ts";
-import { HandlerScope, id } from "../mod.ts";
+import { Handler, handlerScopes } from "../handlers.ts";
+import { addHandler, HandlerScope, id } from "../mod.ts";
 import {
   Console,
   createState,
@@ -172,7 +172,7 @@ describe("effect system", () => {
 
   test("dynamic handling", async () => {
     using _ = new HandlerScope();
-    addHandlers(handleIoReadTXT);
+    addHandler(handleIoReadTXT);
 
     const txt = await io.readFile("note.txt");
     assertEquals(txt, "txt content");
@@ -180,7 +180,7 @@ describe("effect system", () => {
 
   test("dynamic delegation", async () => {
     using _ = new HandlerScope(handleIOReadBase);
-    addHandlers(handleIoReadTXT);
+    addHandler(handleIoReadTXT);
 
     const txt = await io.readFile("note.txt");
     assertEquals(txt, "txt content");
@@ -191,7 +191,7 @@ describe("effect system", () => {
 
   test("unscoped dynamic handling", () => {
     try {
-      addHandlers(handleIoReadTXT);
+      addHandler(handleIoReadTXT);
       unreachable();
     } catch (error) {
       assertInstanceOf(error, MissingHandlerScopeError);
