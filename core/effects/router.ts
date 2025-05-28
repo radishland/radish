@@ -5,6 +5,7 @@ export type RouteContext = {
   request: Request;
   cookies: Record<string, string>;
   url: URL;
+  headers: Headers;
   params?: URLPatternResult;
 };
 

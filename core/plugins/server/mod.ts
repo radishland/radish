@@ -32,8 +32,20 @@ export const handleServerRequest = handlerFor(
     try {
       const url = new URL(request.url);
       const cookies = getCookies(request.headers);
+      const headers = new Headers();
 
-      return await router.handleRoute({ request, url, cookies });
+      const response = await router.handleRoute({
+        request,
+        url,
+        cookies,
+        headers,
+      });
+
+      for (const [name, value] of headers.entries()) {
+        response.headers.set(name, value);
+      }
+
+      return response;
     } catch (error) {
       console.error(error);
       if (error instanceof AppError) {
@@ -65,8 +77,10 @@ export const handleServerStart = handlerFor(server.start, (options) => {
   Deno.addSignalListener("SIGTERM", shutdown);
 });
 handleServerStart[Symbol.asyncDispose] = async () => {
-  await httpServer?.shutdown();
-  console.log("Server closed");
+  if (httpServer) {
+    await httpServer.shutdown();
+    console.log("Server closed");
+  }
 };
 
 const shutdown = async () => {
