@@ -1,11 +1,14 @@
 import { config, io, render } from "$effects/mod.ts";
+import { indent } from "$lib/utils/text.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { dirname, join } from "@std/path";
 
 const moduleDir = dirname(import.meta.url);
 
 /**
- * Inserts WebSocket script in the head of routes to initiate a WebSocket connection to enable HMR
+ * Inserts the WebSocket script in the head when rendering routes in dev mode
+ *
+ * The script is inserted at build time for prerendered routes and at request time for ssr routes
  *
  * @performs
  * - `config/read`
@@ -15,14 +18,12 @@ export const handleInsertWebSocketScript = handlerFor(
   render.route,
   async (route, insertHead, insertBody) => {
     const { args } = await config.read();
-    // the script can be remote in preview contexts
-    const rawScript = await io.read(join(moduleDir, "./script.nofmt.ts"));
 
     if (args?.dev) {
-      insertHead += `<script>\n${
-        rawScript.split("\n")
-          .map((l) => `      ${l}`).join("\n")
-      }\n    </script>`;
+      // the script can be remote in preview contexts
+      const rawScript = await io.read(join(moduleDir, "./script.nofmt.html"));
+
+      insertHead += "\n" + indent(rawScript, 2 * 2);
     }
     return Handler.continue(route, insertHead, insertBody);
   },

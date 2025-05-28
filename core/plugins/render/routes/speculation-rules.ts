@@ -15,7 +15,7 @@ export const handleSpeculationRules = handlerFor(
       insertHead += `
       <script type="speculationrules">
         ${JSON.stringify(speculationRules)}
-      </script>`;
+      </script>\n`;
     }
 
     return Handler.continue(route, insertHead, insertBody);

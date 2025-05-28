@@ -3,16 +3,16 @@ import {
   importmap,
   importmapPath,
 } from "$effects/importmap.ts";
-import { build, config, denoConfig, io, manifest } from "$effects/mod.ts";
-import { target_head, ts_extension_regex } from "$lib/constants.ts";
+import { config, denoConfig, io, manifest } from "$effects/mod.ts";
+import { ts_extension_regex } from "$lib/constants.ts";
 import { dev } from "$lib/environment.ts";
 import type { ManifestBase } from "$lib/types.d.ts";
 import { throwUnlessNotFound } from "$lib/utils/io.ts";
-import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
-import { assert, assertExists, assertMatch, unimplemented } from "@std/assert";
-import { basename, extname } from "@std/path";
-import { dedent } from "@std/text/unstable-dedent";
+import { handlerFor, type Plugin } from "@radish/effect-system";
+import { assert, assertExists, unimplemented } from "@std/assert";
+import { extname } from "@std/path";
 import { findLongestMatchingPrefix } from "../resolve.ts";
+import { handleImportmapBuildTransform } from "./hooks/build.transform.ts";
 
 let importmapObject: ImportMap = {};
 
@@ -47,24 +47,7 @@ export const pluginImportmap: Plugin = {
     handlerFor(importmap.write, async () => {
       await io.write(importmapPath, JSON.stringify(importmapObject));
     }),
-    handlerFor(build.transform, async (path, content) => {
-      if (basename(path) === "_app.html") {
-        const pageHeadContent = dedent`
-        <script type="importmap">
-          ${JSON.stringify(await importmap.get())}
-        </script>
-        %radish.head%`.split("\n").map((line) => `    ${line}`).join("\n");
-
-        assertMatch(
-          content,
-          target_head,
-          `%radish.head% target not found in file "${path}". Try moving the importmap plugin down the list.`,
-        );
-        content = content.replace(target_head, "\n" + pageHeadContent);
-      }
-
-      return Handler.continue(path, content);
-    }),
+    handleImportmapBuildTransform,
   ],
 };
 

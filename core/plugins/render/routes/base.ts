@@ -1,4 +1,4 @@
-import { appPath } from "$lib/constants.ts";
+import { appPath, target_head } from "$lib/constants.ts";
 import { handlerFor } from "@radish/effect-system";
 import { io } from "$effects/io.ts";
 import { render } from "$effects/render.ts";
@@ -16,7 +16,7 @@ export const handleRouteBase = handlerFor(
     const appSkeleton = await io.read(appSkeletonPath);
 
     return appSkeleton
-      .replace("%radish.head%", insertHead)
+      .replace(target_head, insertHead)
       .replace("%radish.body%", insertBody);
   },
 );
