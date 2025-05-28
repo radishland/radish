@@ -2,7 +2,6 @@ import {
   build,
   config as configEffect,
   env,
-  hmr,
   importmap,
   manifest,
   router,
@@ -23,26 +22,17 @@ import {
 import { dev } from "./environment.ts";
 import { generateImportmap } from "./plugins/importmap/importmap.ts";
 import { updateManifest } from "./plugins/manifest/manifest.ts";
-import { SERVER_DEFAULTS } from "./plugins/server/mod.ts";
 import type { CLIArgs, Config } from "./types.d.ts";
-import { onDispose } from "./mod.ts";
 
 const cliArgs: CLIArgs = Object.freeze(parseArgs(Deno.args, {
   boolean: ["dev", "env", "importmap", "manifest", "build", "server"],
 }));
 
-export async function startApp(
-  config: Config,
-  getManifest: () => Promise<any>,
-) {
-  const plugins = config.plugins ?? [];
-  const scope = new effects.HandlerScope(...plugins);
-  onDispose(async () => await scope[Symbol.asyncDispose]());
-
+export async function startApp(config: Config) {
   config = await configEffect.transform({ ...config, args: cliArgs });
   const resolvedConfig: Config = Object.freeze(config);
 
-  effects.addHandlers(
+  effects.addHandler(
     effects.handlerFor(configEffect.read, () => resolvedConfig),
   );
 
@@ -61,14 +51,12 @@ export async function startApp(
   }
 
   if (cliArgs.importmap) {
-    await manifest.setLoader(getManifest);
     await manifest.load();
     await generateImportmap();
     await importmap.write();
   }
 
   if (cliArgs.build) {
-    await manifest.setLoader(getManifest);
     await manifest.load();
 
     await build.start([
@@ -79,7 +67,6 @@ export async function startApp(
   }
 
   if (cliArgs.server) {
-    await manifest.setLoader(getManifest);
     await manifest.load();
     await router.init();
 
@@ -105,8 +92,6 @@ export async function startApp(
       });
     }
 
-    await server.start({ ...SERVER_DEFAULTS, ...config.server });
-
-    if (dev) await hmr.start();
+    await server.start(config.server);
   }
 }

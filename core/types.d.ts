@@ -1,4 +1,3 @@
-import type { Plugin } from "@radish/effect-system";
 import type { SpeculationRules } from "./generate/speculationrules.ts";
 import type { ImportMapOptions } from "./plugins/importmap/importmap.ts";
 
@@ -25,10 +24,6 @@ export interface Config {
     envPath?: string;
   };
   importmap?: ImportMapOptions;
-  /**
-   * Array of plugins to use
-   */
-  plugins?: Plugin[];
   router?: {
     /**
      * An object mapping matcher names to their corresponding regexp definition.

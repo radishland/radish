@@ -1,6 +1,7 @@
 import type { Config } from "@radish/core";
-import { importmapPath, manifestPath, startApp } from "@radish/core";
-import { importmap, io, router, server } from "@radish/core/effects";
+import { importmapPath, manifestPath, onDispose, startApp } from "@radish/core";
+import { hmr, importmap, io, manifest, router } from "@radish/core/effects";
+import { dev } from "@radish/core/environment";
 import {
   pluginBuild,
   pluginConfig,
@@ -15,7 +16,7 @@ import {
   pluginStripTypes,
   pluginWS,
 } from "@radish/core/plugins";
-import { Handler, handlerFor } from "@radish/effect-system";
+import { Handler, handlerFor, HandlerScope } from "@radish/effect-system";
 import { serveDir, UserAgent } from "@std/http";
 import { join } from "@std/path";
 
@@ -37,15 +38,15 @@ const substituteDevRuntime = handlerFor(router.handleRoute, async (context) => {
 });
 
 const hooks = handlerFor(
-  server.handleRequest,
-  (request, info) => {
+  router.handleRoute,
+  (event) => {
     // Avoid mime type sniffing
-    // request.headers.set("X-Content-Type-Options", "nosniff");
+    event.headers.set("X-Content-Type-Options", "nosniff");
 
-    const ua = new UserAgent(request.headers.get("user-agent") ?? "");
-    console.log("ua:", ua);
+    const ua = new UserAgent(event.request.headers.get("user-agent") ?? "");
+    // console.log("ua:", ua);
 
-    return Handler.continue(request, info);
+    return Handler.continue(event);
   },
 );
 
@@ -71,47 +72,6 @@ const config: Config = {
     ],
   },
   router: { matchers: { number: /\d+/ }, nodeModulesRoot: ".." },
-  plugins: [
-    {
-      name: "router-handle-route-serve-runtime",
-      handlers: [substituteDevRuntime],
-    },
-    { name: "server-handle-request-ua-logger", handlers: [hooks] },
-    {
-      name: "importmap-resolve-@radish/runtime",
-      handlers: [
-        // rewrites the importmap when using the development runtime version
-        handlerFor(importmap.write, async () => {
-          const importmapObject = await importmap.get();
-
-          const imports = {
-            "@radish/runtime": "/@radish/runtime/index.js",
-            "@radish/runtime/boot": "/@radish/runtime/boot.js",
-          };
-
-          await io.write(
-            importmapPath,
-            JSON.stringify({
-              imports: { ...importmapObject.imports, ...imports },
-              scopes: { ...importmapObject.scopes },
-            }),
-          );
-        }),
-      ],
-    },
-    pluginWS,
-    pluginServer,
-    pluginRouter,
-    pluginRender,
-    pluginImportmap,
-    pluginManifest,
-    pluginHMR,
-    pluginStripTypes,
-    pluginBuild,
-    pluginEnv,
-    pluginConfig,
-    pluginIO,
-  ],
   // speculationRules: {
   //   prerender: [{
   //     where: {
@@ -131,7 +91,48 @@ const config: Config = {
   // },
 };
 
-await startApp(
-  config,
-  async () => (await import("./" + manifestPath))["manifest"],
+const scope = new HandlerScope(
+  pluginWS,
+  pluginServer,
+  pluginRouter,
+  pluginRender,
+  pluginImportmap,
+  pluginManifest,
+  pluginHMR,
+  pluginStripTypes,
+  pluginBuild,
+  pluginEnv,
+  pluginConfig,
+  pluginIO,
 );
+onDispose(scope[Symbol.asyncDispose]);
+
+await manifest.setLoader(async () =>
+  (await import("./" + manifestPath))["manifest"]
+);
+
+await startApp(config);
+
+const _ = new HandlerScope(
+  hooks,
+  substituteDevRuntime,
+  // rewrites the importmap when using the development runtime version
+  handlerFor(importmap.write, async () => {
+    const importmapObject = await importmap.get();
+
+    const imports = {
+      "@radish/runtime": "/@radish/runtime/index.js",
+      "@radish/runtime/boot": "/@radish/runtime/boot.js",
+    };
+
+    await io.write(
+      importmapPath,
+      JSON.stringify({
+        imports: { ...importmapObject.imports, ...imports },
+        scopes: { ...importmapObject.scopes },
+      }),
+    );
+  }),
+);
+
+if (dev) await hmr.start();
