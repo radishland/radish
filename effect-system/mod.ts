@@ -117,7 +117,7 @@ import type { Handlers } from "./handlers.ts";
 
 export { createEffect, type Effect, handlerFor } from "./effects.ts";
 export {
-  addHandlers,
+  addHandler,
   Handler,
   type Handlers,
   HandlerScope,

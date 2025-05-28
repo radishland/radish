@@ -108,7 +108,9 @@ export const createState = <T>(key: string, initialValue?: T): {
     }),
   ];
 
-  scope.addHandlers(...handlers);
+  for (const handler of handlers) {
+    scope.addHandler(handler);
+  }
 
   return {
     get,

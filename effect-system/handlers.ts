@@ -235,23 +235,6 @@ export class HandlerScope {
   }
 
   /**
-   * Prepends handlers to the {@linkcode HandlerScope}
-   *
-   * @param handlers Handlers to prepend
-   *
-   * @see {@linkcode addHandler}
-   *
-   * @internal
-   */
-  addHandlers(...handlers: Handlers) {
-    assert(!this.#disposed, "Can't add handlers to a disposed HandlerScope");
-
-    for (const handler of handlers) {
-      this.addHandler(handler);
-    }
-  }
-
-  /**
    * Adds an effect handler to the current {@linkcode HandlerScope}
    *
    * Most of the time you want to prepend handlers in order to override, decorate or delegate to other handlers. Use `position = "start"` to prepend a handler.
@@ -437,15 +420,26 @@ export const Snapshot = (): () => HandlerScope => {
 };
 
 /**
- * Appends handlers to the current {@linkcode HandlersScope}
+ * Adds an effect handler to the current {@linkcode HandlerScope}
  *
- * @param handlers Any number of handlers to append to the current scope
+ * Most of the time you want to prepend handlers in order to override, decorate or delegate to other handlers. Use `position = "start"` to prepend a handler.
  *
- * @throws {MissingHandlerScopeError} If there is no {@linkcode HandlerScope} to append handlers to
+ * Sometimes you may for example have a dynamically defined terminal handler. In that case, append the handler using `position = "end"`
+ *
+ * Looping over handlers for the same effect is another use-case for `position="end"` to preserve their order
+ *
+ * @param handler The {@linkcode Handler} to add
+ * @param position Whether to add the handler at the start or end of the sequence of handlers
+ * @default "start"
+ *
+ * @throws {MissingHandlerScopeError} If there is no {@linkcode HandlerScope} to add handlers to
  */
-export const addHandlers = (...handlers: Handlers): void => {
+export const addHandler = (
+  handler: Handler<any, any>,
+  position: "start" | "end" = "start",
+): void => {
   const currentScope = handlerScopes.at(-1);
   if (!currentScope) throw new MissingHandlerScopeError();
 
-  currentScope.addHandlers(...handlers);
+  currentScope.addHandler(handler, position);
 };
