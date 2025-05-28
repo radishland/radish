@@ -8,7 +8,8 @@
     "./plugins": "./plugins/mod.ts",
     "./plugins/router": "./plugins/router/router.ts",
     "./parser": "./parser.ts",
-    "./environment": "./environment.ts"
+    "./environment": "./environment.ts",
+    "./effect-system": "./effect-system.ts"
   },
   "imports": {
     "$effects/": "./effects/",
