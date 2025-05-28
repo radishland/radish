@@ -44,7 +44,7 @@ const hooks = handlerFor(
     event.headers.set("X-Content-Type-Options", "nosniff");
 
     const ua = new UserAgent(event.request.headers.get("user-agent") ?? "");
-    // console.log("ua:", ua);
+    console.log("ua:", ua);
 
     return Handler.continue(event);
   },
