@@ -14,8 +14,7 @@ export const handleImportmapBuildTransform = handlerFor(
         {
           raw: [
             '\n<script type="importmap">\n',
-            "\n",
-            "</script>\n",
+            "\n</script>\n",
             "\n",
             "%radish.head%",
           ],
