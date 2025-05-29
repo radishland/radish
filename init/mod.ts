@@ -1,14 +1,29 @@
-import { assert, assertExists, assertObjectMatch } from "@std/assert";
+import { io } from "@radish/core/effects";
+import { pluginIO } from "@radish/core/plugins";
+import { HandlerScope } from "@radish/effect-system";
+import {
+  assert,
+  assertExists,
+  assertObjectMatch,
+  unimplemented,
+} from "@std/assert";
 import { parseArgs } from "@std/cli";
 import { Spinner } from "@std/cli/unstable-spinner";
+import { decodeBase64 } from "@std/encoding";
 import { bold, green } from "@std/fmt/colors";
-import { emptyDirSync, existsSync } from "@std/fs";
-import { dirname, join } from "@std/path";
+import { emptyDirSync, existsSync, walkSync } from "@std/fs";
+import { dirname, join, relative, SEPARATOR } from "@std/path";
 
-const spinner = new Spinner({ message: "Loading...", color: "green" });
-const packageUrl = "https://jsr.io/@radish/init/";
-const version = import.meta.url.replace(packageUrl, "").split("/")[0];
+using _ = new HandlerScope(pluginIO);
 
+const module = import.meta.url;
+const moduleDir = dirname(module);
+console.log("module:", module);
+
+const denoConfig = await io.read(join(moduleDir, "deno.jsonc"));
+const version = await JSON.parse(denoConfig)["version"];
+
+assertExists(version, ". Version couldn't be determined");
 console.log("version:", version);
 
 const args = parseArgs(Deno.args, {
@@ -51,39 +66,32 @@ if (!args.force) {
 
 emptyDirSync(projectPath);
 
-const metaURL = `${packageUrl}${version}_meta.json`;
+const moduleDirURL = new URL(moduleDir);
+const spinner = new Spinner({ message: "Loading...", color: "green" });
 
-spinner.start();
 try {
-  spinner.message = "Fetching meta data...";
-  const res = await fetch(metaURL);
-  const metadata = await res.json();
-  assertObjectMatch(metadata, { manifest: {} });
+  using spinnerScope = new DisposableStack();
+  spinnerScope.defer(() => spinner.stop());
 
-  const pathsByArgs = Object.groupBy(Object.keys(metadata.manifest), (k) => {
-    if (k.startsWith("/template/base/")) return "base";
-    else if (k.startsWith("/template/vscode/")) return "vscode";
-    return "skip";
-  });
-
+  spinner.start();
   spinner.message = "Fetching template files...";
-  for (const arg of Object.keys(pathsByArgs) as (keyof typeof pathsByArgs)[]) {
-    switch (arg) {
-      case "skip":
-        continue;
 
-      case "vscode":
-        if (!vscode) continue;
-    }
+  if (
+    moduleDirURL.protocol === "https:" && moduleDirURL.hostname === "jsr.io"
+  ) {
+    const metaURL = join(moduleDir, `${version}_meta.json`);
+    const content = await io.read(metaURL);
+    const metadata = JSON.parse(content);
+    assertObjectMatch(metadata, { manifest: {} });
 
-    const paths = pathsByArgs[arg];
-    assertExists(paths);
+    const paths = Object.keys(metadata.manifest).filter((k) =>
+      vscode
+        ? k.startsWith("/template/base/") || k.startsWith("/template/vscode/")
+        : k.startsWith("/template/base/")
+    );
 
-    const textFiles = await Promise.all(
-      paths.map(async (path) => {
-        const res = await fetch(`${packageUrl}${version}${path}`);
-        return await res.text();
-      }),
+    const textFiles: string[] = await Promise.all(
+      paths.map(async (path) => await io.read(join(moduleDir, version, path))),
     );
 
     assert(paths.length === textFiles.length);
@@ -95,24 +103,101 @@ try {
       assertExists(path);
       assertExists(content);
 
+      const dest = join(projectPath, ...path.split(SEPARATOR).slice(3));
+
+      Deno.mkdirSync(dirname(dest), { recursive: true });
+      await io.write(dest, content);
+    }
+  } else if (
+    moduleDirURL.protocol === "https:" && moduleDirURL.hostname === "github.com"
+  ) {
+    const content = await fetch(
+      "https://api.github.com/repos/radishland/radish/git/trees/main?recursive=1",
+    );
+    const metadata: { tree: { path: string; type: "blob" | "tree" }[] } =
+      await content.json();
+    assertObjectMatch(metadata, { tree: [] });
+
+    const paths = metadata.tree
+      .filter((e) =>
+        e.type === "blob" &&
+        (vscode
+          ? e.path.startsWith("init/template/base/") ||
+            e.path.startsWith("init/template/vscode/")
+          : e.path.startsWith("init/template/base/"))
+      ).map((e) => e.path);
+
+    const entries: {
+      type: "file" | string & {};
+      content: string;
+      encoding: "base64" | string & {};
+    }[] = await Promise.all(
+      paths.map(async (path) =>
+        JSON.parse(
+          await io.read(
+            join(
+              "https://api.github.com/repos/radishland/radish/contents/",
+              path,
+            ),
+          ),
+        )
+      ),
+    );
+
+    assert(entries.every((e) => e.type === "file" && e.encoding === "base64"));
+
+    const textFiles = entries.map((e) =>
+      new TextDecoder().decode(decodeBase64(e.content))
+    );
+
+    assert(paths.length === textFiles.length);
+
+    for (let i = 0; i < paths.length; i++) {
+      const path: string | undefined = paths[i];
+      const content = textFiles[i];
+
+      assertExists(path);
+      assertExists(content);
+
+      const dest = join(projectPath, ...path.split(SEPARATOR).slice(3));
+
+      Deno.mkdirSync(dirname(dest), { recursive: true });
+      await io.write(dest, content);
+    }
+  } else if (moduleDirURL.protocol === "file:") {
+    const templatePath = join(moduleDirURL.pathname, "template");
+    const basePath = join(templatePath, "base");
+    const vscodePath = join(templatePath, "vscode");
+
+    const paths = Array.from(walkSync(templatePath))
+      .filter((e) =>
+        e.isFile && (vscode
+          ? e.path.startsWith(basePath) ||
+            e.path.startsWith(vscodePath)
+          : e.path.startsWith(basePath))
+      )
+      .map((e) => e.path);
+
+    for (const path of paths) {
+      const content = await io.read(path);
       const dest = join(
         projectPath,
-        path.replaceAll(new RegExp(`^/template/${arg}/`, "g"), ""),
+        ...relative(templatePath, path).split(SEPARATOR).slice(1),
       );
 
       Deno.mkdirSync(dirname(dest), { recursive: true });
-      Deno.writeTextFileSync(dest, content);
+      await io.write(dest, content);
     }
+  } else {
+    unimplemented("init method");
   }
+
+  Deno.rename(join(projectPath, "env"), join(projectPath, ".env"));
+  Deno.rename(join(projectPath, "gitignore"), join(projectPath, ".gitignore"));
+  Deno.rename(join(projectPath, "denojsonc"), join(projectPath, "deno.jsonc"));
 } catch (error) {
   console.log(error);
-} finally {
-  spinner.stop();
 }
-
-Deno.rename(join(projectPath, "env"), join(projectPath, ".env"));
-Deno.rename(join(projectPath, "gitignore"), join(projectPath, ".gitignore"));
-Deno.rename(join(projectPath, "denojsonc"), join(projectPath, "deno.jsonc"));
 
 console.log(
   // deno-lint-ignore prefer-ascii
