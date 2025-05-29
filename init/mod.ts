@@ -119,8 +119,7 @@ try {
 
     const headers = new Headers();
     if (args.auth) {
-      console.log("authenticated request");
-      console.log(`token: ${args.auth.slice(0, 4)}****`);
+      console.log(`auth token: ${args.auth.slice(0, 16)}****`);
       headers.set("Authorization", `token ${args.auth}`);
     }
 
@@ -142,8 +141,6 @@ try {
           : e.path.startsWith("init/template/base/"))
       );
 
-    console.log(blobs);
-
     const entries: {
       sha: string;
       content: string;
@@ -154,6 +151,8 @@ try {
         return await res.json();
       }),
     );
+
+    console.log(entries);
 
     assert(entries.every((e) => e.encoding === "base64"));
 
