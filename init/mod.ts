@@ -119,51 +119,53 @@ try {
     const content = await fetch(
       `https://api.github.com/repos/radishland/radish/git/trees/${hash}?recursive=1`,
     );
-    const metadata: { tree: { path: string; type: "blob" | "tree" }[] } =
-      await content.json();
+    const metadata: {
+      tree: { path: string; type: "blob" | "tree"; sha: string }[];
+    } = await content.json();
     assertObjectMatch(metadata, { tree: [] });
 
-    const paths = metadata.tree
+    const blobs = metadata.tree
       .filter((e) =>
         e.type === "blob" &&
         (vscode
           ? e.path.startsWith("init/template/base/") ||
             e.path.startsWith("init/template/vscode/")
           : e.path.startsWith("init/template/base/"))
-      ).map((e) => e.path);
+      );
 
-    console.log(paths);
+    console.log(blobs);
 
     const entries: {
-      type: "file" | string & {};
+      sha: string;
       content: string;
       encoding: "base64" | string & {};
     }[] = await Promise.all(
-      paths.map(async (path) =>
+      blobs.map(async (entry) =>
         JSON.parse(
           await io.read(
             join(
-              "https://api.github.com/repos/radishland/radish/contents/",
-              path,
+              "https://api.github.com/repos/radishland/radish/git/blobs/",
+              entry.sha,
             ),
           ),
         )
       ),
     );
 
-    assert(entries.every((e) => e.type === "file" && e.encoding === "base64"));
+    assert(entries.every((e) => e.encoding === "base64"));
 
-    const textFiles = entries.map((e) =>
-      new TextDecoder().decode(decodeBase64(e.content))
-    );
+    const decoder = new TextDecoder();
+    const decodedBlobs = entries.map((e) => ({
+      ...e,
+      encoding: "utf-8",
+      content: decoder.decode(decodeBase64(e.content)),
+    }));
 
-    assert(paths.length === textFiles.length);
+    assert(blobs.length === decodedBlobs.length);
 
-    for (let i = 0; i < paths.length; i++) {
-      const path: string | undefined = paths[i];
-      const content = textFiles[i];
-
-      assertExists(path);
+    for (const blob of blobs) {
+      const { sha, path } = blob;
+      const content = decodedBlobs.find((blob) => blob.sha === sha)?.content;
       assertExists(content);
 
       const dest = join(projectPath, ...path.split(SEPARATOR).slice(3));
