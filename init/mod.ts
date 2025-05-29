@@ -109,7 +109,8 @@ try {
       await io.write(dest, content);
     }
   } else if (
-    moduleDirURL.protocol === "https:" && moduleDirURL.hostname === "github.com"
+    moduleDirURL.protocol === "https:" &&
+    moduleDirURL.hostname === "raw.githubusercontent.com"
   ) {
     const content = await fetch(
       "https://api.github.com/repos/radishland/radish/git/trees/main?recursive=1",
