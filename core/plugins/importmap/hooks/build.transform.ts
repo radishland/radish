@@ -3,8 +3,8 @@ import { build } from "$effects/mod.ts";
 import { target_head } from "$lib/conventions.ts";
 import { Handler, handlerFor } from "$lib/effect-system.ts";
 import { indent } from "$lib/utils/text.ts";
-import { assertMatch } from "@std/assert/match";
-import { basename } from "@std/path/basename";
+import { assertMatch } from "@std/assert";
+import { basename } from "@std/path";
 
 export const handleImportmapBuildTransform = handlerFor(
   build.transform,

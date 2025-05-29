@@ -28,6 +28,7 @@ console.log("version:", version);
 
 const args = parseArgs(Deno.args, {
   boolean: ["help", "force", "vscode"],
+  string: ["auth"],
   default: {
     force: false,
     help: false,
@@ -109,54 +110,65 @@ try {
       await io.write(dest, content);
     }
   } else if (
-    moduleDirURL.protocol === "https:" && moduleDirURL.hostname === "github.com"
+    moduleDirURL.protocol === "https:" &&
+    moduleDirURL.hostname === "raw.githubusercontent.com"
   ) {
+    const hash = moduleDirURL.pathname.split("/").at(-2);
+    assertExists(hash);
+    console.log("branch:", hash);
+
+    const headers = new Headers();
+    if (args.auth) {
+      console.log(`auth token: ${args.auth.slice(0, 16)}****`);
+      headers.set("Authorization", `token ${args.auth}`);
+    }
+
     const content = await fetch(
-      "https://api.github.com/repos/radishland/radish/git/trees/main?recursive=1",
+      `https://api.github.com/repos/radishland/radish/git/trees/${hash}?recursive=1`,
+      { headers },
     );
-    const metadata: { tree: { path: string; type: "blob" | "tree" }[] } =
-      await content.json();
+    const metadata: {
+      tree: { path: string; type: "blob" | "tree"; sha: string; url: string }[];
+    } = await content.json();
     assertObjectMatch(metadata, { tree: [] });
 
-    const paths = metadata.tree
+    const blobs = metadata.tree
       .filter((e) =>
         e.type === "blob" &&
         (vscode
           ? e.path.startsWith("init/template/base/") ||
             e.path.startsWith("init/template/vscode/")
           : e.path.startsWith("init/template/base/"))
-      ).map((e) => e.path);
+      );
 
     const entries: {
-      type: "file" | string & {};
+      sha: string;
       content: string;
       encoding: "base64" | string & {};
     }[] = await Promise.all(
-      paths.map(async (path) =>
-        JSON.parse(
-          await io.read(
-            join(
-              "https://api.github.com/repos/radishland/radish/contents/",
-              path,
-            ),
-          ),
-        )
-      ),
+      blobs.map(async (entry) => {
+        const res = await fetch(entry.url, { headers });
+        return await res.json();
+      }),
     );
 
-    assert(entries.every((e) => e.type === "file" && e.encoding === "base64"));
+    console.log(entries);
 
-    const textFiles = entries.map((e) =>
-      new TextDecoder().decode(decodeBase64(e.content))
-    );
+    assert(entries.every((e) => e.encoding === "base64"));
 
-    assert(paths.length === textFiles.length);
+    const decoder = new TextDecoder();
+    const decodedBlobs = entries.map((e) => ({
+      ...e,
+      encoding: "utf-8",
+      content: decoder.decode(decodeBase64(e.content.split("\n").join(""))),
+      // gh content is not clean and can contain the "\n" character
+    }));
 
-    for (let i = 0; i < paths.length; i++) {
-      const path: string | undefined = paths[i];
-      const content = textFiles[i];
+    assert(blobs.length === decodedBlobs.length);
 
-      assertExists(path);
+    for (const blob of blobs) {
+      const { sha, path } = blob;
+      const content = decodedBlobs.find((blob) => blob.sha === sha)?.content;
       assertExists(content);
 
       const dest = join(projectPath, ...path.split(SEPARATOR).slice(3));
