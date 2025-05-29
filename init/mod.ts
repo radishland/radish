@@ -67,7 +67,6 @@ if (!args.force) {
 emptyDirSync(projectPath);
 
 const moduleDirURL = new URL(moduleDir);
-console.log(" moduleDirURL:", moduleDirURL);
 const spinner = new Spinner({ message: "Loading...", color: "green" });
 
 try {
@@ -113,8 +112,12 @@ try {
     moduleDirURL.protocol === "https:" &&
     moduleDirURL.hostname === "raw.githubusercontent.com"
   ) {
+    const hash = moduleDirURL.pathname.split("/").at(-2);
+    assertExists(hash);
+    console.log("branch:", hash);
+
     const content = await fetch(
-      "https://api.github.com/repos/radishland/radish/git/trees/main?recursive=1",
+      `https://api.github.com/repos/radishland/radish/git/trees/${hash}?recursive=1`,
     );
     const metadata: { tree: { path: string; type: "blob" | "tree" }[] } =
       await content.json();
@@ -128,6 +131,8 @@ try {
             e.path.startsWith("init/template/vscode/")
           : e.path.startsWith("init/template/base/"))
       ).map((e) => e.path);
+
+    console.log(paths);
 
     const entries: {
       type: "file" | string & {};
