@@ -17,7 +17,6 @@
         "default-param-last",
         "no-slow-types",
         "no-sync-fn-in-async-fn",
-        "prefer-ascii",
         "verbatim-module-syntax"
       ],
       "exclude": ["no-explicit-any", "ban-types"],
