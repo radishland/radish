@@ -9,13 +9,17 @@
  *
  * ### Contributors
  *
- * To scaffold the latest, unreleased version, provide a GitHub url to the init module. It can refer to any branch or commit.
+ * To scaffold from the latest **unreleased** version, provide a GitHub URL pointing to the `init` module on any branch or commit.
  *
- * You'll have to provide an importmap to resolve module specifiers. You can use the one provided in the `init/` folder at https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/importmap.json, or a local file.
+ * You’ll also need to supply an import map to resolve module specifiers. You can use the one in the `init/` folder:
+ *
+ * https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/importmap.json
+ *
+ * Or use a local file for finer control over dependency versions.
  *
  * @example Scaffolding from GitHub (unauthenticated)
  *
- * This fetch the init module on the `main` branch and its sibling `importmap.json`
+ * Fetch the init module from the `main` branch, along with its sibling `importmap.json`:
  *
  * ```sh
  * ❯ deno run -A --reload --import-map https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/importmap.json https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/mod.ts
@@ -23,18 +27,20 @@
  *
  * @example Scaffolding from GitHub (authenticated)
  *
- * If the Github API rate-limit is blocking, you can pass the init query a Github auth token.
+ * If you're hitting GitHub's API rate-limits, pass a GitHub auth token to the init command.
  *
- * A read-only (no permissions required) token is enough. You can generated one from your Github account → Settings → Developer Settings → Personal Access Tokens.
+ * A read-only token (no permissions required) is sufficient. You can generate one under GitHub → Settings → Developer Settings → Personal Access Tokens.
  *
  * ```sh
  * ❯ deno run -A --reload --import-map ./importmap.json https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/mod.ts --auth github_token_1234
  * ```
  *
- * @example Scaffolding from a specific branch/commit
+ * @example Scaffolding from a specific commit
+ *
+ * To scaffold from a specific commit, use its SHA in the URL:
  *
  * ```sh
- * ❯ deno run -A --reload --import-map ./importmap.json https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/mod.ts --auth github_token_1234
+ * ❯ deno run -A --reload --import-map ./importmap.json https://raw.githubusercontent.com/radishland/radish/<sha>/init/mod.ts --auth github_token_1234
  * ```
  *
  * @module
