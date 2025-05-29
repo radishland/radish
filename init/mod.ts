@@ -67,6 +67,7 @@ if (!args.force) {
 emptyDirSync(projectPath);
 
 const moduleDirURL = new URL(moduleDir);
+console.log(" moduleDirURL:", moduleDirURL);
 const spinner = new Spinner({ message: "Loading...", color: "green" });
 
 try {
