@@ -4,10 +4,22 @@
  * @example Getting started
  *
  * ```sh
- * ❯ deno run -A jsr:@radish/init@1.0.0-alpha.xx my-rad-project
+ * deno run -A jsr:@radish/init@1.0.0-alpha.xx my-rad-project
  * ```
  *
- * ### Contributors
+ * This script scaffolds a Radish project with the following structure:
+ *
+ * ```
+ * my-rad-project/
+ * ├ elements/ <-- custom elements, web components and unknown elements
+ * ├ lib/      <-- ts utilities
+ * ├ routes/   <-- routes and one-off colocated custom elements
+ * ├ static/   <-- static assets served as-is
+ * ├ start.ts  <-- start script and project config
+ * └ deno.json
+ * ```
+ *
+ * ## Contributors
  *
  * To scaffold from the latest **unreleased** version, provide a GitHub URL pointing to the `init` module on any branch or commit.
  *
@@ -22,7 +34,7 @@
  * Fetch the init module from the `main` branch, along with its sibling `importmap.json`:
  *
  * ```sh
- * ❯ deno run -A --reload --import-map https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/importmap.json https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/mod.ts
+ * deno run -A --reload --import-map https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/importmap.json https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/mod.ts
  * ```
  *
  * @example Scaffolding from GitHub (authenticated)
@@ -32,7 +44,7 @@
  * A read-only token (no permissions required) is sufficient. You can generate one under GitHub → Settings → Developer Settings → Personal Access Tokens.
  *
  * ```sh
- * ❯ deno run -A --reload --import-map ./importmap.json https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/mod.ts --auth github_token_1234
+ * deno run -A --reload --import-map ./importmap.json https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/mod.ts --auth github_token_1234
  * ```
  *
  * @example Scaffolding from a specific commit
@@ -40,7 +52,7 @@
  * To scaffold from a specific commit, use its SHA in the URL:
  *
  * ```sh
- * ❯ deno run -A --reload --import-map ./importmap.json https://raw.githubusercontent.com/radishland/radish/<sha>/init/mod.ts --auth github_token_1234
+ * deno run -A --reload --import-map ./importmap.json https://raw.githubusercontent.com/radishland/radish/<sha>/init/mod.ts --auth github_token_1234
  * ```
  *
  * @module
