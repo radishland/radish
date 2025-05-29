@@ -1,3 +1,51 @@
+/**
+ * Scaffolds a new Radish project
+ *
+ * @example Getting started
+ *
+ * ```sh
+ * ❯ deno run -A jsr:@radish/init@1.0.0-alpha.xx my-rad-project
+ * ```
+ *
+ * ### Contributors
+ *
+ * To scaffold from the latest **unreleased** version, provide a GitHub URL pointing to the `init` module on any branch or commit.
+ *
+ * You’ll also need to supply an import map to resolve module specifiers. You can use the one in the `init/` folder:
+ *
+ * https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/importmap.json
+ *
+ * Or use a local file for finer control over dependency versions.
+ *
+ * @example Scaffolding from GitHub (unauthenticated)
+ *
+ * Fetch the init module from the `main` branch, along with its sibling `importmap.json`:
+ *
+ * ```sh
+ * ❯ deno run -A --reload --import-map https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/importmap.json https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/mod.ts
+ * ```
+ *
+ * @example Scaffolding from GitHub (authenticated)
+ *
+ * If you're hitting GitHub's API rate-limits, pass a GitHub auth token to the init command.
+ *
+ * A read-only token (no permissions required) is sufficient. You can generate one under GitHub → Settings → Developer Settings → Personal Access Tokens.
+ *
+ * ```sh
+ * ❯ deno run -A --reload --import-map ./importmap.json https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/mod.ts --auth github_token_1234
+ * ```
+ *
+ * @example Scaffolding from a specific commit
+ *
+ * To scaffold from a specific commit, use its SHA in the URL:
+ *
+ * ```sh
+ * ❯ deno run -A --reload --import-map ./importmap.json https://raw.githubusercontent.com/radishland/radish/<sha>/init/mod.ts --auth github_token_1234
+ * ```
+ *
+ * @module
+ */
+
 import { io } from "@radish/core/effects";
 import { pluginIO } from "@radish/core/plugins";
 import { HandlerScope } from "@radish/effect-system";
@@ -152,8 +200,6 @@ try {
       }),
     );
 
-    console.log(entries);
-
     assert(entries.every((e) => e.encoding === "base64"));
 
     const decoder = new TextDecoder();
@@ -212,7 +258,6 @@ try {
 }
 
 console.log(
-  // deno-lint-ignore prefer-ascii
   `\n${green(bold("Project Ready!"))} 🌱\n`,
 );
 
