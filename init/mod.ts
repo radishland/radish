@@ -1,3 +1,45 @@
+/**
+ * Scaffolds a new Radish project
+ *
+ * @example Getting started
+ *
+ * ```sh
+ * ❯ deno run -A jsr:@radish/init@1.0.0-alpha.xx my-rad-project
+ * ```
+ *
+ * ### Contributors
+ *
+ * To scaffold the latest, unreleased version, provide a GitHub url to the init module. It can refer to any branch or commit.
+ *
+ * You'll have to provide an importmap to resolve module specifiers. You can use the one provided in the `init/` folder at https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/importmap.json, or a local file.
+ *
+ * @example Scaffolding from GitHub (unauthenticated)
+ *
+ * This fetch the init module on the `main` branch and its sibling `importmap.json`
+ *
+ * ```sh
+ * ❯ deno run -A --reload --import-map https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/importmap.json https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/mod.ts
+ * ```
+ *
+ * @example Scaffolding from GitHub (authenticated)
+ *
+ * If the Github API rate-limit is blocking, you can pass the init query a Github auth token.
+ *
+ * A read-only (no permissions required) token is enough. You can generated one from your Github account → Settings → Developer Settings → Personal Access Tokens.
+ *
+ * ```sh
+ * ❯ deno run -A --reload --import-map ./importmap.json https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/mod.ts --auth github_token_1234
+ * ```
+ *
+ * @example Scaffolding from a specific branch/commit
+ *
+ * ```sh
+ * ❯ deno run -A --reload --import-map ./importmap.json https://raw.githubusercontent.com/radishland/radish/refs/heads/main/init/mod.ts --auth github_token_1234
+ * ```
+ *
+ * @module
+ */
+
 import { io } from "@radish/core/effects";
 import { pluginIO } from "@radish/core/plugins";
 import { HandlerScope } from "@radish/effect-system";
@@ -212,7 +254,6 @@ try {
 }
 
 console.log(
-  // deno-lint-ignore prefer-ascii
   `\n${green(bold("Project Ready!"))} 🌱\n`,
 );
 
