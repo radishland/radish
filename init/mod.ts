@@ -200,8 +200,6 @@ try {
       }),
     );
 
-    console.log(entries);
-
     assert(entries.every((e) => e.encoding === "base64"));
 
     const decoder = new TextDecoder();
