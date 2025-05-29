@@ -160,7 +160,8 @@ try {
     const decodedBlobs = entries.map((e) => ({
       ...e,
       encoding: "utf-8",
-      content: decoder.decode(decodeBase64(e.content)),
+      content: decoder.decode(decodeBase64(e.content.split("\n").join(""))),
+      // gh content is not clean and can contain the "\n" character
     }));
 
     assert(blobs.length === decodedBlobs.length);
