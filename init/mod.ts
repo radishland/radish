@@ -28,6 +28,7 @@ console.log("version:", version);
 
 const args = parseArgs(Deno.args, {
   boolean: ["help", "force", "vscode"],
+  string: ["auth"],
   default: {
     force: false,
     help: false,
@@ -116,11 +117,19 @@ try {
     assertExists(hash);
     console.log("branch:", hash);
 
+    const headers = new Headers();
+    if (args.auth) {
+      console.log("authenticated request");
+      console.log(`token: ${args.auth.slice(0, 4)}****`);
+      headers.set("Authorization", `token ${args.auth}`);
+    }
+
     const content = await fetch(
       `https://api.github.com/repos/radishland/radish/git/trees/${hash}?recursive=1`,
+      { headers },
     );
     const metadata: {
-      tree: { path: string; type: "blob" | "tree"; sha: string }[];
+      tree: { path: string; type: "blob" | "tree"; sha: string; url: string }[];
     } = await content.json();
     assertObjectMatch(metadata, { tree: [] });
 
@@ -140,16 +149,10 @@ try {
       content: string;
       encoding: "base64" | string & {};
     }[] = await Promise.all(
-      blobs.map(async (entry) =>
-        JSON.parse(
-          await io.read(
-            join(
-              "https://api.github.com/repos/radishland/radish/git/blobs/",
-              entry.sha,
-            ),
-          ),
-        )
-      ),
+      blobs.map(async (entry) => {
+        const res = await fetch(entry.url, { headers });
+        return await res.json();
+      }),
     );
 
     assert(entries.every((e) => e.encoding === "base64"));
