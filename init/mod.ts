@@ -152,7 +152,7 @@ try {
     );
 
     const textFiles: string[] = await Promise.all(
-      paths.map(async (path) => await io.read(join(moduleDir, version, path))),
+      paths.map(async (path) => await io.read(join(moduleDir, path))),
     );
 
     assert(paths.length === textFiles.length);
