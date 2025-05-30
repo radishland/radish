@@ -43,7 +43,7 @@ robust, future-proof applications. Its clear and coherent
 **Create a new project:**
 
 ```sh
-deno run -A jsr:@radish/init@1.0.0-alpha.24 my-rad-project
+deno run -A jsr:@radish/init@1.0.0-alpha.25 my-rad-project
 ```
 
 **Build your project:**

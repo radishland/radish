@@ -1,6 +1,6 @@
 {
   "name": "@radish/core",
-  "version": "1.0.0-alpha.40",
+  "version": "1.0.0-alpha.41",
   "license": "MIT",
   "exports": {
     ".": "./mod.ts",

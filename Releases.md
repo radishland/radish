@@ -1,3 +1,31 @@
+### 2025.05.30
+
+#### @radish/core 1.0.0-alpha.41 (prerelease)
+
+- BREAKING(core): pass plugins directly to the root scope
+- feat(core): export conventions (#106)
+- feat(core): expose the effect-system
+- feat(core): pass a mutable `Headers` object in `RouteContext`
+- fix(core): prevent leak by removing signalListener in the server cleanup
+- fix(core): conditionally close ws
+- fix(core): close hmr only if there is a watcher
+- fix(core): graceful shutdown
+- chore(core): add `indent` text helper (#105)
+
+#### @radish/effect-system 0.4.0 (minor)
+
+- BREAKING(effect-system): expose addHandler remove addHandlers
+- BREAKING(effect-system): make `addHandlers` variadic (#102)
+- feat(effect-system): Plugin API (#103)
+- fix(effect-system): dispose and asyncDispose are lexically bound
+
+#### @radish/init 1.0.0-alpha.25 (prerelease)
+
+- feat(init): scaffold from github with authenticated requests (#108)
+- feat(init): add github & local init methods (#107)
+- fix(init): update the start script
+- fix(init): add empty env.ts module (#100)
+
 ### 2025.05.23
 
 #### @radish/core 1.0.0-alpha.40 (prerelease)
