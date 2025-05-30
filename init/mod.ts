@@ -140,7 +140,7 @@ try {
   if (
     moduleDirURL.protocol === "https:" && moduleDirURL.hostname === "jsr.io"
   ) {
-    const metaURL = join(moduleDir, `${version}_meta.json`);
+    const metaURL = moduleDir + `_meta.json`;
     const content = await io.read(metaURL);
     const metadata = JSON.parse(content);
     assertObjectMatch(metadata, { manifest: {} });
