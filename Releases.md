@@ -1,5 +1,11 @@
 ### 2025.05.30
 
+#### @radish/init 1.0.0-alpha.27 (prerelease)
+
+- fix(init): jsr paths (#114)
+
+### 2025.05.30
+
 #### @radish/init 1.0.0-alpha.26 (prerelease)
 
 - fix(init): jsr metaURL path (#112)
