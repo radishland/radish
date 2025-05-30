@@ -1,5 +1,11 @@
 ### 2025.05.30
 
+#### @radish/init 1.0.0-alpha.26 (prerelease)
+
+- fix(init): jsr metaURL path (#112)
+
+### 2025.05.30
+
 #### @radish/core 1.0.0-alpha.41 (prerelease)
 
 - BREAKING(core): pass plugins directly to the root scope
