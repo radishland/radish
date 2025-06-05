@@ -1,3 +1,17 @@
+### 2025.06.05
+
+#### @radish/core 1.0.0-alpha.42 (prerelease)
+
+- chore(core): remove boot script
+
+#### @radish/init 1.0.0-alpha.28 (prerelease)
+
+- chore(init): remove boot script
+
+#### @radish/runtime 0.4.0 (minor)
+
+- BREAKING(runtime): remove the boot script
+
 ### 2025.05.30
 
 #### @radish/init 1.0.0-alpha.27 (prerelease)
