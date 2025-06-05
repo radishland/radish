@@ -92,6 +92,21 @@ const config: Config = {
 };
 
 const scope = new HandlerScope(
+  // rewrites the importmap when using the development runtime version
+  handlerFor(importmap.write, async () => {
+    const importmapObject = await importmap.get();
+
+    await io.write(
+      importmapPath,
+      JSON.stringify({
+        imports: {
+          ...importmapObject.imports,
+          "@radish/runtime": "/@radish/runtime/index.js",
+        },
+        scopes: { ...importmapObject.scopes },
+      }),
+    );
+  }),
   pluginWS,
   pluginServer,
   pluginRouter,
@@ -113,26 +128,6 @@ await manifest.setLoader(async () =>
 
 await startApp(config);
 
-const _ = new HandlerScope(
-  hooks,
-  substituteDevRuntime,
-  // rewrites the importmap when using the development runtime version
-  handlerFor(importmap.write, async () => {
-    const importmapObject = await importmap.get();
-
-    const imports = {
-      "@radish/runtime": "/@radish/runtime/index.js",
-      "@radish/runtime/boot": "/@radish/runtime/boot.js",
-    };
-
-    await io.write(
-      importmapPath,
-      JSON.stringify({
-        imports: { ...importmapObject.imports, ...imports },
-        scopes: { ...importmapObject.scopes },
-      }),
-    );
-  }),
-);
+const _ = new HandlerScope(hooks, substituteDevRuntime);
 
 if (dev) await hmr.start();
