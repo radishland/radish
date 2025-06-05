@@ -33,6 +33,7 @@ To cut a release, follow these steps:
 
 1. Publish @radish/runtime if it has a new version
    ```sh
+   cd runtime
    pnpm publish
    ```
 
