@@ -21,5 +21,10 @@ jobs:
       - name: Set up Deno
         uses: denoland/setup-deno@v2
 
+      - name: Create init tar ball
+        run: |
+          tar -C init/template/vscode -czf init/template/vscode.tar.gz .
+          tar -C init/template/base -czf init/template/base.tar.gz .
+
       - name: Publish to JSR
         run: deno publish
