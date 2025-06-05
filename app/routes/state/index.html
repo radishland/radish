@@ -27,14 +27,31 @@
   <p>
     <span text="interval" use:hookInterval></span>
   </p>
-
-  <button id="rm">remove component</button>
 </handle-state>
+<button id="rm">remove component</button>
+<button id="add">add component</button>
 
 <p>TODO: path binding for accessing state</p>
 
 <script>
   rm.addEventListener("click", () => {
-    component.remove();
+    if (component.isConnected) {
+      component.remove();
+    }
+  });
+
+  add.addEventListener("click", () => {
+    const parent = document.createElement("handle-state");
+
+    const span = document.createElement("span");
+    span.setAttribute("text", "count");
+
+    const button = document.createElement("button");
+    button.setAttribute("on:click", "increment");
+    button.textContent = "click";
+
+    parent.appendChild(span);
+    parent.appendChild(button);
+    document.body.appendChild(parent);
   });
 </script>
