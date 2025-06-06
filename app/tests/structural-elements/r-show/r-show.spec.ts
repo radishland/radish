@@ -9,11 +9,11 @@ test("r-show toggles its content", async ({ page }) => {
 
   // Content is initially visible
   await expect(checkbox).toBeChecked();
-  await expect(page.getByTestId("if")).toBeVisible();
-  await expect(page.getByTestId("else")).toBeHidden();
+  await expect(page.getByTestId("content")).toBeVisible();
+  await expect(page.getByTestId("fallback")).toBeHidden();
 
   // Clicking the checkbox toggles the content
   await checkbox.click();
-  await expect(page.getByTestId("if")).toBeHidden();
-  await expect(page.getByTestId("else")).toBeVisible();
+  await expect(page.getByTestId("content")).toBeHidden();
+  await expect(page.getByTestId("fallback")).toBeVisible();
 });

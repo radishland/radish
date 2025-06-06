@@ -9,7 +9,7 @@
         display: contents;
       }
 
-      & > slot[name="else"] {
+      & > slot[name="fallback"] {
         display: none;
       }
     }
@@ -19,11 +19,11 @@
         display: none;
       }
 
-      & > slot[name="else"] {
+      & > slot[name="fallback"] {
         display: contents;
       }
     }
   </style>
   <slot></slot>
-  <slot name="else"></slot>
+  <slot name="fallback"></slot>
 </template>

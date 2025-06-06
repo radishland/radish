@@ -5,8 +5,8 @@
     </label>
   </div>
 
-  <r-show prop:if="condition">
-    <div data-testid="if">displayed</div>
-    <div slot="else" data-testid="else">fallback</div>
+  <r-show prop:when="condition">
+    <div data-testid="content">displayed</div>
+    <div slot="fallback" data-testid="fallback">fallback</div>
   </r-show>
 </handle-show>
