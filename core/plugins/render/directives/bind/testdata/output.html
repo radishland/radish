@@ -1,4 +1,8 @@
 <handle-bind>
-  <input type="checkbox" bind:checked="" checked>
+  <!-- Should be checked -->
+  <input type="checkbox" bind:checked="condition1" checked>
+  <!-- Should be unchecked -->
+  <input type="checkbox" bind:checked="condition2">
+
   <input type="text" bind:value="content" value="hi">
 </handle-bind>
