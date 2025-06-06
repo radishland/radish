@@ -10,6 +10,9 @@ import { updateManifest } from "../../manifest/manifest.ts";
 import { manifestShape } from "./manifest.ts";
 
 /**
+ * @hooks
+ * - `hmr/update`
+ *
  * @performs
  * - `manifest/get`
  * - `manifest/update`
