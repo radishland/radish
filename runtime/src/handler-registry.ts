@@ -150,7 +150,13 @@ export class HandlerRegistry extends HTMLElement
 
         this.effect(() => {
           // @ts-ignore property is in target
-          target[property] = ref.valueOf();
+          if (isState(target[property])) {
+            // @ts-ignore property is in target
+            target[property].value = ref.valueOf();
+          } else {
+            // @ts-ignore property is in target
+            target[property] = ref.valueOf();
+          }
         });
 
         e.stopPropagation();
@@ -398,24 +404,21 @@ export class HandlerRegistry extends HTMLElement
     }
   }
 
-  walkDOM(node: Node) {
+  // TODO: tree aware hydration that filters out HandlerRegistries and parallelize
+  hydrate(node: Node = this) {
     if (node instanceof Element) {
+      // Perf: add hydration marker on the server and filter nodes that need hydration
       this.hydrateElement(node);
 
       if (node.shadowRoot && node.shadowRoot.mode === "open") {
         console.log("entering shadow root");
-        this.walkDOM(node.shadowRoot);
+        this.hydrate(node.shadowRoot);
         console.log("exiting shadow root");
       }
 
       let child = node.firstElementChild;
       while (child) {
-        if (!(child instanceof HandlerRegistry)) {
-          this.walkDOM(child);
-        } else {
-          console.log(`skipping handler registry ${child.tagName}`);
-        }
-
+        this.hydrate(child);
         child = child.nextElementSibling;
       }
     }
@@ -434,8 +437,6 @@ export class HandlerRegistry extends HTMLElement
     this.addEventListener("rad::prop", this.#handleProp, { signal });
     this.addEventListener("rad::text", this.#handleText, { signal });
     this.addEventListener("rad::use", this.#handleUse, { signal });
-
-    this.walkDOM(this);
   }
 
   disconnectedCallback() {
@@ -450,3 +451,24 @@ export class HandlerRegistry extends HTMLElement
 if (window && !customElements.get("handler-registry")) {
   customElements?.define("handler-registry", HandlerRegistry);
 }
+
+customElements?.whenDefined("handler-registry").then(() => {
+  const tw = document.createTreeWalker(
+    document,
+    NodeFilter.SHOW_ELEMENT,
+    (node) => {
+      return node instanceof HandlerRegistry
+        ? NodeFilter.FILTER_ACCEPT
+        : NodeFilter.FILTER_SKIP;
+    },
+  );
+  let current: Node | null = tw.currentNode;
+
+  while (current && !(current instanceof HandlerRegistry)) {
+    current = tw.nextNode();
+  }
+
+  if (current) {
+    current.hydrate();
+  }
+});
