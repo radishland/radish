@@ -1,4 +1,4 @@
-name: deno test
+name: e2e tests
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  test:
+  e2e-tests:
     runs-on: ubuntu-latest
 
     permissions:
@@ -21,4 +21,4 @@ jobs:
         uses: denoland/setup-deno@v2
 
       - name: Run deno task test
-        run: deno task test
+        run: deno task test:e2e

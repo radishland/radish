@@ -1,7 +1,7 @@
 import { HandlerRegistry, signal } from "@radish/runtime";
 
 export class HandleShow extends HandlerRegistry {
-  condition = signal(false);
+  condition = signal(true);
 }
 
 if (window && !customElements.get("handle-show")) {
