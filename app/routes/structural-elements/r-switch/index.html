@@ -1,0 +1,33 @@
+<demo-switch>
+  <div>
+    <label>
+      <input name="tab" type="checkbox" bind:checked="condition1"> tab 1
+    </label>
+    <label>
+      <input name="tab" type="checkbox" bind:checked="condition2"> tab 2
+    </label>
+    <label>
+      <input name="tab" type="checkbox" bind:checked="condition3"> tab 3
+    </label>
+  </div>
+
+  <!-- Fallback only -->
+  <r-switch data-testid="fallback-only">
+    <div slot="fallback">fallback only</div>
+  </r-switch>
+
+  <!-- Only r-match children can match  -->
+  <r-switch data-testid="r-match-only">
+    <div>not matching</div>
+    <div slot="fallback">fallback only</div>
+  </r-switch>
+
+  <!-- Switches between matching groups -->
+  <r-switch data-testid="switch-and-fallthrough">
+    <r-match prop:when="condition1">content 1</r-match>
+    <r-match prop:when="condition2">content 2</r-match>
+    <r-match prop:when="condition3">content 3</r-match>
+
+    <div slot="fallback">fallback</div>
+  </r-switch>
+</demo-switch>
