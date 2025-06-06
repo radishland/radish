@@ -1,0 +1,11 @@
+<template shadowrootmode="open">
+  <style>
+    :host(:state(show)) {
+      display: contents;
+    }
+    :host(:not(:state(show))) {
+      display: none;
+    }
+  </style>
+  <slot></slot>
+</template>
