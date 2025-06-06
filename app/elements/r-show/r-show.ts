@@ -5,7 +5,7 @@ import { HandlerRegistry } from "@radish/runtime";
 
 export class RShow extends HandlerRegistry {
   #internals: ElementInternals;
-  when = signal(false);
+  if = signal(false);
 
   constructor() {
     super();
@@ -16,7 +16,7 @@ export class RShow extends HandlerRegistry {
     super.connectedCallback();
 
     this.effect(() => {
-      if (this.when.value) {
+      if (this.if.value) {
         this.#internals.states.add("show");
       } else {
         this.#internals.states.delete("show");

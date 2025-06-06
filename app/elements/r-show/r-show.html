@@ -1,11 +1,29 @@
 <template shadowrootmode="open">
   <style>
-    :host(:state(show)) {
+    :host {
       display: contents;
     }
+
+    :host(:state(show)) {
+      & > slot:not([name]) {
+        display: contents;
+      }
+
+      & > slot[name="else"] {
+        display: none;
+      }
+    }
+
     :host(:not(:state(show))) {
-      display: none;
+      & > slot:not([name]) {
+        display: none;
+      }
+
+      & > slot[name="else"] {
+        display: contents;
+      }
     }
   </style>
   <slot></slot>
+  <slot name="else"></slot>
 </template>
