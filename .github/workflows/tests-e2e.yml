@@ -24,4 +24,4 @@ jobs:
         run: cd app && deno task build
 
       - name: Run e2e tests
-        run: deno task e2e
+        run: deno task test:e2e
