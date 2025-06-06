@@ -1,11 +1,29 @@
 <template shadowrootmode="open">
   <style>
-    :host(:state(show)) {
+    :host {
       display: contents;
     }
+
+    :host(:state(show)) {
+      & > slot:not([name]) {
+        display: contents;
+      }
+
+      & > slot[name="fallback"] {
+        display: none;
+      }
+    }
+
     :host(:not(:state(show))) {
-      display: none;
+      & > slot:not([name]) {
+        display: none;
+      }
+
+      & > slot[name="fallback"] {
+        display: contents;
+      }
     }
   </style>
   <slot></slot>
+  <slot name="fallback"></slot>
 </template>
