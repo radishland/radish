@@ -23,14 +23,12 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-
       - name: Install Playwright
         run: deno run -A npm:playwright install chromium
 
       - name: Build runtime
-        run: cd runtime && pnpm i && pnpm build
+        working-directory: runtime
+        run: npm install && npm run build
 
       - name: Build app
         run: cd app && deno task build
