@@ -24,6 +24,10 @@ export const handleDirectiveBase = handlerFor(
   },
 );
 
+/**
+ * @hooks
+ * - `render/directive`
+ */
 export const handleDirectives = [
   handleAttrDirective,
   handleBindDirective,

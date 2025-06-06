@@ -63,6 +63,9 @@ const sortComponents = <T extends ElementManifest | RouteManifest>(
 };
 
 /**
+ * @hooks
+ * - `build/sort`
+ *
  * @performs
  * - `manifest/get`
  */
@@ -116,7 +119,7 @@ export const handleSort = handlerFor(
             continue;
           }
 
-          unreachable(`Entry not handled by sortFiled '${entry.path}'`);
+          unreachable(`Entry not handled by sortFile '${entry.path}'`);
         } else {
           otherEntries.push(entry);
         }

@@ -10,6 +10,9 @@ import { assertEmptyHandlerRegistryStack } from "../state.ts";
 import { manifestShape } from "./manifest.ts";
 
 /**
+ * @hooks
+ * - `build/transform`
+ *
  * @performs
  * - `manifest/get`
  * - `render/component`
