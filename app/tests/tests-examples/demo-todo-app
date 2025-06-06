@@ -1,3 +1,4 @@
+// deno-ignore
 import { expect, type Page, test } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
