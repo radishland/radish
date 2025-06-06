@@ -1,0 +1,11 @@
+<handle-show>
+  <div>
+    <label>
+      <input name="toggle" type="checkbox" bind:checked="condition"> show/hide
+    </label>
+  </div>
+
+  <r-show prop:when="condition">
+    <div data-testid="content">displayed</div>
+  </r-show>
+</handle-show>

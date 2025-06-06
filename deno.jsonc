@@ -9,7 +9,9 @@
   ],
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check",
-    "test": "deno test -A --no-check"
+    "test:unit": "deno test -A --no-check",
+    "test:e2e": "cd app && deno task e2e",
+    "test": "deno task test:unit && deno task test:e2e"
   },
   "lint": {
     "rules": {

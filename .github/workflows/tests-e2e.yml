@@ -1,0 +1,37 @@
+name: e2e tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+
+      - name: Install Playwright
+        run: deno run -A npm:playwright install chromium
+
+      - name: Build runtime
+        working-directory: runtime
+        run: npm install && npm run build
+
+      - name: Build app
+        run: cd app && deno task build
+
+      - name: Run e2e tests
+        run: deno task test:e2e
