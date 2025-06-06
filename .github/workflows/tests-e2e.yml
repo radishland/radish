@@ -20,5 +20,8 @@ jobs:
       - name: Set up Deno
         uses: denoland/setup-deno@v2
 
-      - name: Run deno task test
-        run: deno task test:e2e
+      - name: Build app
+        run: cd app && deno task build
+
+      - name: Run e2e tests
+        run: deno task e2e
