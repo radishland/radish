@@ -21,7 +21,10 @@ jobs:
         uses: denoland/setup-deno@v2
 
       - name: Install Playwright
-        run: deno run -A npm:playwright install
+        run: deno run -A npm:playwright install chromium
+
+      - name: Build runtime
+        run: cd runtime && pnpm build
 
       - name: Build app
         run: cd app && deno task build
