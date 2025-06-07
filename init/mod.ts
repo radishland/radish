@@ -1,13 +1,13 @@
 /**
  * Scaffolds a new Radish project
  *
- * ### Getting started
+ * ## Getting started
  *
  * ```sh
  * deno run -A jsr:@radish/init@1.0.0-alpha.xx my-rad-project
  * ```
  *
- * ## Project structure
+ * ### Project structure
  *
  * Your scaffolded project has the following structure:
  *
