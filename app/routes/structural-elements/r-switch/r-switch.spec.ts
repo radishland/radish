@@ -15,7 +15,7 @@ test.describe("r-switch", () => {
     await page.close();
   });
 
-  test("fallback-only r-switch displays the fallback", async () => {
+  test("fallback-only", async () => {
     const fallback = page
       .getByTestId("fallback-only")
       .locator("[slot=fallback]");
@@ -23,7 +23,7 @@ test.describe("r-switch", () => {
     await expect(fallback).toBeVisible();
   });
 
-  test("only r-match children of fallback content can be visible", async () => {
+  test("only r-match children or fallback can be visible", async () => {
     const testCase = page.getByTestId("r-match-only");
     const notVisible = testCase.locator("> div:not([slot=fallback])");
     const fallback = testCase.locator("[slot=fallback]");
@@ -76,7 +76,7 @@ test.describe("r-switch", () => {
     await expect(fallback).toBeHidden();
   });
 
-  test("exclusive options", async () => {
+  test("exclusive options without fallback", async () => {
     const input = page.getByLabel("number");
 
     const testCase = page.getByTestId("exclusive");
