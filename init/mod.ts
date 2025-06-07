@@ -1,13 +1,15 @@
 /**
  * Scaffolds a new Radish project
  *
- * @example Getting started
+ * ## Getting started
  *
  * ```sh
  * deno run -A jsr:@radish/init@1.0.0-alpha.xx my-rad-project
  * ```
  *
- * This script scaffolds a Radish project with the following structure:
+ * ### Project structure
+ *
+ * Your scaffolded project has the following structure:
  *
  * ```
  * my-rad-project/
@@ -73,6 +75,7 @@ import { decodeBase64 } from "@std/encoding";
 import { bold, green } from "@std/fmt/colors";
 import { emptyDirSync, existsSync, walkSync } from "@std/fs";
 import { dirname, join, relative, SEPARATOR } from "@std/path";
+import { UntarStream } from "@std/tar";
 
 using _ = new HandlerScope(pluginIO);
 
@@ -97,7 +100,18 @@ const args = parseArgs(Deno.args, {
 });
 
 if (args.help) {
-  help();
+  console.log(`
+Initialize a new Radish project. This will create all the necessary files for a
+new project.
+
+USAGE:
+    deno run -A jsr:@radish/init <project_name> <options>
+
+OPTIONS:
+    --auth       GitHub auth token
+    --force      Overwrite existing files
+    --vscode     Setup project for VS Code
+`);
   Deno.exit(0);
 }
 
@@ -131,8 +145,8 @@ const moduleDirURL = new URL(moduleDir);
 const spinner = new Spinner({ message: "Loading...", color: "green" });
 
 try {
-  using spinnerScope = new DisposableStack();
-  spinnerScope.defer(() => spinner.stop());
+  using resources = new DisposableStack();
+  resources.defer(() => spinner.stop());
 
   spinner.start();
   spinner.message = "Fetching template files...";
@@ -145,29 +159,27 @@ try {
     const metadata = JSON.parse(content);
     assertObjectMatch(metadata, { manifest: {} });
 
-    const paths = Object.keys(metadata.manifest).filter((k) =>
-      vscode
-        ? k.startsWith("/template/base/") || k.startsWith("/template/vscode/")
-        : k.startsWith("/template/base/")
-    );
+    const tarballNames = [
+      "base.tar.gz",
+      vscode ? "vscode.tar.gz" : undefined,
+    ];
 
-    const textFiles: string[] = await Promise.all(
-      paths.map(async (path) => await io.read(join(moduleDir, path))),
-    );
+    for (const tarballName of tarballNames) {
+      if (!tarballName) continue;
 
-    assert(paths.length === textFiles.length);
+      const path = join(moduleDir, "template", tarballName);
+      const tarball = await fetch(path);
+      assertExists(tarball.body);
 
-    for (let i = 0; i < paths.length; i++) {
-      const path: string | undefined = paths[i];
-      const content = textFiles[i];
-
-      assertExists(path);
-      assertExists(content);
-
-      const dest = join(projectPath, ...path.split(SEPARATOR).slice(3));
-
-      Deno.mkdirSync(dirname(dest), { recursive: true });
-      await io.write(dest, content);
+      for await (
+        const entry of tarball.body
+          .pipeThrough(new DecompressionStream("gzip"))
+          .pipeThrough(new UntarStream())
+      ) {
+        const path = join(projectPath, entry.path);
+        await Deno.mkdir(dirname(path), { recursive: true });
+        await entry.readable?.pipeTo((await Deno.create(path)).writable);
+      }
     }
   } else if (
     moduleDirURL.protocol === "https:" &&
@@ -280,20 +292,6 @@ cd ${name}
 deno install
 git init && git add -A && git commit -m "Initial commit"
 `);
-
-function help() {
-  console.log(`
-Initialize a new Radish project. This will create all the necessary files for a
-new project.
-
-USAGE:
-    deno run -A jsr:@radish/init <project_name> <options>
-
-OPTIONS:
-    --force      Overwrite existing files
-    --vscode     Setup project for VS Code
-`);
-}
 
 function confirmDirOverride(dirPath: string) {
   if (existsSync(dirPath, { isDirectory: true })) {
