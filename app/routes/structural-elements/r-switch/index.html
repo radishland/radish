@@ -1,16 +1,4 @@
 <demo-switch>
-  <div>
-    <label>
-      <input name="tab" type="checkbox" bind:checked="condition1"> tab 1
-    </label>
-    <label>
-      <input name="tab" type="checkbox" bind:checked="condition2"> tab 2
-    </label>
-    <label>
-      <input name="tab" type="checkbox" bind:checked="condition3"> tab 3
-    </label>
-  </div>
-
   <!-- Fallback only -->
   <r-switch data-testid="fallback-only">
     <div slot="fallback">fallback only</div>
@@ -22,12 +10,41 @@
     <div slot="fallback">fallback only</div>
   </r-switch>
 
-  <!-- Switches between matching groups -->
-  <r-switch data-testid="switch-and-fallthrough">
-    <r-match prop:when="condition1">content 1</r-match>
-    <r-match prop:when="condition2">content 2</r-match>
-    <r-match prop:when="condition3">content 3</r-match>
+  <!-- Switches between matches with fallthrough and fallback -->
+  <section>
+    <div>
+      <label>
+        <input name="tab" type="checkbox" bind:checked="condition1"> tab 1
+      </label>
+      <label>
+        <input name="tab" type="checkbox" bind:checked="condition2"> tab 2
+      </label>
+      <label>
+        <input name="tab" type="checkbox" bind:checked="condition3"> tab 3
+      </label>
+    </div>
 
-    <div slot="fallback">fallback</div>
-  </r-switch>
+    <r-switch data-testid="switch-and-fallthrough">
+      <r-match prop:when="condition1">content 1</r-match>
+      <r-match prop:when="condition2">content 2</r-match>
+      <r-match prop:when="condition3">content 3</r-match>
+
+      <div slot="fallback">fallback</div>
+    </r-switch>
+  </section>
+
+  <!-- Exclusive options without fallback -->
+  <section>
+    <div>
+      <label>
+        <input type="number" bind:value="number"> number
+      </label>
+    </div>
+
+    <r-switch data-testid="exclusive">
+      <r-match prop:when="isEvenLessThan10">even and less than 10</r-match>
+      <r-match prop:when="isEvenBiggerThan10">even and bigger than 10</r-match>
+      <r-match prop:when="isOdd">odd</r-match>
+    </r-switch>
+  </section>
 </demo-switch>
