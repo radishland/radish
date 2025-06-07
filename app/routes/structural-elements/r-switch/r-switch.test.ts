@@ -75,4 +75,31 @@ test.describe("r-switch", () => {
     await expect(match3).toBeVisible();
     await expect(fallback).toBeHidden();
   });
+
+  test("exclusive options", async () => {
+    const input = page.getByLabel("number");
+
+    const testCase = page.getByTestId("exclusive");
+    const isEvenLessThan10 = testCase.locator("> r-match:nth-of-type(1)");
+    const isEvenBiggerThan10 = testCase.locator("> r-match:nth-of-type(2)");
+    const isOdd = testCase.locator("> r-match:nth-of-type(3)");
+
+    // even less than 10
+    await expect(input).toHaveValue("0");
+    await expect(isEvenLessThan10).toBeVisible();
+    await expect(isEvenBiggerThan10).toBeHidden();
+    await expect(isOdd).toBeHidden();
+
+    // odd
+    input.fill("1");
+    await expect(isEvenLessThan10).toBeHidden();
+    await expect(isEvenBiggerThan10).toBeHidden();
+    await expect(isOdd).toBeVisible();
+
+    // even bigger than 10
+    input.fill("12");
+    await expect(isEvenLessThan10).toBeHidden();
+    await expect(isEvenBiggerThan10).toBeVisible();
+    await expect(isOdd).toBeHidden();
+  });
 });
