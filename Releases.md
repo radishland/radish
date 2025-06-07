@@ -1,3 +1,15 @@
+### 2025.06.07
+
+#### @radish/core 1.0.0-alpha.43 (prerelease)
+
+- fix(core): unchecked bindings (#124)
+
+#### @radish/runtime 0.4.1 (patch)
+
+- feat(runtime): add `r-switch` element (#123)
+- feat(runtime): add a fallback slot to `r-show` (#122)
+- feat(runtime): add structural `r-show` element (#121)
+
 ### 2025.06.05
 
 #### @radish/core 1.0.0-alpha.42 (prerelease)
