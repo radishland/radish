@@ -10,7 +10,8 @@
 - [x] HMR
 - [x] Init script
 
-- [ ] set directive: html -> set:innerHTML, text -> set:textContent, classList -> set:classList
+- [ ] set directive: html -> set:innerHTML, text -> set:textContent, classList
+      -> set:classList
 - [ ] Load effect (code & data)
 - [ ] Lazy load islands
 - [ ] Option to prerender a component
