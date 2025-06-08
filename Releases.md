@@ -1,3 +1,9 @@
+### 2025.06.08
+
+#### @radish/init 1.0.0-alpha.29 (prerelease)
+
+- fix(init): prevent url path rewrite (#127)
+
 ### 2025.06.07
 
 #### @radish/core 1.0.0-alpha.43 (prerelease)
