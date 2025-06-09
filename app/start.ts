@@ -122,9 +122,7 @@ const scope = new HandlerScope(
 );
 onDispose(scope[Symbol.asyncDispose]);
 
-await manifest.setLoader(async () =>
-  (await import("./" + manifestPath))["manifest"]
-);
+await manifest.set(async () => (await import("./" + manifestPath))["manifest"]);
 
 await startApp(config);
 
