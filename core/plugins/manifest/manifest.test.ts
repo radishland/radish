@@ -6,7 +6,6 @@ import { assertEquals, assertExists } from "@std/assert";
 import type { WalkEntry } from "@std/fs";
 import { basename, extname, relative } from "@std/path";
 import type { ManifestBase } from "../../types.d.ts";
-import { id } from "../../utils/algebraic-structures.ts";
 import { extractImports } from "../../utils/parse.ts";
 
 const files: Record<string, string> = {
@@ -47,14 +46,12 @@ using _ = new HandlerScope(
 
     return Handler.continue({ entry, manifestObject });
   }),
-  handlerFor(manifest.update, (
-    { entry, manifestObject },
-  ) => {
+  handlerFor(manifest.update, ({ entry, manifestObject: manifest }) => {
     manifestObject = Object.assign({
       elements: {},
       routes: {},
       layouts: {},
-    }, manifestObject);
+    }, manifest);
 
     if (
       entry.path.includes("-") &&
@@ -70,18 +67,11 @@ using _ = new HandlerScope(
 
       manifestObject.elements[name] = elementMetaData;
     }
-
-    return Handler.continue({ entry, manifestObject });
   }),
-  handlerFor(manifest.update, id),
 );
 
 for (const path of Object.keys(files)) {
-  const { manifestObject: newManifest } = await manifest.update({
-    entry: createWalkEntry(path),
-    manifestObject,
-  });
-  manifestObject = newManifest;
+  await manifest.update({ entry: createWalkEntry(path), manifestObject });
 }
 
 Deno.test("manifest", () => {
