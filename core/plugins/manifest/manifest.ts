@@ -43,8 +43,6 @@ const handleManifestUpdate = handlerFor(manifest.update, async (
     const imports = extractImports(content);
     manifestObject.imports[entry.path] = imports;
   }
-
-  return { entry, manifestObject };
 });
 
 /**
@@ -90,8 +88,7 @@ export const updateManifest = async (
   options?: ExpandGlobOptions,
 ): Promise<void> => {
   for await (const entry of expandGlobWorkspaceRelative(glob, options)) {
-    const result = await manifest.update({ entry, manifestObject });
-    manifestObject = result.manifestObject;
+    await manifest.update({ entry, manifestObject });
   }
 };
 

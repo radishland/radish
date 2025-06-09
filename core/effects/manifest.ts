@@ -15,7 +15,7 @@ interface ManifestOperations {
   setLoader: (loader: () => Promise<ManifestBase>) => void;
   load: () => void;
   get: () => ManifestBase;
-  update: (param: UpdateManifestParam) => UpdateManifestParam;
+  update: (param: UpdateManifestParam) => void;
   write: () => void;
 }
 
@@ -38,7 +38,7 @@ export const manifest: {
   /**
    * Updates the manifest object in memory
    */
-  update: (param: UpdateManifestParam) => Effect<UpdateManifestParam>;
+  update: (param: UpdateManifestParam) => Effect<void>;
   /**
    * Serializes the manifest object and saves it to disk
    */
