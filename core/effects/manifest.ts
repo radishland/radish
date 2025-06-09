@@ -1,7 +1,7 @@
 import type { WalkEntry } from "@std/fs";
 import { join } from "@std/path";
 import { generatedFolder } from "$lib/conventions.ts";
-import type { ManifestBase } from "../types.d.ts";
+import type { ManifestBase, MaybePromise } from "../types.d.ts";
 import { createEffect, type Effect } from "@radish/effect-system";
 
 /**
@@ -9,13 +9,11 @@ import { createEffect, type Effect } from "@radish/effect-system";
  */
 export const manifestPath: string = join(generatedFolder, "manifest.ts");
 
-type UpdateManifestParam = { entry: WalkEntry; manifestObject: ManifestBase };
-
 interface ManifestOperations {
-  setLoader: (loader: () => Promise<ManifestBase>) => void;
   load: () => void;
+  set: (loader: () => MaybePromise<ManifestBase>) => void;
   get: () => ManifestBase;
-  update: (param: UpdateManifestParam) => void;
+  update: (entry: WalkEntry) => void;
   write: () => void;
 }
 
@@ -24,11 +22,11 @@ interface ManifestOperations {
  */
 export const manifest: {
   /**
-   * Sets the loader function used by `manifest/load`
+   * Sets the manifest loader and calls it
    */
-  setLoader: (loader: () => Promise<ManifestBase>) => Effect<void>;
+  set: (loader: () => MaybePromise<ManifestBase>) => Effect<void>;
   /**
-   * Reads the manifest.ts file and loads its content in memory
+   * Loads the manifest.ts file in memory
    */
   load: () => Effect<void>;
   /**
@@ -36,18 +34,16 @@ export const manifest: {
    */
   get: () => Effect<ManifestBase>;
   /**
-   * Updates the manifest object in memory
+   * Updates the manifest object
    */
-  update: (param: UpdateManifestParam) => Effect<void>;
+  update: (entry: WalkEntry) => Effect<void>;
   /**
    * Serializes the manifest object and saves it to disk
    */
   write: () => Effect<void>;
 } = {
-  setLoader: createEffect<ManifestOperations["setLoader"]>(
-    "manifest/setLoader",
-  ),
   load: createEffect<ManifestOperations["load"]>("manifest/load"),
+  set: createEffect<ManifestOperations["set"]>("manifest/set"),
   get: createEffect<ManifestOperations["get"]>("manifest/get"),
   update: createEffect<ManifestOperations["update"]>(
     "manifest/update",

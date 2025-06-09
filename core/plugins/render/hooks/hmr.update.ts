@@ -7,7 +7,7 @@ import { Handler, handlerFor } from "@radish/effect-system";
 import { assertObjectMatch } from "@std/assert";
 import { extname } from "@std/path";
 import { updateManifest } from "../../manifest/manifest.ts";
-import { manifestShape } from "./manifest.ts";
+import { manifestShape } from "./manifest.update.ts";
 
 /**
  * @hooks

@@ -4,7 +4,7 @@ import { build } from "$effects/mod.ts";
 import type { Manifest } from "$effects/render.ts";
 import { type Route, type RouteContext, router } from "$effects/router.ts";
 import { routesFolder } from "$lib/conventions.ts";
-import { manifestShape } from "$lib/plugins/render/hooks/manifest.ts";
+import { manifestShape } from "$lib/plugins/render/hooks/manifest.update.ts";
 import type { MaybePromise } from "$lib/types.d.ts";
 import { createStandardResponse } from "$lib/utils/http.ts";
 import {

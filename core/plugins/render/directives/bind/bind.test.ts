@@ -9,7 +9,7 @@ import { dirname, fromFileUrl, join } from "@std/path";
 import { describe, test } from "@std/testing/bdd";
 import { handleRenderComponents } from "../../components/component.ts";
 import { handleTransformFile } from "../../hooks/build.transform.ts";
-import { manifestShape } from "../../hooks/manifest.ts";
+import { manifestShape } from "../../hooks/manifest.update.ts";
 import { handleRenderTransformApplyDirectives } from "../../transforms/apply-directives.ts";
 import { handleRenderTransformTerminal } from "../../transforms/mod.ts";
 import { handleDirectiveBase } from "../mod.ts";

@@ -2,7 +2,7 @@ import { hmr } from "$effects/hmr.ts";
 import { io } from "$effects/io.ts";
 import { manifest, manifestPath } from "$effects/manifest.ts";
 import { generatedFolder } from "$lib/conventions.ts";
-import type { ManifestBase } from "$lib/types.d.ts";
+import type { ManifestBase, MaybePromise } from "$lib/types.d.ts";
 import { expandGlobWorkspaceRelative } from "$lib/utils/fs.ts";
 import { extractImports } from "$lib/utils/parse.ts";
 import { stringifyObject } from "$lib/utils/stringify.ts";
@@ -11,39 +11,74 @@ import { assertExists } from "@std/assert";
 import { ensureDirSync, type ExpandGlobOptions } from "@std/fs";
 import { extname } from "@std/path";
 
-let loader: (() => Promise<ManifestBase>) | undefined;
-let manifestObject: ManifestBase = { imports: {} };
+let loader: (() => MaybePromise<ManifestBase>) | undefined;
+let manifestObject: ManifestBase = {
+  elements: {},
+  imports: {},
+  layouts: {},
+  routes: {},
+};
 
-const handleManifestSetLoader = handlerFor(
-  manifest.setLoader,
-  (manifestLoader) => {
-    loader = manifestLoader;
-  },
-);
-handleManifestSetLoader[Symbol.dispose] = () => {
+/**
+ * Set a manifest loader
+ *
+ * @hooks
+ * - `manifest/set`
+ */
+export const handleManifestSet = handlerFor(manifest.set, async (load) => {
+  loader = load;
+  manifestObject = await loader();
+});
+handleManifestSet[Symbol.dispose] = () => {
   loader = undefined;
+  manifestObject = { imports: {} };
 };
 
 const handleManifestLoad = handlerFor(manifest.load, async () => {
   assertExists(
     loader,
-    "Manifest loader used before it's defined. Use the manifest.setLoader effect",
+    "Manifest loader used before being defined. Use the manifest/set effect",
   );
   manifestObject = await loader();
 });
-handleManifestLoad[Symbol.dispose] = () => {
-  manifestObject = { imports: {} };
-};
 
-const handleManifestUpdate = handlerFor(manifest.update, async (
-  { entry, manifestObject },
-) => {
-  if (entry.isFile && [".js", ".ts"].includes(extname(entry.path))) {
-    const content = await io.read(entry.path);
-    const imports = extractImports(content);
-    manifestObject.imports[entry.path] = imports;
-  }
-});
+/**
+ * Returns the manifest object
+ *
+ * @hooks
+ * - `manifest/get`
+ */
+export const handleManifestGet = handlerFor(manifest.get, () => manifestObject);
+
+/**
+ * Updates the manifest file by extracting imports from .js or .ts files
+ *
+ * @hooks
+ * - manifest/update
+ *
+ * @performs
+ * - io/read
+ */
+export const handleManifestUpdateExtractImports = handlerFor(
+  manifest.update,
+  async (entry) => {
+    if (entry.isFile && [".js", ".ts"].includes(extname(entry.path))) {
+      const manifestObject = await manifest.get();
+      const content = await io.read(entry.path);
+      const imports = extractImports(content);
+      manifestObject.imports[entry.path] = imports;
+    }
+    return Handler.continue(entry);
+  },
+);
+
+/**
+ * Terminal `manifest/update` handler
+ */
+export const handleManifestUpdateTerminal = handlerFor(
+  manifest.update,
+  () => {},
+);
 
 /**
  * @hooks
@@ -56,14 +91,15 @@ const handleManifestUpdate = handlerFor(manifest.update, async (
 export const pluginManifest: Plugin = {
   name: "plugin-manifest",
   handlers: [
-    handleManifestSetLoader,
     handleManifestLoad,
-    handlerFor(manifest.get, () => manifestObject),
+    handleManifestSet,
+    handleManifestGet,
     handlerFor(manifest.write, writeManifest),
     /**
      * Extracts imports from .js & .ts files into the manifest for the importmap generation
      */
-    handleManifestUpdate,
+    handleManifestUpdateExtractImports,
+    handleManifestUpdateTerminal,
     handlerFor(hmr.update, async ({ event, paths }) => {
       if (event.isFile) {
         const manifestObject = await manifest.get();
@@ -88,7 +124,7 @@ export const updateManifest = async (
   options?: ExpandGlobOptions,
 ): Promise<void> => {
   for await (const entry of expandGlobWorkspaceRelative(glob, options)) {
-    await manifest.update({ entry, manifestObject });
+    await manifest.update(entry);
   }
 };
 

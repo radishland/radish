@@ -1,7 +1,7 @@
 import { manifest } from "$effects/manifest.ts";
 import { build, config, router, server } from "$effects/mod.ts";
 import type { Route } from "$effects/router.ts";
-import { manifestShape } from "$lib/plugins/render/hooks/manifest.ts";
+import { manifestShape } from "$lib/plugins/render/hooks/manifest.update.ts";
 import { Handler, handlerFor, HandlerScope } from "@radish/effect-system";
 import {
   assertEquals,

@@ -7,7 +7,7 @@ import { manifest } from "$effects/manifest.ts";
 import { type LayoutManifest, type Manifest, render } from "$effects/render.ts";
 import { dev } from "$lib/environment.ts";
 import { isParent } from "$lib/utils/path.ts";
-import { manifestShape } from "../hooks/manifest.ts";
+import { manifestShape } from "../hooks/manifest.update.ts";
 
 /**
  * @performs
