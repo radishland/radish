@@ -11,3 +11,5 @@ docs/
 app/_generated/
 app/build/
 runtime/client/
+
+playwright-report/
