@@ -1,7 +1,7 @@
 import { manifest } from "$effects/manifest.ts";
 import { build } from "$effects/mod.ts";
 import { globals } from "$lib/globals.ts";
-import { handleBuildTransformCanonical } from "$lib/plugins/build/build.ts";
+import { handleBuildTransformTerminal } from "$lib/plugins/build/build.ts";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { fragments } from "@radish/htmlcrunch";
 import { assertEquals } from "@std/assert";
@@ -24,7 +24,7 @@ describe("classList directive", () => {
   test("renders", async () => {
     using _ = new HandlerScope(
       handleTransformFile,
-      handleBuildTransformCanonical,
+      handleBuildTransformTerminal,
       handleRenderComponents,
       handleRenderTransformApplyDirectives,
       handleRenderTransformTerminal,

@@ -22,7 +22,7 @@ To cut a release, follow these steps:
    relevant:
    - README/try-it-out section if @radish/init was bumped
    - runtime/package.json if @radish/runtime was bumped
-   - init/template/base/denojsonc if @radish/core or @radish/runtime were bumped
+   - init/template/base/denojsonc if core, runtime or effect-system were bumped
 
 4. Create and land a PR
 

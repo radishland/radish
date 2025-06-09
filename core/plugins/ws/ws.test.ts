@@ -2,7 +2,7 @@ import { manifest } from "$effects/manifest.ts";
 import { build, config, io } from "$effects/mod.ts";
 import { render } from "$effects/render.ts";
 import { fragments } from "$lib/parser.ts";
-import { handleBuildTransformCanonical } from "$lib/plugins/build/build.ts";
+import { handleBuildTransformTerminal } from "$lib/plugins/build/build.ts";
 import { handleTransformFile } from "$lib/plugins/render/hooks/build.transform.ts";
 import { manifestShape } from "$lib/plugins/render/hooks/manifest.ts";
 import { handleRouteBase } from "$lib/plugins/render/routes/base.ts";
@@ -28,7 +28,7 @@ describe("ws plugin", () => {
       handleRouteLayoutsAndHeadElements,
       handleRouteBase,
       handlerFor(render.transformNode, id),
-      handleBuildTransformCanonical,
+      handleBuildTransformTerminal,
       handlerFor(build.dest, (path) => {
         if (path === "routes/_app.html") return "build/routes/_app.html";
         unreachable();

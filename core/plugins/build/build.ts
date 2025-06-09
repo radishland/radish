@@ -65,12 +65,12 @@ const handleBuildStart = handlerFor(
 /**
  * Base handler for the build/sort effect
  */
-const handleBuildSort = handlerFor(build.sort, id);
+const handleBuildSortTerminal = handlerFor(build.sort, id);
 
 /**
  * Canonically handles {@linkcode build.transform} as an identity transform
  */
-export const handleBuildTransformCanonical = handlerFor(
+export const handleBuildTransformTerminal = handlerFor(
   build.transform,
   (_, content) => content,
 );
@@ -98,8 +98,8 @@ export const pluginBuild: Plugin = {
   handlers: [
     handleBuildFile,
     handleBuildStart,
-    handleBuildSort,
-    handleBuildTransformCanonical,
+    handleBuildSortTerminal,
+    handleBuildTransformTerminal,
     handleBuildDest,
     buildHMRHook,
   ],
