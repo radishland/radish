@@ -4,7 +4,7 @@ import { handleDirectives } from "./directives/mod.ts";
 import { handleSort } from "./hooks/build.sort.ts";
 import { handleTransformFile } from "./hooks/build.transform.ts";
 import { handleHotUpdate } from "./hooks/hmr.update.ts";
-import { handleManifest } from "./hooks/manifest.ts";
+import { handleManifest } from "./hooks/manifest.update.ts";
 import { handleRoutes } from "./routes/mod.ts";
 import { handleTransformNode } from "./transforms/mod.ts";
 

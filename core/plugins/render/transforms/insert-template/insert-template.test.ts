@@ -5,7 +5,7 @@ import { fragments } from "@radish/htmlcrunch";
 import { assertEquals } from "@std/assert";
 import { join } from "@std/path";
 import { describe, test } from "@std/testing/bdd";
-import { manifestShape } from "../../hooks/manifest.ts";
+import { manifestShape } from "../../hooks/manifest.update.ts";
 import { handleRenderTransformTerminal } from "../../transforms/mod.ts";
 import { handleRenderComponents } from "../../components/component.ts";
 import { handleRenderTransformInsertTemplate } from "./insert-templates.ts";
