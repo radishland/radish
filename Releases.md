@@ -1,3 +1,21 @@
+### 2025.06.10
+
+#### @radish/core 1.0.0-alpha.44 (prerelease)
+
+- BREAKING(core): replace manifest/setLoader by manifest/set
+- BREAKING(core): manifest/update returns void
+- chore(core): use Terminal suffix for terminal handlers
+
+#### @radish/init 1.0.0-alpha.30 (prerelease)
+
+- fix(init): update template imports
+- chore(init): update template
+
+#### @radish/runtime 0.4.2 (patch)
+
+- fix(runtime): hydrates siblings
+- fix(runtime): hydration crosses shadowroots
+
 ### 2025.06.08
 
 #### @radish/init 1.0.0-alpha.29 (prerelease)
