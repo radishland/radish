@@ -108,15 +108,15 @@ export class HandlerRegistry extends HTMLElement
       if (identifier in this) {
         this.effect(() => {
           const classList = this.lookup(identifier)?.valueOf();
-          if (classList && typeof classList === "object") {
+          if (
+            target instanceof HTMLElement &&
+            classList &&
+            typeof classList === "object"
+          ) {
             for (const [k, v] of Object.entries(classList)) {
               const force = !!(v?.valueOf());
               for (const className of k.split(" ")) {
-                // @ts-ignore target is an HTMLElement
-                target.classList.toggle(
-                  className,
-                  force,
-                );
+                target.classList.toggle(className, force);
               }
             }
           }
@@ -415,12 +415,12 @@ export class HandlerRegistry extends HTMLElement
         this.hydrate(node.shadowRoot);
         console.log("exiting shadow root");
       }
+    }
 
-      let child = node.firstElementChild;
-      while (child) {
-        this.hydrate(child);
-        child = child.nextElementSibling;
-      }
+    let child = node.firstChild;
+    while (child) {
+      this.hydrate(child);
+      child = child.nextSibling;
     }
   }
 
@@ -462,13 +462,9 @@ customElements?.whenDefined("handler-registry").then(() => {
         : NodeFilter.FILTER_SKIP;
     },
   );
-  let current: Node | null = tw.currentNode;
+  const first: Node | null = tw.firstChild();
 
-  while (current && !(current instanceof HandlerRegistry)) {
-    current = tw.nextNode();
-  }
-
-  if (current) {
-    current.hydrate();
+  if (first instanceof HandlerRegistry) {
+    first.hydrate();
   }
 });

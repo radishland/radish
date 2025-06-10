@@ -1,30 +1,7 @@
 import { HandlerRegistry } from "@radish/runtime";
 
 export class HandleHydration extends HandlerRegistry {
-  div = document.querySelector("div");
-
-  constructor() {
-    super();
-  }
-
-  hello = () => {
-    console.log("hello");
-  };
-
-  add = () => {
-    const button = document.createElement("button");
-    button.innerText = "click";
-    button.setAttribute("on", "click:hello");
-
-    this.div?.appendChild(button);
-  };
-
-  delete = () => {
-    const child = this.div?.lastChild;
-    if (child) {
-      this.div?.removeChild(child);
-    }
-  };
+  initial = 2;
 }
 
 if (window && !customElements.get("handle-hydration")) {
