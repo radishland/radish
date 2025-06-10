@@ -1,20 +1,19 @@
 <template shadowrootmode="open">
-  <link rel="stylesheet" href="/elements/my-counter/my-counter.css" />
-
-  <div part="display"></div>
-  <button part="trigger">increment</button>
+  <button on:click="increment" part="trigger">
+    <slot></slot>
+    <span text="count" part="display"></span>
+  </button>
 
   <style>
-    div {
-      color: red;
+    button {
+      border: 1px solid black;
+      border-radius: 0.5rem;
+      padding: 2rem;
+      background-color: aliceblue;
     }
 
-    :host(:state(even)) div {
-      color: green;
-    }
-
-    [part="trigger"] {
-      background-color: magenta;
+    :host(:state(even))::part(display) {
+      background-color: yellow;
     }
   </style>
 </template>
