@@ -15,15 +15,26 @@ test.describe("hydration", () => {
   });
 
   test("kicks in and pierces shadow roots", async () => {
-    const button = page.getByRole("button");
-    const display = page.locator("button > span");
+    const button1 = page.getByTestId("counter1").locator("> button");
+    const display1 = button1.locator("> span");
 
     // The counter custom element gets its initial count of 2 from the page element
-    await expect(button).toBeVisible();
-    await expect(display).toContainText("2");
+    await expect(button1).toBeVisible();
+    await expect(display1).toContainText("2");
 
     // The button is functional: the hydration worked across multiple shadow roots like layout, page, counter
-    await button.click();
-    await expect(display).toContainText("3");
+    await button1.click();
+    await expect(display1).toContainText("3");
+  });
+
+  test("siblings are hydrated too", async () => {
+    const button2 = page.getByTestId("counter2").locator("> button");
+    const display2 = button2.locator("> span");
+
+    await expect(button2).toBeVisible();
+    await expect(display2).toContainText("0");
+
+    await button2.click();
+    await expect(display2).toContainText("1");
   });
 });

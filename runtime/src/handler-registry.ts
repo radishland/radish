@@ -69,6 +69,7 @@ export class HandlerRegistry extends HTMLElement
           }
         });
 
+        target.removeAttribute("attr:" + attribute);
         e.stopPropagation();
       }
     }
@@ -85,6 +86,7 @@ export class HandlerRegistry extends HTMLElement
           target.toggleAttribute(attribute, ref.valueOf());
         });
 
+        target.removeAttribute("bool:" + attribute);
         e.stopPropagation();
       }
     }
@@ -94,8 +96,13 @@ export class HandlerRegistry extends HTMLElement
     if (e instanceof CustomEvent) {
       const { identifier, type, target }: OnRequestDetail = e.detail;
 
-      if (identifier in this && typeof this.lookup(identifier) === "function") {
+      if (
+        identifier in this && target instanceof HTMLElement &&
+        typeof this.lookup(identifier) === "function"
+      ) {
         target.addEventListener(type, this.lookup(identifier).bind(this));
+
+        target.removeAttribute("on:" + type);
         e.stopPropagation();
       }
     }
@@ -105,7 +112,7 @@ export class HandlerRegistry extends HTMLElement
     if (e instanceof CustomEvent) {
       const { identifier, target }: HandleRequestDetail = e.detail;
 
-      if (identifier in this) {
+      if (identifier in this && target instanceof HTMLElement) {
         this.effect(() => {
           const classList = this.lookup(identifier)?.valueOf();
           if (
@@ -122,6 +129,7 @@ export class HandlerRegistry extends HTMLElement
           }
         });
 
+        target.removeAttribute("classList");
         e.stopPropagation();
       }
     }
@@ -131,11 +139,16 @@ export class HandlerRegistry extends HTMLElement
     if (e instanceof CustomEvent) {
       const { identifier, target }: HandleRequestDetail = e.detail;
 
-      if (identifier in this && typeof this.lookup(identifier) === "function") {
+      if (
+        identifier in this && typeof this.lookup(identifier) === "function" &&
+        target instanceof HTMLElement
+      ) {
         const cleanup = this.lookup(identifier).bind(this)(target);
         if (typeof cleanup === "function") {
           this.#cleanup.push(cleanup);
         }
+
+        target.removeAttribute("use:" + identifier);
         e.stopPropagation();
       }
     }
@@ -145,7 +158,10 @@ export class HandlerRegistry extends HTMLElement
     if (e instanceof CustomEvent) {
       const { identifier, property, target }: PropRequestDetail = e.detail;
 
-      if (identifier in this && property in target) {
+      if (
+        identifier in this && property in target &&
+        target instanceof HTMLElement
+      ) {
         const ref = this.lookup(identifier);
 
         this.effect(() => {
@@ -159,6 +175,7 @@ export class HandlerRegistry extends HTMLElement
           }
         });
 
+        target.removeAttribute("prop:" + property);
         e.stopPropagation();
       }
     }
@@ -175,6 +192,7 @@ export class HandlerRegistry extends HTMLElement
           target.textContent = `${ref}`;
         });
 
+        target.removeAttribute("text");
         e.stopPropagation();
       }
     }
@@ -191,6 +209,7 @@ export class HandlerRegistry extends HTMLElement
           target.innerHTML = `${ref}`;
         });
 
+        target.removeAttribute("html");
         e.stopPropagation();
       }
     }
@@ -222,6 +241,7 @@ export class HandlerRegistry extends HTMLElement
           });
         }
 
+        target.removeAttribute("bind:" + property);
         e.stopPropagation();
       }
     }
@@ -462,9 +482,12 @@ customElements?.whenDefined("handler-registry").then(() => {
         : NodeFilter.FILTER_SKIP;
     },
   );
-  const first: Node | null = tw.firstChild();
+  let current: Node | null = tw.firstChild();
 
-  if (first instanceof HandlerRegistry) {
-    first.hydrate();
+  while (current) {
+    if (current instanceof HandlerRegistry) {
+      current.hydrate();
+    }
+    current = tw.nextNode();
   }
 });
