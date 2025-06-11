@@ -37,18 +37,15 @@ const substituteDevRuntime = handlerFor(router.handleRoute, async (context) => {
   return Handler.continue(context);
 });
 
-const hooks = handlerFor(
-  router.handleRoute,
-  (event) => {
-    // Avoid mime type sniffing
-    event.headers.set("X-Content-Type-Options", "nosniff");
+const hooks = handlerFor(router.handleRoute, (event) => {
+  // Avoid mime type sniffing
+  event.headers.set("X-Content-Type-Options", "nosniff");
 
-    const ua = new UserAgent(event.request.headers.get("user-agent") ?? "");
-    console.log("ua:", ua);
+  const ua = new UserAgent(event.request.headers.get("user-agent") ?? "");
+  console.log("ua:", ua);
 
-    return Handler.continue(event);
-  },
-);
+  return Handler.continue(event);
+});
 
 const config: Config = {
   importmap: {
