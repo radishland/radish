@@ -21,3 +21,17 @@ const getVersions = () => {
 };
 
 getVersions();
+
+const command = new Deno.Command("deno", {
+  args: ["run", "-A", "jsr:@deno/bump-workspaces@0.1.22/cli"],
+  stdout: "inherit",
+  stdin: "inherit",
+});
+
+const { success } = await command.output();
+
+if (success) {
+  console.log("Success");
+} else {
+  console.log("Something went wrong");
+}
