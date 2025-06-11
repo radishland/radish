@@ -15,12 +15,19 @@ const getVersion = (module: string) => {
   return JSON.parse(content).version;
 };
 
-const getVersions = () => {
-  const packages = ["core", "effect-system", "htmlcrunch", "init", "runtime"];
-  return Object.fromEntries(packages.map((p) => [p, getVersion(p)]));
+type Versions = {
+  [K in "core" | "effect-system" | "htmlcrunch" | "init" | "runtime"]: string;
 };
 
-getVersions();
+const getVersions = (): Versions => {
+  const packages = ["core", "effect-system", "htmlcrunch", "init", "runtime"];
+  return Object.fromEntries(
+    packages.map((p) => [p, getVersion(p)]),
+  ) as Versions;
+};
+
+const oldVersions = getVersions();
+console.log(" oldVersions:", oldVersions);
 
 const command = new Deno.Command("deno", {
   args: ["run", "-A", "jsr:@deno/bump-workspaces@0.1.22/cli"],
@@ -28,10 +35,7 @@ const command = new Deno.Command("deno", {
   stdin: "inherit",
 });
 
-const { success } = await command.output();
+await command.output();
 
-if (success) {
-  console.log("Success");
-} else {
-  console.log("Something went wrong");
-}
+const newVersions = getVersions();
+console.log(" newVersions:", newVersions);
