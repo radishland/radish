@@ -43,7 +43,8 @@ To cut a release, follow these steps:
    git push origin release-YYYY.MM.DD
    ```
 
-8. Generate the release notes from github UI and manually update using Release.md if needed
+8. Generate the release notes from github UI and manually update using
+   Release.md if needed
 
 9. Publish as pre-release
 
