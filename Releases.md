@@ -1,3 +1,9 @@
+### 2025.06.11
+
+#### @radish/init 1.0.0-alpha.31 (prerelease)
+
+- fix(init): update base manifest (#132)
+
 ### 2025.06.10
 
 #### @radish/core 1.0.0-alpha.44 (prerelease)
