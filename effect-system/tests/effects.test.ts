@@ -298,18 +298,36 @@ describe("effect system", () => {
   test("handler decoration", async () => {
     // `transformTXT` only modifies the payload without doing the handling
     // io.transformFile is handled trivially
-    const transformTXT = handlerFor(io.transform, (path, data) => {
+    const toUpperCase = handlerFor(io.transform, (path, data) => {
       if (path.endsWith(".txt")) {
-        return Handler.continue(path, data.toUpperCase());
+        data = data.toUpperCase();
       }
       return Handler.continue(path, data);
     });
 
-    using _ = new HandlerScope(transformTXT.flatMap((_, d) => d));
+    const prefix = handlerFor(io.transform, (path, data) => {
+      if (path.endsWith(".txt")) {
+        data = "a" + data;
+      }
+      return Handler.continue(path, data);
+    });
+
+    const suffix = handlerFor(io.transform, (path, data) => {
+      if (path.endsWith(".txt")) {
+        data = data + "b";
+      }
+      return Handler.continue(path, data);
+    });
+
+    using _ = new HandlerScope(
+      toUpperCase,
+      prefix,
+      suffix.flatMap((_, d) => d),
+    );
 
     const data = await io.transform("note.txt", "some todos");
 
-    assertEquals(data, "SOME TODOS");
+    assertEquals(data, "aSOME TODOSb");
   });
 
   test("observation", async () => {

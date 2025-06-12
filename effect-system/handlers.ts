@@ -300,7 +300,7 @@ export class HandlerScope {
           return result;
         }
 
-        return await perform(id, ...payload);
+        return await perform(id, ...result.getPayload());
       }
 
       if (this.#parent) {
