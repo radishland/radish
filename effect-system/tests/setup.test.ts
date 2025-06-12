@@ -88,28 +88,24 @@ export const handleRandom = handlerFor(random, () => Math.random());
  */
 
 interface IO {
-  readFile: (path: string) => string;
-  writeFile: (path: string, data: string) => void;
-  transformFile: (
-    options: { path: string; data: string },
-  ) => { path: string; data: string };
+  read: (path: string) => string;
+  write: (path: string, data: string) => void;
+  transform: (path: string, data: string) => string;
 }
 
 /**
  * @internal
  */
 export const io = {
-  readFile: createEffect<IO["readFile"]>("io/read"),
-  writeFile: createEffect<IO["writeFile"]>("io/write"),
-  transformFile: createEffect<
-    (options: { path: string; data: string }) => { path: string; data: string }
-  >("io/transform"),
+  read: createEffect<IO["read"]>("io/read"),
+  write: createEffect<IO["write"]>("io/write"),
+  transform: createEffect<IO["transform"]>("io/transform"),
 };
 
 /**
  * @internal
  */
-export const handleIoReadTXT = handlerFor(io.readFile, (path: string) => {
+export const handleIoReadTXT = handlerFor(io.read, (path: string) => {
   if (path.endsWith(".txt")) {
     return "txt content";
   }
@@ -119,7 +115,7 @@ export const handleIoReadTXT = handlerFor(io.readFile, (path: string) => {
 /**
  * @internal
  */
-export const handleIOReadBase = handlerFor(io.readFile, () => {
+export const handleIOReadBase = handlerFor(io.read, () => {
   return "file content";
 });
 
@@ -127,8 +123,14 @@ export const handleIOReadBase = handlerFor(io.readFile, () => {
  * Server
  */
 
+/**
+ * @internal
+ */
 export const serverStart = createEffect<() => void>("server/start");
 
+/**
+ * @internal
+ */
 export const handlerServerStart = handlerFor(serverStart, async () => {
   await Console.log("Starting server...");
 });

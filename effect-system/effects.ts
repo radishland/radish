@@ -98,13 +98,44 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  *
  * interface IO {
  *   read: (path: string) => string;
+ *   transform: (content: string) => string;
  *   write: (path: string; content: string) => void;
  * }
  *
  * const io = {
  *   read: createEffect<IO['read']>('io/read'),
+ *   transform: createEffect<IO['transform']>('io/read'),
  *   write: createEffect<IO['write']>('io/write')
  * }
+ * ```
+ *
+ * @example Handlers can perform effects (even their own effect)
+ *
+ * Here the `handlerTransformA` for `io/transform` performs the `io/transform` effect. In this case the handler is suspended until the handling runs through completion to avoid infinite loops.
+ *
+ * ```ts
+ * const handlerTransformA = handlerFor(io.transform, async (path, content) => {
+ *   const transformed = await io.transform(path, content);
+ *   return "a" + transformed + "a";
+ * });
+ *
+ * const handleTransformB = handlerFor(io.transform, async (path, content) => {
+ *   const transformed = await io.transform(path, content);
+ *   return "b" + transformed + "b";
+ * });
+ *
+ * const handleTransformUpper = handlerFor(io.transform, (_path, content) => {
+ *   return content.toUpperCase();
+ * })
+ *
+ * using _ = new HandlerScope(
+ *   handlerTransformA,
+ *   handlerTransformB,
+ *   handleTransformUpper,
+ * );
+ *
+ * const transformed = await io.transform("/path", "content");
+ * assertEquals(transformed, "abCONTENTba");
  * ```
  *
  * @example Synchronous and asynchronous handlers
