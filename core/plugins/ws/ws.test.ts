@@ -4,7 +4,7 @@ import { render } from "$effects/render.ts";
 import { fragments } from "$lib/parser.ts";
 import { handleBuildTransformTerminal } from "$lib/plugins/build/build.ts";
 import { handleTransformFile } from "$lib/plugins/render/hooks/build.transform.ts";
-import { manifestShape } from "$lib/plugins/render/hooks/manifest.update.ts";
+import { manifestShape } from "../render/hooks/manifest/mod.ts";
 import { handleRouteBase } from "$lib/plugins/render/routes/base.ts";
 import { handleRouteLayoutsAndHeadElements } from "$lib/plugins/render/routes/layouts-and-head.ts";
 import { id } from "$lib/utils/algebraic-structures.ts";

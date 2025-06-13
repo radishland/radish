@@ -42,6 +42,8 @@ export async function startApp(config: Config) {
     await env.load();
   }
 
+  await manifest.load();
+
   if (cliArgs.manifest) {
     console.log("Generating manifest...");
     await updateManifest("**", { root: libFolder });
@@ -51,14 +53,11 @@ export async function startApp(config: Config) {
   }
 
   if (cliArgs.importmap) {
-    await manifest.load();
     await generateImportmap();
     await importmap.write();
   }
 
   if (cliArgs.build) {
-    await manifest.load();
-
     await build.start([
       `${libFolder}/**`,
       `${elementsFolder}/**`,
@@ -67,7 +66,6 @@ export async function startApp(config: Config) {
   }
 
   if (cliArgs.server) {
-    await manifest.load();
     await router.init();
 
     const staticRoutes: [string, string][] = [

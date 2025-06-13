@@ -6,7 +6,7 @@ import {
   type Manifest,
   render,
 } from "$effects/render.ts";
-import { manifestShape } from "../hooks/manifest.update.ts";
+import { manifestShape } from "../hooks/manifest/mod.ts";
 import { ts_extension_regex } from "../../../constants.ts";
 
 /**

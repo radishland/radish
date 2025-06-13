@@ -16,7 +16,7 @@ import {
   pluginStripTypes,
   pluginWS,
 } from "@radish/core/plugins";
-import { HandlerScope } from "@radish/effect-system";
+import { handlerFor, HandlerScope } from "@radish/effect-system";
 
 const config: Config = {
   importmap: {
@@ -49,12 +49,31 @@ const config: Config = {
   // },
 };
 
+const handleManifestLoad = handlerFor(manifest.load, async () => {
+  try {
+    const manifestObject = (await import("./" + manifestPath))["manifest"];
+    await manifest.set(manifestObject);
+    return manifestObject;
+  } catch (error) {
+    if (
+      error instanceof TypeError &&
+      error.message.startsWith("Module not found") &&
+      error.message.includes("manifest.ts")
+    ) {
+      await manifest.write();
+      return await manifest.load();
+    }
+    throw error;
+  }
+});
+
 const scope = new HandlerScope(
   pluginWS,
   pluginServer,
   pluginRouter,
   pluginRender,
   pluginImportmap,
+  handleManifestLoad,
   pluginManifest,
   pluginHMR,
   pluginStripTypes,
@@ -64,8 +83,6 @@ const scope = new HandlerScope(
   pluginIO,
 );
 onDispose(scope[Symbol.asyncDispose]);
-
-await manifest.set(async () => (await import("./" + manifestPath))["manifest"]);
 
 await startApp(config);
 

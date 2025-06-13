@@ -1,8 +1,8 @@
+import { generatedFolder } from "$lib/conventions.ts";
+import { createEffect, type Effect } from "@radish/effect-system";
 import type { WalkEntry } from "@std/fs";
 import { join } from "@std/path";
-import { generatedFolder } from "$lib/conventions.ts";
-import type { ManifestBase, MaybePromise } from "../types.d.ts";
-import { createEffect, type Effect } from "@radish/effect-system";
+import type { ManifestBase } from "../types.d.ts";
 
 /**
  * The path to the manifest file
@@ -10,8 +10,8 @@ import { createEffect, type Effect } from "@radish/effect-system";
 export const manifestPath: string = join(generatedFolder, "manifest.ts");
 
 interface ManifestOperations {
-  load: () => void;
-  set: (loader: () => MaybePromise<ManifestBase>) => void;
+  load: () => ManifestBase;
+  set: (manifestObject: ManifestBase) => void;
   get: () => ManifestBase;
   update: (entry: WalkEntry) => void;
   write: () => void;
@@ -22,13 +22,13 @@ interface ManifestOperations {
  */
 export const manifest: {
   /**
-   * Sets the manifest loader and calls it
+   * Sets the manifest object to a given value
    */
-  set: (loader: () => MaybePromise<ManifestBase>) => Effect<void>;
+  set: (manifestObject: ManifestBase) => Effect<void>;
   /**
    * Loads the manifest.ts file in memory
    */
-  load: () => Effect<void>;
+  load: () => Effect<ManifestBase>;
   /**
    * Returns the manifest object
    */
