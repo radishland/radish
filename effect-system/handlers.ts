@@ -215,7 +215,7 @@ export class HandlerScope {
    *
    * @internal
    */
-  suspendedHandlers = new Set<string>();
+  suspendedHandlers: Set<string> = new Set<string>();
 
   /**
    * The map of registered handlers in the {@linkcode HandlerScope}

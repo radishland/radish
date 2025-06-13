@@ -1,20 +1,10 @@
-import {
-  assert,
-  assertEquals,
-  assertInstanceOf,
-  unreachable,
-} from "@std/assert";
+import { assert, assertInstanceOf, unreachable } from "@std/assert";
 import { delay } from "@std/async";
 import { describe, test } from "@std/testing/bdd";
 import { MissingHandlerScopeError } from "../errors.ts";
 import { Snapshot } from "../handlers.ts";
-import { Handler, handlerFor, HandlerScope } from "../mod.ts";
-import {
-  handleNumberRandom,
-  handleTransformUpper,
-  io,
-  number,
-} from "./setup.test.ts";
+import { HandlerScope } from "../mod.ts";
+import { handleNumberRandom, number } from "./setup.test.ts";
 
 describe("effects snapshots", () => {
   test("setTimeout executes after HandlerScope is disposed of", async () => {
@@ -51,17 +41,17 @@ describe("effects snapshots", () => {
     await delay(20);
   });
 
-  test.ignore("Handler.all runs effects in parallel", async () => {
-    const content = ["a", "b", "c"];
+  test.ignore("Handler.all runs effects in parallel", () => {
+    // const content = ["a", "b", "c"];
 
-    const handleTransformSurround = handlerFor(
-      io.transform,
-      async (path, data) => {
-        const result = await io.transform(path, data);
-        return "_" + result + "_";
-      },
-      { suspend: true },
-    );
+    // const handleTransformSurround = handlerFor(
+    //   io.transform,
+    //   async (path, data) => {
+    //     const result = await io.transform(path, data);
+    //     return "_" + result + "_";
+    //   },
+    //   { suspend: true },
+    // );
 
     {
       // ...but Promise.all is not reliable
