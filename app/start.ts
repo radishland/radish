@@ -41,10 +41,28 @@ const hooks = handlerFor(router.handleRoute, (event) => {
   // Avoid mime type sniffing
   event.headers.set("X-Content-Type-Options", "nosniff");
 
-  const ua = new UserAgent(event.request.headers.get("user-agent") ?? "");
+  const ua = new UserAgent(event.request.headers.get("user-agent"));
   console.log("ua:", ua);
 
   return Handler.continue(event);
+});
+
+const handleManifestLoad = handlerFor(manifest.load, async () => {
+  try {
+    const manifestObject = (await import("./" + manifestPath))["manifest"];
+    await manifest.set(manifestObject);
+    return manifestObject;
+  } catch (error) {
+    if (
+      error instanceof TypeError &&
+      error.message.startsWith("Module not found") &&
+      error.message.includes("manifest.ts")
+    ) {
+      await manifest.write();
+      return await manifest.load();
+    }
+    throw error;
+  }
 });
 
 const config: Config = {
@@ -109,6 +127,7 @@ const scope = new HandlerScope(
   pluginRouter,
   pluginRender,
   pluginImportmap,
+  handleManifestLoad,
   pluginManifest,
   pluginHMR,
   pluginStripTypes,
@@ -118,8 +137,6 @@ const scope = new HandlerScope(
   pluginIO,
 );
 onDispose(scope[Symbol.asyncDispose]);
-
-await manifest.set(async () => (await import("./" + manifestPath))["manifest"]);
 
 await startApp(config);
 

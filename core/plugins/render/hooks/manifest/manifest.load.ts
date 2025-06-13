@@ -3,7 +3,7 @@ import { handlerFor } from "@radish/effect-system";
 import { manifestShape } from "./mod.ts";
 
 /**
- * Sets a manifest loader
+ * Ensures the manifest has the shape expected by the render plugin
  *
  * @hooks
  * - `manifest/load`
