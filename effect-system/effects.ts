@@ -1,5 +1,10 @@
 import { IllFormedEffectError } from "./errors.ts";
-import { type BaseHandler, Handler, perform } from "./handlers.ts";
+import {
+  type BaseHandler,
+  Handler,
+  type HandlerOptions,
+  perform,
+} from "./handlers.ts";
 
 /**
  * The effect class
@@ -98,13 +103,79 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  *
  * interface IO {
  *   read: (path: string) => string;
+ *   transform: (content: string) => string;
  *   write: (path: string; content: string) => void;
  * }
  *
  * const io = {
  *   read: createEffect<IO['read']>('io/read'),
+ *   transform: createEffect<IO['transform']>('io/read'),
  *   write: createEffect<IO['write']>('io/write')
  * }
+ * ```
+ *
+ * @example Recursive handlers
+ *
+ * Handlers can perform effects, even recursively performing their own effect
+ *
+ * ```ts
+ * const handleNumberTransform = handlerFor(
+ * number.transform,
+ * async (digits) => {
+ *   if (digits.length === 0) return digits;
+ *
+ *   const firstDigit = digits.charAt(0);
+ *   let count = 0;
+ *
+ *   while (digits.charAt(count) === firstDigit) {
+ *     count++;
+ *   }
+ *
+ *   const prefix = `${count}${firstDigit}`;
+ *   const remaining = digits.slice(count);
+ *
+ *   if (remaining.length === 0) {
+ *     return prefix;
+ *   }
+ *
+ *   return prefix + await number.transform(remaining);
+ * });
+ *
+ * using _ = new HandlerScope(handleNumberTransform);
+ *
+ * const transformed = await number.transform("2113");
+ * assertEquals(transformed, "122113");
+ * ```
+ ** @example Suspended handlers
+ *
+ * Recursion is not always wanted: in the case of postprocessing hooks it would result in infinite loops.
+ *
+ * The `reentrant` option allows to opt-out of recursion by declaring a handler as non reentrant. This will "suspend" the handler until the effect is fully handled, preventing infinite loops.
+ *
+ * ```ts
+ * // this handler needs to perform its own effect non-recursively to do some postprocessing
+ * const handlerTransformA = handlerFor(io.transform, async (path, content) => {
+ *   const transformed = await io.transform(path, content);
+ *   return "a" + transformed + "a";
+ * }, { reentrant: false });
+ *
+ * const handleTransformB = handlerFor(io.transform, async (path, content) => {
+ *   const transformed = await io.transform(path, content);
+ *   return "b" + transformed + "b";
+ * }, { reentrant: false });
+ *
+ * const handleTransformUpper = handlerFor(io.transform, (_path, content) => {
+ *   return content.toUpperCase();
+ * })
+ *
+ * using _ = new HandlerScope(
+ *   handlerTransformA,
+ *   handlerTransformB,
+ *   handleTransformUpper,
+ * );
+ *
+ * const transformed = await io.transform("/path", "content");
+ * assertEquals(transformed, "abCONTENTba");
  * ```
  *
  * @example Synchronous and asynchronous handlers
@@ -200,16 +271,18 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  *
  * @param effect The effect we're implementing a handler for
  * @param handler The handler implementation
+ * @param options The options for the handler
  *
  * @see {@linkcode Handler.continue}
  */
 export const handlerFor = <P extends any[], R>(
   effect: (...params: P) => Effect<R>,
   handler: NoInfer<BaseHandler<P, R>>,
+  options?: HandlerOptions,
 ): Handler<P, R> => {
   if (!Object.hasOwn(effect, "id")) throw new IllFormedEffectError();
 
   // @ts-ignore id is there
   const { id } = effect;
-  return new Handler(id, handler);
+  return new Handler(id, handler, options);
 };

@@ -1,11 +1,12 @@
 import { importmapPath } from "$effects/importmap.ts";
 import { io } from "$effects/io.ts";
 import { build } from "$effects/mod.ts";
-import { handlerFor, HandlerScope } from "@radish/effect-system";
+import { Handler, handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals } from "@std/assert";
 import { dirname, fromFileUrl, join } from "@std/path";
 import { describe, test } from "@std/testing/bdd";
 import { pluginImportmap, pureImportMap } from "./importmap.ts";
+import { pluginIO } from "../mod.ts";
 
 describe("pure importmap", () => {
   test("main import", () => {
@@ -99,23 +100,21 @@ const moduleDir = dirname(fromFileUrl(import.meta.url));
 describe("importmap generation", () => {
   test("transforms index.html files", async () => {
     using _ = new HandlerScope(
-      ...pluginImportmap.handlers,
+      pluginImportmap,
       handlerFor(io.read, async (path) => {
         if (path === importmapPath) {
           return await Deno.readTextFile(
             join(moduleDir, "testdata", "importmap.json"),
           );
         }
-        return "";
+        return Handler.continue(path);
       }),
+      pluginIO,
       handlerFor(build.transform, (_, content) => content),
     );
 
-    const input = await Deno.readTextFile(
-      join(moduleDir, "testdata", "input.html"),
-    );
-
-    const output = await Deno.readTextFile(
+    const input = await io.read(join(moduleDir, "testdata", "input.html"));
+    const output = await io.read(
       join(moduleDir, "testdata", "output.nofmt.html"),
     );
 

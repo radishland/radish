@@ -59,6 +59,20 @@ export const perform = <P extends any[], R>(
 };
 
 /**
+ * Options for handlers
+ */
+export type HandlerOptions = {
+  /**
+   * Configures whether a handler will re-enter itself when the handling of an effect re-emits its own effect.
+   *
+   * Set this to `false` to opt-out of recursion and allow post-effect hooks and non-recursive handlers to perform their own effects, avoiding infinite loops.
+   *
+   * @default true
+   */
+  reentrant?: boolean;
+};
+
+/**
  * This class implements the monadic sequencing of handlers with {@linkcode flatMap} and {@linkcode fold}
  *
  * You only interact directly with this class when using the {@linkcode continue} static method
@@ -67,15 +81,32 @@ export class Handler<P extends any[], R> {
   /**
    * The effect id this handler is for
    */
-  id: string;
   #handle: BaseHandler<P, R>;
 
   /**
-   * Lifts a {@linkcode BaseHandler} into the monadic `Handler` class
+   * @internal
    */
-  constructor(id: string, handle: BaseHandler<P, R>) {
-    this.id = id;
+  id: string;
+  /**
+   * @internal
+   */
+  effectId: string;
+  /**
+   * @internal
+   */
+  options: HandlerOptions;
+
+  /**
+   * Lifts a {@linkcode BaseHandler} into the monadic `Handler` class
+   *
+   * @internal
+   */
+  constructor(id: string, handle: BaseHandler<P, R>, options?: HandlerOptions) {
+    this.id = `${id}:${Math.random()}`;
+    this.effectId = id;
     this.#handle = handle;
+    const defaults: HandlerOptions = { reentrant: true };
+    this.options = Object.assign(defaults, options);
   }
 
   /**
@@ -87,10 +118,10 @@ export class Handler<P extends any[], R> {
   }
 
   /**
-   * The monadic binding of handlers, where {@linkcode BaseHandler BaseHandlers} actually are Keisli arrows
+   * The monadic binding of handlers, with {@linkcode BaseHandler BaseHandlers} being the Keisli arrows
    */
   flatMap(f: BaseHandler<P, R>): Handler<P, R> {
-    return new Handler(this.id, async (...payload: P) => {
+    return new Handler(this.effectId, async (...payload: P) => {
       const result = await this.run(...payload);
 
       if (!(result instanceof Continue)) return result;
@@ -107,20 +138,6 @@ export class Handler<P extends any[], R> {
    * Async cleanup function to run when leaving the {@linkcode HandlerScope}
    */
   [Symbol.asyncDispose]?: () => void | PromiseLike<void>;
-
-  /**
-   * Turns a list of handlers into a single handler by sequencing them with {@linkcode flatMap}
-   *
-   * @throws {AssertionError} Throws if all handlers are not handling the same effect
-   */
-  static fold<P extends any[], R>(handlers: Handler<P, R>[]): Handler<P, R> {
-    const ids = new Set(handlers.map((h) => h.id));
-    assert(ids.size === 1, "Can't fold together handlers of different effects");
-
-    return handlers.reduce((acc, curr) =>
-      acc.flatMap((...args) => curr.run(...args))
-    );
-  }
 
   /**
    * This methods lets a handler delegate work to other handlers of the same effect
@@ -157,7 +174,7 @@ export class Continue<P extends any[]> {
 /**
  * A {@linkcode HandlerScope} creates a new scope where effects are handled and AsyncState is stored.
  *
- * Use `using` when creating a `HandlerScope` to have proper cleanup when leaving the scope
+ * Use `using` when creating a `HandlerScope` for auto cleanup when leaving the scope
  *
  * The {@linkcode handle} method is responsible for finding handlers in scope for a given effect.
  *
@@ -193,13 +210,26 @@ export class HandlerScope {
   #disposed = false;
 
   /**
+   * The effect currently running
+   *
+   * @internal
+   */
+  runningEffect: string | undefined;
+  /**
+   * The set of suspended handlers
+   *
+   * @internal
+   */
+  suspendedHandlers: Set<string> = new Set<string>();
+
+  /**
    * The map of registered handlers in the {@linkcode HandlerScope}
    *
    * @internal
    */
-  handlers: Map<string, Handler<any, any>> = new Map<
+  handlers: Map<string, Handler<any, any>[]> = new Map<
     string,
-    Handler<any, any>
+    Handler<any, any>[]
   >();
   /**
    * The internal store where {@linkcode HandlerScope HandlerScopes} keep track of AsyncState created with {@linkcode createState}
@@ -261,20 +291,14 @@ export class HandlerScope {
       this.#asyncStack.defer(handler[Symbol.asyncDispose]!);
     }
 
-    const { id } = handler;
-    const currentHandler = this.handlers.get(id);
-
-    if (!currentHandler) {
-      this.handlers.set(id, handler);
-      return;
-    }
+    const { effectId } = handler;
+    const currentEffectHandlers = this.handlers.get(effectId) ?? [];
 
     const handlers = position === "start"
-      ? [handler, currentHandler]
-      : [currentHandler, handler];
+      ? [handler, ...currentEffectHandlers]
+      : [...currentEffectHandlers, handler];
 
-    const newHandler = Handler.fold(handlers);
-    this.handlers.set(id, newHandler);
+    this.handlers.set(effectId, handlers);
   }
 
   /**
@@ -290,15 +314,45 @@ export class HandlerScope {
    */
   async handle<P extends any[], R>(id: string, ...payload: P): Promise<R> {
     if (this.handlers.has(id)) {
-      const handler: Handler<P, R> = this.handlers.get(id)!;
-      const result: R | Continue<P> = await handler.run(...payload);
+      using scope = new DisposableStack();
 
-      if (!(result instanceof Continue)) {
+      if (this.runningEffect !== id) {
+        const previous = this.runningEffect;
+        const suspendedHandlers = [...this.suspendedHandlers];
+
+        this.runningEffect = id;
+        this.suspendedHandlers = new Set();
+
+        scope.defer(() => {
+          this.runningEffect = previous;
+          this.suspendedHandlers = new Set(suspendedHandlers);
+        });
+      }
+
+      const handlers: Handler<P, R>[] = this.handlers.get(id)!
+        .filter((handler) => !this.suspendedHandlers.has(handler.id));
+
+      for (const handler of handlers) {
+        if (!handler.options.reentrant) {
+          this.suspendedHandlers.add(handler.id);
+
+          scope.defer(() => {
+            this.suspendedHandlers.delete(handler.id);
+          });
+        }
+
+        const result: R | Continue<P> = await handler.run(...payload);
+
+        if ((result instanceof Continue)) {
+          payload = result.getPayload();
+          continue;
+        }
+
         return result;
       }
 
       if (this.#parent) {
-        return this.#parent.handle(id, ...result.getPayload());
+        return this.#parent.handle(id, ...payload);
       }
 
       throw new MissingTerminalHandlerError(id);
@@ -327,6 +381,7 @@ export class HandlerScope {
     if (this.#disposed) return;
 
     handlerScopes.pop();
+    this.suspendedHandlers.clear();
     this.handlers.clear();
     this.#stack.dispose();
     this.#parent = undefined;
@@ -398,20 +453,30 @@ export const Snapshot = (): () => HandlerScope => {
     scope,
   ) => [...scope.handlers.values()]);
   const stores = handlerScopes.map((scope) => new Map(scope.store));
+  const runningEffects = handlerScopes.map((scope) => scope.runningEffect);
+  const suspendedHandlersList = handlerScopes.map((
+    scope,
+  ) => [...scope.suspendedHandlers]);
 
-  assertEquals(handlersMap.length, stores.length);
+  assertEquals(handlersMap.length, handlerScopes.length);
+  assertEquals(stores.length, handlerScopes.length);
 
   return () => {
     let scope: HandlerScope | undefined;
     for (let index = 0; index < handlersMap.length; index++) {
       const handlers = handlersMap[index];
       const store = stores[index];
+      const runningEffect = runningEffects[index];
+      const suspendedHandlers = suspendedHandlersList[index];
 
-      assert(handlers);
-      assert(store);
+      assertExists(handlers);
+      assertExists(store);
+      assertExists(suspendedHandlers);
 
-      scope = new HandlerScope(...handlers);
+      scope = new HandlerScope(...handlers.flat());
       scope.store = store;
+      scope.runningEffect = runningEffect;
+      scope.suspendedHandlers = new Set(suspendedHandlers);
     }
 
     assertExists(scope);
@@ -422,11 +487,22 @@ export const Snapshot = (): () => HandlerScope => {
 /**
  * Adds an effect handler to the current {@linkcode HandlerScope}
  *
- * Most of the time you want to prepend handlers in order to override, decorate or delegate to other handlers. Use `position = "start"` to prepend a handler.
+ * Most of the time you want to prepend handlers in order to override, decorate or delegate to other handlers. Use `position = "start"` to prepend a handler (the default).
  *
  * Sometimes you may for example have a dynamically defined terminal handler. In that case, append the handler using `position = "end"`
  *
- * Looping over handlers for the same effect is another use-case for `position="end"` to preserve their order
+ * @example Dynamic handlers
+ *
+ * A file-based router can dynamically generate route handlers and add them to the current `HandlerScope` when scanning the file system
+ *
+ * ```ts
+ * const newRouteHandler = handlerFor(router.handleRoute, (context) => {
+ *   // create the route
+ * });
+ *
+ * addHandler(newRouteHandler); // dynamically add the route handler
+ * addHandler(notFoundHandler, "end"); // dynamically add a terminal handler
+ * ```
  *
  * @param handler The {@linkcode Handler} to add
  * @param position Whether to add the handler at the start or end of the sequence of handlers
