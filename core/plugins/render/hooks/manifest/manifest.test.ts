@@ -6,10 +6,11 @@ import {
   handleManifestUpdateTerminal,
 } from "$lib/plugins/manifest/manifest.ts";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
-import { assertExists, assertObjectMatch } from "@std/assert";
+import { assertEquals, assertExists, assertObjectMatch } from "@std/assert";
 import type { WalkEntry } from "@std/fs";
 import { basename } from "@std/path";
 import { describe, test } from "@std/testing/bdd";
+import { handleManifestLoadRenderHook } from "./manifest.load.ts";
 import { handleManifestUpdateRenderHook } from "./manifest.update.ts";
 import { manifestShape } from "./mod.ts";
 
@@ -23,12 +24,24 @@ const createWalkEntry = (path: string): WalkEntry => {
   };
 };
 
-describe("manifest", () => {
-  test("manifest/update ", async () => {
+describe("manifest render hook", () => {
+  test.only("manifest/load ensures the manifest object has the right shape", async () => {
+    using _ = new HandlerScope(
+      handlerFor(manifest.set, () => {}),
+      handleManifestLoadRenderHook,
+      handlerFor(manifest.load, () => ({ imports: {} })),
+    );
+
+    const loadedManifest = await manifest.load();
+    assertEquals(loadedManifest, manifestShape);
+  });
+
+  test("manifest/update populates elements and routes", async () => {
     const files: Record<string, string> = {
       "elements/my-alert/my-alert.ts": ``,
       "elements/my-button/my-button.ts": ``,
       "elements/my-carousel/my-carousel.ts": ``,
+      "routes/about/index.html": ``,
     };
 
     using _ = new HandlerScope(
@@ -53,31 +66,20 @@ describe("manifest", () => {
       imports: {},
       elements: {
         "my-alert": {
-          files: [
-            "elements/my-alert/my-alert.ts",
-          ],
-          kind: "element",
-          path: "my-alert",
-          tagName: "my-alert",
+          // element description
         },
         "my-button": {
-          files: [
-            "elements/my-button/my-button.ts",
-          ],
-          kind: "element",
-          path: "my-button",
-          tagName: "my-button",
+          // ...
         },
         "my-carousel": {
-          files: [
-            "elements/my-carousel/my-carousel.ts",
-          ],
-          kind: "element",
-          path: "my-carousel",
-          tagName: "my-carousel",
+          // ...
         },
       },
-      routes: {},
+      routes: {
+        "routes/about/index.html": {
+          // route description
+        },
+      },
       layouts: {},
     });
   });
