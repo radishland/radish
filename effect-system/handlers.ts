@@ -63,9 +63,13 @@ export const perform = <P extends any[], R>(
  */
 export type HandlerOptions = {
   /**
-   * Allows post-effect hooks and non-recursive handlers to perform their own effects, avoiding infinite loops.
+   * Configures whether a handler will re-enter itself when the handling of an effect re-emits its own effect.
+   *
+   * Set this to `false` to opt-out of recursion and allow post-effect hooks and non-recursive handlers to perform their own effects, avoiding infinite loops.
+   *
+   * @default true
    */
-  suspend?: boolean;
+  reentrant?: boolean;
 };
 
 /**
@@ -101,7 +105,8 @@ export class Handler<P extends any[], R> {
     this.id = `${id}:${Math.random()}`;
     this.effectId = id;
     this.#handle = handle;
-    this.options = Object.assign({ recursive: false }, options);
+    const defaults: HandlerOptions = { reentrant: true };
+    this.options = Object.assign(defaults, options);
   }
 
   /**
@@ -328,7 +333,7 @@ export class HandlerScope {
         .filter((handler) => !this.suspendedHandlers.has(handler.id));
 
       for (const handler of handlers) {
-        if (handler.options.suspend) {
+        if (!handler.options.reentrant) {
           this.suspendedHandlers.add(handler.id);
 
           scope.defer(() => {

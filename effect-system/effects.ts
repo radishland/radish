@@ -148,21 +148,21 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  * ```
  ** @example Suspended handlers
  *
- * Recursion is not always desirable: in the case of post-effect hooks it would only result in infinite loops.
+ * Recursion is not always wanted: in the case of postprocessing hooks it would result in infinite loops.
  *
- * The `suspend` options allows handlers perform their own effect non-recursively
+ * The `reentrant` option allows to opt-out of recursion by declaring a handler as non reentrant. This will "suspend" the handler until the effect is fully handled, preventing infinite loops.
  *
  * ```ts
- * // this handler needs to perform its own effect non-recursively
+ * // this handler needs to perform its own effect non-recursively to do some postprocessing
  * const handlerTransformA = handlerFor(io.transform, async (path, content) => {
  *   const transformed = await io.transform(path, content);
  *   return "a" + transformed + "a";
- * }, { suspend: true });
+ * }, { reentrant: false });
  *
  * const handleTransformB = handlerFor(io.transform, async (path, content) => {
  *   const transformed = await io.transform(path, content);
  *   return "b" + transformed + "b";
- * }, { suspend: true });
+ * }, { reentrant: false });
  *
  * const handleTransformUpper = handlerFor(io.transform, (_path, content) => {
  *   return content.toUpperCase();

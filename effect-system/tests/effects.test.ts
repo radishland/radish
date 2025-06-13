@@ -288,12 +288,12 @@ describe("effect system", () => {
     const suspendedEffectA = handlerFor(io.transform, async (path, content) => {
       const transformed = await io.transform(path, content);
       return "a" + transformed + "a";
-    }, { suspend: true });
+    }, { reentrant: false });
 
     const suspendedEffectB = handlerFor(io.transform, async (path, content) => {
       const transformed = await io.transform(path, content);
       return "b" + transformed + "b";
-    }, { suspend: true });
+    }, { reentrant: false });
 
     using _ = new HandlerScope(
       suspendedEffectA,
