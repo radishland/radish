@@ -25,6 +25,7 @@ import {
   handleNumberRandom,
   handleNumberTransform,
   handlerServerStart,
+  handleTransformUpper,
   io,
   logs,
   number,
@@ -251,7 +252,7 @@ describe("effect system", () => {
     }
   });
 
-  test("handlers can delegate to a parent scope handler", async () => {
+  test("delegation to a parent scope handler", async () => {
     using _ = new HandlerScope(handleIOReadBase);
     using __ = new HandlerScope(handleIoReadTXT);
 
@@ -259,53 +260,7 @@ describe("effect system", () => {
     assertEquals(content, "file content");
   });
 
-  test("effects can perform other effects", async () => {
-    const readAndLog = handlerFor(io.read, async (path: string) => {
-      await Console.log(`reading ${path}...`);
-      return `content of ${path}`;
-    });
-
-    // ... and `flatMap` returns early if the return is not `Continue`
-    using _ = new HandlerScope(readAndLog.flatMap(id), handleConsole);
-
-    const res = await io.read("/path/to/file");
-    assertEquals(logs, ["reading /path/to/file..."]);
-    assertEquals(res, "content of /path/to/file");
-  });
-
-  test("recursive handlers", async () => {
-    using _ = new HandlerScope(handleNumberTransform);
-
-    const transformed = await number.transform("2113");
-    assertEquals(transformed, "122113");
-  });
-
-  test("suspended handlers", async () => {
-    const handleTransformUpper = handlerFor(io.transform, (_path, content) => {
-      return content.toUpperCase();
-    });
-
-    const suspendedEffectA = handlerFor(io.transform, async (path, content) => {
-      const transformed = await io.transform(path, content);
-      return "a" + transformed + "a";
-    }, { reentrant: false });
-
-    const suspendedEffectB = handlerFor(io.transform, async (path, content) => {
-      const transformed = await io.transform(path, content);
-      return "b" + transformed + "b";
-    }, { reentrant: false });
-
-    using _ = new HandlerScope(
-      suspendedEffectA,
-      suspendedEffectB,
-      handleTransformUpper,
-    );
-
-    const transformed = await io.transform("/path", "content");
-    assertEquals(transformed, "abCONTENTba");
-  });
-
-  test("handler decoration", async () => {
+  test("decoration", async () => {
     // `transformTXT` only modifies the payload without doing the handling
     // io.transformFile is handled trivially
     const toUpperCase = handlerFor(io.transform, (path, data) => {
@@ -370,5 +325,85 @@ describe("effect system", () => {
       'writing to "script.ts": "my script"',
     ]);
     assertEquals(await state.get(), 3);
+  });
+
+  test("effects can perform other effects", async () => {
+    const readAndLog = handlerFor(io.read, async (path: string) => {
+      await Console.log(`reading ${path}...`);
+      return `content of ${path}`;
+    });
+
+    // ... and `flatMap` returns early if the return is not `Continue`
+    using _ = new HandlerScope(readAndLog.flatMap(id), handleConsole);
+
+    const res = await io.read("/path/to/file");
+    assertEquals(logs, ["reading /path/to/file..."]);
+    assertEquals(res, "content of /path/to/file");
+  });
+
+  test("recursive handlers", async () => {
+    using _ = new HandlerScope(handleNumberTransform);
+
+    const transformed = await number.transform("2113");
+    assertEquals(transformed, "122113");
+  });
+
+  test("suspended handlers", async () => {
+    const suspendedEffectA = handlerFor(io.transform, async (path, content) => {
+      const transformed = await io.transform(path, content);
+      return "a" + transformed + "a";
+    }, { reentrant: false });
+
+    const suspendedEffectB = handlerFor(io.transform, async (path, content) => {
+      const transformed = await io.transform(path, content);
+      return "b" + transformed + "b";
+    }, { reentrant: false });
+
+    using _ = new HandlerScope(
+      suspendedEffectA,
+      suspendedEffectB,
+      handleTransformUpper,
+    );
+
+    const transformed = await io.transform("/path", "content");
+    assertEquals(transformed, "abCONTENTba");
+  });
+
+  test("one-shot handlers", async () => {
+    const readSecret = handlerFor(io.read, (path) => {
+      if (path === "secret") {
+        return "token";
+      }
+      return Handler.continue(path);
+    }, { once: true });
+
+    using _ = new HandlerScope(readSecret, handleIOReadBase);
+
+    const content = await io.read("/path");
+    assertEquals(content, "file content");
+
+    const token = await io.read("secret");
+    assertEquals(token, "token");
+
+    const token2 = await io.read("secret");
+    assertEquals(token2, "file content");
+  });
+
+  test("one-shot suspended handlers", async () => {
+    const surroundOnce = handlerFor(io.transform, async (path, content) => {
+      const transformed = await io.transform(path, content);
+      return "_" + transformed + "_";
+    }, { reentrant: false, once: true });
+
+    using _ = new HandlerScope(
+      surroundOnce,
+      handleTransformUpper,
+    );
+
+    const a = await io.transform("/path", "content");
+    assertEquals(a, "_CONTENT_");
+
+    const b = await io.transform("/path", "hello");
+    assertEquals(b, "HELLO");
   });
 });
