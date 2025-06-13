@@ -8,7 +8,7 @@ import { describe, test } from "@std/testing/bdd";
 import {
   handleManifestGet,
   handleManifestUpdateTerminal,
-} from "../../manifest/manifest.ts";
+} from "../../../manifest/manifest.ts";
 import { handleManifestUpdateRenderHook } from "./manifest.update.ts";
 
 const createWalkEntry = (path: string): WalkEntry => {

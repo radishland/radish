@@ -2,45 +2,30 @@ import { hmr } from "$effects/hmr.ts";
 import { io } from "$effects/io.ts";
 import { manifest, manifestPath } from "$effects/manifest.ts";
 import { generatedFolder } from "$lib/conventions.ts";
-import type { ManifestBase, MaybePromise } from "$lib/types.d.ts";
+import type { ManifestBase } from "$lib/types.d.ts";
 import { expandGlobWorkspaceRelative } from "$lib/utils/fs.ts";
 import { extractImports } from "$lib/utils/parse.ts";
 import { stringifyObject } from "$lib/utils/stringify.ts";
 import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
-import { assertExists } from "@std/assert";
 import { ensureDirSync, type ExpandGlobOptions } from "@std/fs";
 import { extname } from "@std/path";
 
-let loader: (() => MaybePromise<ManifestBase>) | undefined;
 let manifestObject: ManifestBase = {
-  elements: {},
   imports: {},
-  layouts: {},
-  routes: {},
 };
 
 /**
- * Set a manifest loader
+ * Sets the in-memory manifest object to a given value
  *
  * @hooks
  * - `manifest/set`
  */
-export const handleManifestSet = handlerFor(manifest.set, async (load) => {
-  loader = load;
-  manifestObject = await loader();
+export const handleManifestSet = handlerFor(manifest.set, (_manifestObject) => {
+  manifestObject = _manifestObject;
 });
 handleManifestSet[Symbol.dispose] = () => {
-  loader = undefined;
   manifestObject = { imports: {} };
 };
-
-const handleManifestLoad = handlerFor(manifest.load, async () => {
-  assertExists(
-    loader,
-    "Manifest loader used before being defined. Use the manifest/set effect",
-  );
-  manifestObject = await loader();
-});
 
 /**
  * Returns the manifest object
@@ -81,6 +66,26 @@ export const handleManifestUpdateTerminal = handlerFor(
 );
 
 /**
+ * Stringifies the manifest object and saves it on disk
+ *
+ * Functions are stringified with their scope by {@linkcode stringifyObject}
+ *
+ * @hooks
+ * - `manifest/write`
+ *
+ * @performs
+ * - `io.write`
+ */
+const handleManifestWrite = handlerFor(manifest.write, async () => {
+  ensureDirSync(generatedFolder);
+
+  let file = "export const manifest = ";
+  file += stringifyObject(manifestObject);
+
+  await io.write(manifestPath, file);
+});
+
+/**
  * @hooks
  * - `hmr/update`
  *
@@ -91,10 +96,9 @@ export const handleManifestUpdateTerminal = handlerFor(
 export const pluginManifest: Plugin = {
   name: "plugin-manifest",
   handlers: [
-    handleManifestLoad,
     handleManifestSet,
     handleManifestGet,
-    handlerFor(manifest.write, writeManifest),
+    handleManifestWrite,
     /**
      * Extracts imports from .js & .ts files into the manifest for the importmap generation
      */
@@ -127,17 +131,3 @@ export const updateManifest = async (
     await manifest.update(entry);
   }
 };
-
-/**
- * Stringifies the manifest object and saves it on disk
- *
- * Functions are stringified with their scope by {@linkcode stringifyObject}
- */
-async function writeManifest() {
-  ensureDirSync(generatedFolder);
-
-  let file = "export const manifest = ";
-  file += stringifyObject(manifestObject);
-
-  await io.write(manifestPath, file);
-}

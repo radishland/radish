@@ -11,7 +11,7 @@ import type {
   Manifest,
   RouteManifest,
 } from "$effects/render.ts";
-import { manifestShape } from "./manifest.update.ts";
+import { manifestShape } from "./manifest/mod.ts";
 
 /**
  * Return the build order of a list of components, taking their relative dependencies into

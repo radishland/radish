@@ -73,7 +73,7 @@ handleIORead[Symbol.dispose] = () => {
 };
 
 /**
- * Handles {@linkcode io.write} effects
+ * Handles {@linkcode io.write} effects by writing string data to the given path, creating a new file if needed, else overwriting.
  *
  * Invalidates the file cache after a file write
  */
