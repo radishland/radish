@@ -70,6 +70,35 @@ export type HandlerOptions = {
    * @default true
    */
   reentrant?: boolean;
+  /**
+   * Whether to only use a handler once and suspend it afterwards.
+   *
+   * @example One-shot handlers
+   *
+   * ```ts
+   * const readSecret = handlerFor(io.read, (path) => {
+   *  if (path === "secret") {
+   *    return "token";
+   *  }
+   *  return Handler.continue(path);
+   * }, { once: true });
+   *
+   * using _ = new HandlerScope(readSecret, handleIOReadBase);
+   *
+   * const content = await io.read("/path");
+   * assertEquals(content, "file content");
+   *
+   * const token = await io.read("secret");
+   * assertEquals(token, "token");
+   *
+   * const token2 = await io.read("secret");
+   * assertEquals(token2, "file content");
+   *
+   * ```
+   *
+   * @default false
+   */
+  once?: boolean;
 };
 
 /**
@@ -105,7 +134,7 @@ export class Handler<P extends any[], R> {
     this.id = `${id}:${Math.random()}`;
     this.effectId = id;
     this.#handle = handle;
-    const defaults: HandlerOptions = { reentrant: true };
+    const defaults: Required<HandlerOptions> = { reentrant: true, once: false };
     this.options = Object.assign(defaults, options);
   }
 
@@ -346,6 +375,12 @@ export class HandlerScope {
         if ((result instanceof Continue)) {
           payload = result.getPayload();
           continue;
+        }
+
+        if (handler.options.once) {
+          const filteredHandlers = this.handlers.get(id)!
+            .filter((h) => h !== handler);
+          this.handlers.set(id, filteredHandlers);
         }
 
         return result;
