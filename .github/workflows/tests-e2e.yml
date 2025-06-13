@@ -30,9 +30,13 @@ jobs:
         working-directory: runtime
         run: npm install && npm run build
 
-      - name: Create a _generated folder
+      - name: Create an empty manifest file
         working-directory: app
-        run: mkdir _generated
+        run: >
+          mkdir _generated &&
+          echo 'export const manifest = {
+            imports: {},
+          };' >  _generated/manifest.ts
 
       - name: Build app
         working-directory: app
