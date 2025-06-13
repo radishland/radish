@@ -10,7 +10,6 @@ import { assertEquals, assertExists, assertObjectMatch } from "@std/assert";
 import type { WalkEntry } from "@std/fs";
 import { basename } from "@std/path";
 import { describe, test } from "@std/testing/bdd";
-import { handleManifestLoadRenderHook } from "./manifest.load.ts";
 import { handleManifestUpdateRenderHook } from "./manifest.update.ts";
 import { manifestShape } from "./mod.ts";
 
@@ -25,10 +24,25 @@ const createWalkEntry = (path: string): WalkEntry => {
 };
 
 describe("manifest render hook", () => {
-  test.only("manifest/load ensures the manifest object has the right shape", async () => {
+  test("manifest/load ensures the manifest object has the right shape", async () => {
     using _ = new HandlerScope(
       handlerFor(manifest.set, () => {}),
-      handleManifestLoadRenderHook,
+      // handleManifestLoadRenderHook,
+      // TODO replace by ref above. (ReferenceError as of 13/06/2025)
+      handlerFor(
+        manifest.load,
+        async () => {
+          const baseManifestObject = await manifest.load();
+          const manifestObject = Object.assign(
+            {},
+            manifestShape,
+            baseManifestObject,
+          );
+          await manifest.set(manifestObject);
+          return manifestObject;
+        },
+        { reentrant: false },
+      ),
       handlerFor(manifest.load, () => ({ imports: {} })),
     );
 
