@@ -30,6 +30,10 @@ jobs:
         working-directory: runtime
         run: npm install && npm run build
 
+      - name: Create a _generated folder
+        working-directory: app
+        run: mkdir _generated
+
       - name: Build app
         working-directory: app
         run: deno task build
