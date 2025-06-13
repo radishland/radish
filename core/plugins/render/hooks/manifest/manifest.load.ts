@@ -3,7 +3,7 @@ import { handlerFor } from "@radish/effect-system";
 import { manifestShape } from "./mod.ts";
 
 /**
- * Ensures the manifest has the shape expected by the render plugin
+ * Ensures the manifest has the shape the render plugin expects
  *
  * @hooks
  * - `manifest/load`
@@ -20,5 +20,5 @@ export const handleManifestLoadRenderHook = handlerFor(
     await manifest.set(manifestObject);
     return manifestObject;
   },
-  { reentrant: false },
+  { reentrant: false, once: true },
 );
