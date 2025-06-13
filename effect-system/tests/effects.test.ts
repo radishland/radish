@@ -22,11 +22,12 @@ import {
   handleConsole,
   handleIOReadBase,
   handleIoReadTXT,
-  handleRandom,
+  handleNumberRandom,
+  handleNumberTransform,
   handlerServerStart,
   io,
   logs,
-  random,
+  number,
   serverStart,
 } from "./setup.test.ts";
 
@@ -48,7 +49,7 @@ describe("effect system", () => {
     using _ = new HandlerScope();
 
     try {
-      await random();
+      await number.random();
       unreachable();
     } catch (error) {
       assertInstanceOf(error, UnhandledEffectError);
@@ -68,7 +69,7 @@ describe("effect system", () => {
     const logs: string[] = [];
 
     {
-      using scope = new HandlerScope(handleRandom);
+      using scope = new HandlerScope(handleNumberRandom);
       scope.onDispose(() => {
         logs.push("clean");
       });
@@ -135,7 +136,7 @@ describe("effect system", () => {
     const logs: string[] = [];
 
     {
-      using scope = new HandlerScope(handleRandom);
+      using scope = new HandlerScope(handleNumberRandom);
 
       scope.onDispose(() => {
         logs.push("clean");
@@ -150,20 +151,22 @@ describe("effect system", () => {
   });
 
   test("simple handling", async () => {
-    using _ = new HandlerScope(handleRandom);
+    using _ = new HandlerScope(handleNumberRandom);
 
-    const number = await random();
+    const random = await number.random();
 
-    assertEquals(typeof number, "number");
-    assertGreaterOrEqual(number, 0);
-    assertLessOrEqual(number, 1);
+    assertEquals(typeof random, "number");
+    assertGreaterOrEqual(random, 0);
+    assertLessOrEqual(random, 1);
   });
 
   test("plugin", async () => {
-    using _ = new HandlerScope({
+    const pluginIO = {
       name: "plugin-io",
       handlers: [handleIoReadTXT, handleIOReadBase],
-    });
+    };
+
+    using _ = new HandlerScope(pluginIO);
 
     const txt = await io.read("note.txt");
     assertEquals(txt, "txt content");
@@ -241,7 +244,7 @@ describe("effect system", () => {
     using _ = new HandlerScope(handleIOReadBase);
 
     {
-      using __ = new HandlerScope(handleRandom);
+      using __ = new HandlerScope(handleNumberRandom);
 
       const content = await io.read("file");
       assertEquals(content, "file content");
@@ -270,7 +273,14 @@ describe("effect system", () => {
     assertEquals(res, "content of /path/to/file");
   });
 
-  test("effects can perform their own effect", async () => {
+  test("recursive handlers", async () => {
+    using _ = new HandlerScope(handleNumberTransform);
+
+    const transformed = await number.transform("2113");
+    assertEquals(transformed, "122113");
+  });
+
+  test("suspended handlers", async () => {
     const handleTransformUpper = handlerFor(io.transform, (_path, content) => {
       return content.toUpperCase();
     });
@@ -278,12 +288,12 @@ describe("effect system", () => {
     const suspendedEffectA = handlerFor(io.transform, async (path, content) => {
       const transformed = await io.transform(path, content);
       return "a" + transformed + "a";
-    });
+    }, { suspend: true });
 
     const suspendedEffectB = handlerFor(io.transform, async (path, content) => {
       const transformed = await io.transform(path, content);
       return "b" + transformed + "b";
-    });
+    }, { suspend: true });
 
     using _ = new HandlerScope(
       suspendedEffectA,

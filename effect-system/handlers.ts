@@ -59,6 +59,16 @@ export const perform = <P extends any[], R>(
 };
 
 /**
+ * Options for handlers
+ */
+export type HandlerOptions = {
+  /**
+   * Allows post-effect hooks and non-recursive handlers to perform their own effects, avoiding infinite loops.
+   */
+  suspend?: boolean;
+};
+
+/**
  * This class implements the monadic sequencing of handlers with {@linkcode flatMap} and {@linkcode fold}
  *
  * You only interact directly with this class when using the {@linkcode continue} static method
@@ -67,15 +77,31 @@ export class Handler<P extends any[], R> {
   /**
    * The effect id this handler is for
    */
-  id: string;
   #handle: BaseHandler<P, R>;
 
   /**
-   * Lifts a {@linkcode BaseHandler} into the monadic `Handler` class
+   * @internal
    */
-  constructor(id: string, handle: BaseHandler<P, R>) {
-    this.id = id;
+  id: string;
+  /**
+   * @internal
+   */
+  effectId: string;
+  /**
+   * @internal
+   */
+  options: HandlerOptions;
+
+  /**
+   * Lifts a {@linkcode BaseHandler} into the monadic `Handler` class
+   *
+   * @internal
+   */
+  constructor(id: string, handle: BaseHandler<P, R>, options?: HandlerOptions) {
+    this.id = `${id}:${Math.random()}`;
+    this.effectId = id;
     this.#handle = handle;
+    this.options = Object.assign({ recursive: false }, options);
   }
 
   /**
@@ -90,7 +116,7 @@ export class Handler<P extends any[], R> {
    * The monadic binding of handlers, with {@linkcode BaseHandler BaseHandlers} being the Keisli arrows
    */
   flatMap(f: BaseHandler<P, R>): Handler<P, R> {
-    return new Handler(this.id, async (...payload: P) => {
+    return new Handler(this.effectId, async (...payload: P) => {
       const result = await this.run(...payload);
 
       if (!(result instanceof Continue)) return result;
@@ -177,7 +203,19 @@ export class HandlerScope {
   #stack = new DisposableStack();
   #asyncStack = new AsyncDisposableStack();
   #disposed = false;
-  #runningHandlers = new Map<string, Handler<any, any>[]>();
+
+  /**
+   * The effect currently running
+   *
+   * @internal
+   */
+  runningEffect: string | undefined;
+  /**
+   * The set of suspended handlers
+   *
+   * @internal
+   */
+  suspendedHandlers = new Set<string>();
 
   /**
    * The map of registered handlers in the {@linkcode HandlerScope}
@@ -248,14 +286,14 @@ export class HandlerScope {
       this.#asyncStack.defer(handler[Symbol.asyncDispose]!);
     }
 
-    const { id } = handler;
-    const currentEffectHandlers = this.handlers.get(id) ?? [];
+    const { effectId } = handler;
+    const currentEffectHandlers = this.handlers.get(effectId) ?? [];
 
     const handlers = position === "start"
       ? [handler, ...currentEffectHandlers]
       : [...currentEffectHandlers, handler];
 
-    this.handlers.set(id, handlers);
+    this.handlers.set(effectId, handlers);
   }
 
   /**
@@ -272,35 +310,40 @@ export class HandlerScope {
   async handle<P extends any[], R>(id: string, ...payload: P): Promise<R> {
     if (this.handlers.has(id)) {
       using scope = new DisposableStack();
-      const handlers: Handler<P, R>[] = this.handlers.get(id)!;
-      const runningHandlers = this.#runningHandlers.get(id) ?? [];
 
-      let handler: Handler<P, R> | null = null;
+      if (this.runningEffect !== id) {
+        const previous = this.runningEffect;
+        const suspendedHandlers = [...this.suspendedHandlers];
 
-      for (const _handler of handlers) {
-        if (runningHandlers.includes(_handler)) continue;
-
-        handler = _handler;
-        break;
-      }
-
-      if (handler) {
-        runningHandlers.push(handler);
-        this.#runningHandlers.set(id, runningHandlers);
+        this.runningEffect = id;
+        this.suspendedHandlers = new Set();
 
         scope.defer(() => {
-          const restoreRunningHandlers = (this.#runningHandlers.get(id) ?? [])
-            .filter((h) => h !== handler);
-          this.#runningHandlers.set(id, restoreRunningHandlers);
+          this.runningEffect = previous;
+          this.suspendedHandlers = new Set(suspendedHandlers);
         });
+      }
+
+      const handlers: Handler<P, R>[] = this.handlers.get(id)!
+        .filter((handler) => !this.suspendedHandlers.has(handler.id));
+
+      for (const handler of handlers) {
+        if (handler.options.suspend) {
+          this.suspendedHandlers.add(handler.id);
+
+          scope.defer(() => {
+            this.suspendedHandlers.delete(handler.id);
+          });
+        }
 
         const result: R | Continue<P> = await handler.run(...payload);
 
-        if (!(result instanceof Continue)) {
-          return result;
+        if ((result instanceof Continue)) {
+          payload = result.getPayload();
+          continue;
         }
 
-        return await perform(id, ...result.getPayload());
+        return result;
       }
 
       if (this.#parent) {
@@ -333,7 +376,7 @@ export class HandlerScope {
     if (this.#disposed) return;
 
     handlerScopes.pop();
-    this.#runningHandlers.clear();
+    this.suspendedHandlers.clear();
     this.handlers.clear();
     this.#stack.dispose();
     this.#parent = undefined;
@@ -405,6 +448,10 @@ export const Snapshot = (): () => HandlerScope => {
     scope,
   ) => [...scope.handlers.values()]);
   const stores = handlerScopes.map((scope) => new Map(scope.store));
+  const runningEffects = handlerScopes.map((scope) => scope.runningEffect);
+  const suspendedHandlersList = handlerScopes.map((
+    scope,
+  ) => [...scope.suspendedHandlers]);
 
   assertEquals(handlersMap.length, handlerScopes.length);
   assertEquals(stores.length, handlerScopes.length);
@@ -414,12 +461,17 @@ export const Snapshot = (): () => HandlerScope => {
     for (let index = 0; index < handlersMap.length; index++) {
       const handlers = handlersMap[index];
       const store = stores[index];
+      const runningEffect = runningEffects[index];
+      const suspendedHandlers = suspendedHandlersList[index];
 
       assertExists(handlers);
       assertExists(store);
+      assertExists(suspendedHandlers);
 
       scope = new HandlerScope(...handlers.flat());
       scope.store = store;
+      scope.runningEffect = runningEffect;
+      scope.suspendedHandlers = new Set(suspendedHandlers);
     }
 
     assertExists(scope);

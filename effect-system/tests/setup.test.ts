@@ -71,17 +71,46 @@ export const createState = <S>(initialState: S) => {
 
 interface RandomOps {
   random: () => number;
+  transform: (digits: `${number}`) => string;
 }
 
 /**
  * @internal
  */
-export const random = createEffect<RandomOps["random"]>("random");
+export const number = {
+  random: createEffect<RandomOps["random"]>("number/random"),
+  transform: createEffect<RandomOps["transform"]>("number/transform"),
+};
 
-/**
- * @internal
- */
-export const handleRandom = handlerFor(random, () => Math.random());
+/** @internal */
+export const handleNumberRandom = handlerFor(
+  number.random,
+  () => Math.random(),
+);
+
+/** @internal */
+export const handleNumberTransform = handlerFor(
+  number.transform,
+  async (digits) => {
+    if (digits.length === 0) return digits;
+
+    const firstDigit = digits.charAt(0);
+    let count = 0;
+
+    while (digits.charAt(count) === firstDigit) {
+      count++;
+    }
+
+    const prefix = `${count}${firstDigit}`;
+    const remaining = digits.slice(count);
+
+    if (remaining.length === 0) {
+      return prefix;
+    }
+
+    return prefix + await number.transform(remaining as `${number}`);
+  },
+);
 
 /**
  * IO
@@ -117,6 +146,13 @@ export const handleIoReadTXT = handlerFor(io.read, (path: string) => {
  */
 export const handleIOReadBase = handlerFor(io.read, () => {
   return "file content";
+});
+
+/**
+ * @internal
+ */
+export const handleTransformUpper = handlerFor(io.transform, (_path, data) => {
+  return data.toUpperCase();
 });
 
 /**
