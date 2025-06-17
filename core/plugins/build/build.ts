@@ -4,7 +4,7 @@ import { buildFolder } from "$lib/conventions.ts";
 import { id } from "$lib/utils/algebraic-structures.ts";
 import { expandGlobWorkspaceRelative } from "$lib/utils/fs.ts";
 import { workspaceRelative } from "$lib/utils/path.ts";
-import { handlerFor, type Plugin } from "@radish/effect-system";
+import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
 import { distinctBy } from "@std/collections";
 import { emptyDirSync, ensureDirSync, type WalkEntry } from "@std/fs";
 import { join } from "@std/path";
@@ -62,6 +62,19 @@ const handleBuildStart = handlerFor(
   },
 );
 
+const skipBuild = /\.(d|spec|test)\.(js|ts)$/;
+
+/**
+ * Skips test files and declaration files during the build
+ */
+const handleBuildSortFilterTestFiles = handlerFor(build.sort, (entries) => {
+  entries = entries.filter((entry) =>
+    entry.isFile && !skipBuild.test(entry.path)
+  );
+
+  return Handler.continue(entries);
+});
+
 /**
  * Base handler for the build/sort effect
  */
@@ -97,8 +110,9 @@ export const pluginBuild: Plugin = {
   name: "plugin-build",
   handlers: [
     handleBuildFile,
-    handleBuildStart,
+    handleBuildSortFilterTestFiles,
     handleBuildSortTerminal,
+    handleBuildStart,
     handleBuildTransformTerminal,
     handleBuildDest,
     buildHMRHook,

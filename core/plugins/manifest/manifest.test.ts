@@ -3,20 +3,9 @@ import { manifest } from "$effects/manifest.ts";
 import { pluginManifest } from "$lib/plugins/mod.ts";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals, assertExists, assertObjectMatch } from "@std/assert";
-import type { WalkEntry } from "@std/fs";
-import { basename } from "@std/path";
 import { describe, test } from "@std/testing/bdd";
+import { createWalkEntry } from "../../utils/fs.ts";
 import { updateManifest } from "./manifest.ts";
-
-const createWalkEntry = (path: string): WalkEntry => {
-  return {
-    isDirectory: false,
-    isFile: true,
-    path,
-    name: basename(path),
-    isSymlink: false,
-  };
-};
 
 describe("manifest", () => {
   test("skips test files", async () => {
