@@ -7,7 +7,7 @@ import {
   render,
 } from "$effects/render.ts";
 import { manifestShape } from "../hooks/manifest/mod.ts";
-import { ts_extension_regex } from "../../../constants.ts";
+import { ts_extension_regex } from "$lib/constants.ts";
 
 /**
  * @performs
