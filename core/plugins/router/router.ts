@@ -31,7 +31,7 @@ const square_brackets_around_named_group =
 export const handleRouterAddRoute: Handler<[route: Route], void> = handlerFor(
   router.addRoute,
   (route) => {
-    const newHandler = handlerFor(router.handleRoute, (context) => {
+    const newHandler = handlerFor(router.onRequest, (context) => {
       const patternResult = route.pattern.exec(context.request.url);
 
       if (
@@ -40,7 +40,7 @@ export const handleRouterAddRoute: Handler<[route: Route], void> = handlerFor(
           ? route.method.includes(context.request.method)
           : route.method === context.request.method)
       ) {
-        return route.handleRoute({ ...context, params: patternResult });
+        return route.onRequest({ ...context, params: patternResult });
       }
 
       return Handler.continue(context);
@@ -59,7 +59,7 @@ export const handleRouterHandleRouteTerminal: Handler<
   [context: RouteContext],
   MaybePromise<Response>
 > = handlerFor(
-  router.handleRoute,
+  router.onRequest,
   () => {
     return createStandardResponse(STATUS_CODE.NotFound, {
       headers: { "Content-Type": "text/plain" },
@@ -106,7 +106,7 @@ export const handleRouterInit: Handler<[], void> = handlerFor(
       await router.addRoute({
         method: "GET",
         pattern: new URLPattern({ pathname }),
-        handleRoute: async ({ request }) => {
+        onRequest: async ({ request }) => {
           return await serveFile(request, destPath);
         },
       });

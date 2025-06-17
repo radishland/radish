@@ -10,7 +10,7 @@ import { createStandardResponse } from "$lib/utils/http.ts";
  * - `ws/handle-socket`
  */
 export const handleWSServerRequest = handlerFor(
-  server.handleRequest,
+  server.onRequest,
   async (request, info) => {
     if (!dev && request.headers.get("upgrade")) {
       // Not implemented: we don't support upgrades in production

@@ -27,14 +27,14 @@ export const SERVER_DEFAULTS: Config["server"] = {
  * - `router/handle-request`
  */
 export const handleServerRequest = handlerFor(
-  server.handleRequest,
+  server.onRequest,
   async (request) => {
     try {
       const url = new URL(request.url);
       const cookies = getCookies(request.headers);
       const headers = new Headers();
 
-      const response = await router.handleRoute({
+      const response = await router.onRequest({
         request,
         url,
         cookies,
@@ -72,7 +72,7 @@ export const handleServerStart = handlerFor(server.start, (options) => {
   httpServer = Deno.serve(
     { ...SERVER_DEFAULTS, ...options },
     async (request, info) => {
-      return await server.handleRequest(request, info);
+      return await server.onRequest(request, info);
     },
   );
 
@@ -107,7 +107,7 @@ const shutdown = async () => {
  * await router.addRoute({
  *   method: "GET",
  *   pattern: new URLPattern({ pathname: "/about" }),
- *   handleRoute: () => {
+ *   onRequest: () => {
  *     return new Response("hi", {
  *       headers: { "content-type": "text/plain" },
  *     });

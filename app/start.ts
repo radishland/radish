@@ -23,7 +23,7 @@ import { join } from "@std/path";
 const dirname = import.meta.dirname!;
 const clientRuntime = join(dirname, "..", "runtime", "client");
 
-const substituteDevRuntime = handlerFor(router.handleRoute, async (context) => {
+const substituteDevRuntime = handlerFor(router.onRequest, async (context) => {
   const pattern = new URLPattern({ pathname: "/@radish/runtime*" });
   const patternResult = pattern.exec(context.request.url);
 
@@ -37,7 +37,7 @@ const substituteDevRuntime = handlerFor(router.handleRoute, async (context) => {
   return Handler.continue(context);
 });
 
-const hooks = handlerFor(router.handleRoute, (event) => {
+const hooks = handlerFor(router.onRequest, (event) => {
   // Avoid mime type sniffing
   event.headers.set("X-Content-Type-Options", "nosniff");
 

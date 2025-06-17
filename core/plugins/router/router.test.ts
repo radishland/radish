@@ -111,10 +111,10 @@ describe("router", () => {
     ]);
   });
 
-  test("router/handleRoute: user hooks can decorate the dynamically generated routes", async () => {
+  test("router/onRequest: user hooks can decorate the dynamically generated routes", async () => {
     // Mutates the Headers object
     const hooks = handlerFor(
-      router.handleRoute,
+      router.onRequest,
       (event) => {
         event.headers.set("X-Content-Type-Options", "nosniff");
         if (event.url.pathname === "/") {

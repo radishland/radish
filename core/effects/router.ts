@@ -12,13 +12,13 @@ export type RouteContext = {
 export type Route = {
   method: string | string[];
   pattern: URLPattern;
-  handleRoute: (context: RouteContext) => MaybePromise<Response>;
+  onRequest: (context: RouteContext) => MaybePromise<Response>;
 };
 
 interface RouterOps {
   init: () => void;
   addRoute: (route: Route) => void;
-  handleRoute: (context: RouteContext) => MaybePromise<Response>;
+  onRequest: (context: RouteContext) => MaybePromise<Response>;
 }
 
 export const router: {
@@ -33,9 +33,9 @@ export const router: {
   /**
    * Handles a requested route
    */
-  handleRoute: (context: RouteContext) => Effect<MaybePromise<Response>>;
+  onRequest: (context: RouteContext) => Effect<MaybePromise<Response>>;
 } = {
   init: createEffect<RouterOps["init"]>("router/init"),
   addRoute: createEffect<RouterOps["addRoute"]>("router/add-route"),
-  handleRoute: createEffect<RouterOps["handleRoute"]>("router/handle-route"),
+  onRequest: createEffect<RouterOps["onRequest"]>("router/on-request"),
 };
