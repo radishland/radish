@@ -7,21 +7,10 @@ import {
 } from "$lib/plugins/manifest/manifest.ts";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals, assertExists, assertObjectMatch } from "@std/assert";
-import type { WalkEntry } from "@std/fs";
-import { basename } from "@std/path";
 import { describe, test } from "@std/testing/bdd";
+import { createWalkEntry } from "../../../../utils/fs.ts";
 import { handleManifestUpdateRenderHook } from "./manifest.update.ts";
 import { manifestShape } from "./mod.ts";
-
-const createWalkEntry = (path: string): WalkEntry => {
-  return {
-    isDirectory: false,
-    isFile: true,
-    path,
-    name: basename(path),
-    isSymlink: false,
-  };
-};
 
 describe("manifest render hook", () => {
   test("manifest/load ensures the manifest object has the right shape", async () => {
@@ -80,12 +69,15 @@ describe("manifest render hook", () => {
       imports: {},
       elements: {
         "my-alert": {
+          path: "elements/my-alert", // path should be correct
           // element description
         },
         "my-button": {
+          path: "elements/my-button",
           // ...
         },
         "my-carousel": {
+          path: "elements/my-carousel",
           // ...
         },
       },

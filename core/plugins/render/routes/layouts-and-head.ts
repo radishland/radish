@@ -1,13 +1,14 @@
-import { serializeFragments } from "@radish/htmlcrunch";
-import { transformNode } from "../transforms/transform-node.ts";
-import { assertObjectMatch } from "@std/assert";
-import { dirname } from "@std/path";
-import { Handler, handlerFor } from "@radish/effect-system";
 import { manifest } from "$effects/manifest.ts";
+import { io } from "$effects/mod.ts";
 import { type LayoutManifest, type Manifest, render } from "$effects/render.ts";
 import { dev } from "$lib/environment.ts";
 import { isParent } from "$lib/utils/path.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
+import { fragments, serializeFragments } from "@radish/htmlcrunch";
+import { assertObjectMatch } from "@std/assert";
+import { dirname } from "@std/path";
 import { manifestShape } from "../hooks/manifest/mod.ts";
+import { transformNode } from "../transforms/transform-node.ts";
 
 /**
  * @performs
@@ -22,10 +23,18 @@ export const handleRouteLayoutsAndHeadElements = handlerFor(
     const layouts: LayoutManifest[] = Object.values(_manifest.layouts)
       .filter((layout) => isParent(dirname(layout.path), route.path));
 
-    const pageFragments = layouts.map((layout) => layout.templateLoader());
-    pageFragments.push(
-      await Promise.all(route.templateLoader().map(transformNode)),
+    const pageFragments = await Promise.all(
+      layouts.map(async (layout) => {
+        const template = await io.read(layout.templatePath);
+        return fragments.parseOrThrow(template);
+      }),
     );
+
+    const routeTemplate = await io.read(route.templatePath);
+    const routeFragmentsTransformed = await Promise.all(
+      fragments.parseOrThrow(routeTemplate).map(transformNode),
+    );
+    pageFragments.push(routeFragmentsTransformed);
 
     const pageGroups = Object.groupBy(
       pageFragments.flat(),

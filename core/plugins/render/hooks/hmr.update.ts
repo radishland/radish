@@ -43,7 +43,6 @@ export const handleHotUpdate = handlerFor(
 
             switch (extension) {
               case ".html":
-                delete element.templateLoader;
                 break;
               case ".js":
               case ".ts":

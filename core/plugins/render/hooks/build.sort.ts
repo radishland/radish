@@ -1,16 +1,16 @@
-import { assertExists, assertObjectMatch, unreachable } from "@std/assert";
-import type { WalkEntry } from "@std/fs";
-import { basename, extname } from "@std/path";
-import { appPath, elementsFolder, routesFolder } from "$lib/conventions.ts";
 import { build } from "$effects/build.ts";
-import { handlerFor } from "@radish/effect-system";
 import { manifest } from "$effects/manifest.ts";
-import { filename, isParent } from "../../../utils/path.ts";
 import type {
   ElementManifest,
   Manifest,
   RouteManifest,
 } from "$effects/render.ts";
+import { appPath, elementsFolder, routesFolder } from "$lib/conventions.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
+import { assertExists, assertObjectMatch, unreachable } from "@std/assert";
+import type { WalkEntry } from "@std/fs";
+import { basename, extname } from "@std/path";
+import { filename, isParent } from "../../../utils/path.ts";
 import { manifestShape } from "./manifest/mod.ts";
 
 /**
@@ -142,6 +142,6 @@ export const handleSort = handlerFor(
         } satisfies WalkEntry;
       });
 
-    return [...otherEntries, ...layouts, ...sorted];
+    return Handler.continue([...otherEntries, ...layouts, ...sorted]);
   },
 );

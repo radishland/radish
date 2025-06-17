@@ -1,24 +1,22 @@
 import { manifest } from "$effects/manifest.ts";
-import { render } from "$effects/mod.ts";
-import { handlerFor, HandlerScope } from "@radish/effect-system";
-import { fragments } from "@radish/htmlcrunch";
+import { build, io, render } from "$effects/mod.ts";
+import { globals } from "$lib/globals.ts";
+import { pluginBuild, pluginIO, pluginRender } from "$lib/plugins/mod.ts";
+import { Handler, handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals } from "@std/assert";
 import { join } from "@std/path";
 import { describe, test } from "@std/testing/bdd";
 import { manifestShape } from "../../hooks/manifest/mod.ts";
-import { handleRenderTransformTerminal } from "../../transforms/mod.ts";
-import { handleRenderComponents } from "../../components/component.ts";
-import { handleRenderTransformInsertTemplate } from "./insert-templates.ts";
 
 const moduleDir = import.meta.dirname!;
-const testDataDir = join(moduleDir, "testdata");
+
+globals();
 
 describe("render/transform template insertion", () => {
-  test("inserts template", async () => {
+  test("inserts templates", async () => {
+    const testDataDir = join(moduleDir, "testdata", "insert");
+
     using _ = new HandlerScope(
-      handleRenderComponents,
-      handleRenderTransformInsertTemplate,
-      handleRenderTransformTerminal,
       handlerFor(manifest.get, () => ({
         ...manifestShape,
         elements: {
@@ -28,14 +26,12 @@ describe("render/transform template insertion", () => {
             files: [],
             tagName: "my-component",
             dependencies: [],
-            templateLoader: () => {
-              return fragments.parseOrThrow(
-                Deno.readTextFileSync(join(testDataDir, "my-component.html")),
-              );
-            },
+            templatePath: join(testDataDir, "my-component.html"),
           },
         },
       })),
+      pluginRender,
+      pluginIO,
     );
 
     const output = await Deno.readTextFile(
@@ -47,11 +43,56 @@ describe("render/transform template insertion", () => {
       files: [],
       tagName: "my-input",
       dependencies: [],
-      templateLoader: () => {
-        return fragments.parseOrThrow(
-          Deno.readTextFileSync(join(testDataDir, "input.html")),
-        );
-      },
+      templatePath: join(testDataDir, "input.html"),
+    });
+
+    assertEquals(rendered, output);
+  });
+
+  test("reuses pre-rendered templates for dependencies", async () => {
+    const testDataDir = join(moduleDir, "testdata", "built-templates");
+
+    using _ = new HandlerScope(
+      handlerFor(io.read, async (path) => {
+        // this is wrong but ok for testing (`join` normalizes paths) but in reality we have workspace relative paths anyway
+        const dest = await build.dest(join(testDataDir, "my-component.html"));
+        if (path.includes(dest)) {
+          return await io.read(join(testDataDir, "my-component.built.html"));
+        }
+        return Handler.continue(path);
+      }, { reentrant: false }),
+      handlerFor(manifest.get, () => ({
+        ...manifestShape,
+        elements: {
+          "my-component": {
+            kind: "element",
+            path: "",
+            files: [],
+            tagName: "my-component",
+            dependencies: [],
+            templatePath: join(testDataDir, "my-component.html"),
+            classLoader: async () =>
+              (await import("./testdata/built-templates/my-component.ts"))[
+                "MyComponent"
+              ],
+          },
+        },
+      })),
+      pluginRender,
+      pluginBuild,
+      pluginIO,
+    );
+
+    const output = await Deno.readTextFile(
+      join(testDataDir, "output.nofmt.html"),
+    );
+    const rendered = await render.component({
+      kind: "element",
+      path: "",
+      files: [],
+      tagName: "my-input",
+      dependencies: ["my-component"],
+      templatePath: join(testDataDir, "input.html"),
     });
 
     assertEquals(rendered, output);

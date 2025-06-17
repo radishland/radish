@@ -1,7 +1,7 @@
-import type { MFragment, MNode } from "@radish/htmlcrunch";
 import { createEffect, type Effect } from "@radish/effect-system";
-import type { ManifestBase } from "../types.d.ts";
+import type { MNode } from "@radish/htmlcrunch";
 import type { AnyConstructor } from "@std/assert";
+import type { ManifestBase } from "../types.d.ts";
 
 export type ElementManifest = {
   kind: "element";
@@ -9,7 +9,7 @@ export type ElementManifest = {
   path: string;
   files: string[];
   classLoader?: () => Promise<AnyConstructor>;
-  templateLoader?: () => MFragment;
+  templatePath?: string;
   dependencies?: string[];
 };
 
@@ -17,14 +17,14 @@ export type RouteManifest = {
   kind: "route";
   path: string;
   files: string[];
-  templateLoader: () => MFragment;
+  templatePath: string;
   dependencies: string[];
 };
 
 export type LayoutManifest = {
   kind: "layout";
   path: string;
-  templateLoader: () => MFragment;
+  templatePath: string;
   dependencies: string[];
 };
 
