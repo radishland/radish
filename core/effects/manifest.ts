@@ -11,7 +11,7 @@ export const manifestPath: string = join(generatedFolder, "manifest.ts");
 
 interface ManifestOperations {
   load: () => ManifestBase;
-  set: (manifestObject: ManifestBase) => void;
+  set: (manifest: ManifestBase) => void;
   get: () => ManifestBase;
   update: (entry: WalkEntry) => void;
   write: () => void;
@@ -24,7 +24,7 @@ export const manifest: {
   /**
    * Sets the manifest object to a given value
    */
-  set: (manifestObject: ManifestBase) => Effect<void>;
+  set: (manifest: ManifestBase) => Effect<void>;
   /**
    * Loads the manifest.ts file in memory
    */

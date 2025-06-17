@@ -80,12 +80,15 @@ describe("manifest render hook", () => {
       imports: {},
       elements: {
         "my-alert": {
+          path: "elements/my-alert", // path should be correct
           // element description
         },
         "my-button": {
+          path: "elements/my-button",
           // ...
         },
         "my-carousel": {
+          path: "elements/my-carousel",
           // ...
         },
       },

@@ -39,10 +39,10 @@ export const handleManifestUpdateRenderHook = handlerFor(
        * Elements
        */
 
-      const parentFolder = basename(dirname(entry.path));
+      const parentFolder = dirname(entry.path);
       const elementName = filename(entry.name);
 
-      if (parentFolder !== elementName) {
+      if (basename(parentFolder) !== elementName) {
         console.warn(
           `By convention an element file has the same name as its parent folder. Skipping file ${entry.path}`,
         );
