@@ -24,10 +24,9 @@ export const handleRenderTransformInsertTemplate = handlerFor(
     const element = _manifest.elements[node.tagName];
 
     if (element?.templatePath) {
-      const template = shadowRoot.parseOrThrow(
-        await io.read(element.templatePath),
-      );
-      const transformed = await Promise.all(template.map(transformNode));
+      const template = await io.read(element.templatePath);
+      const fragments = shadowRoot.parseOrThrow(template);
+      const transformed = await Promise.all(fragments.map(transformNode));
 
       node.children = [...transformed, ...(node?.children ?? [])];
     }
