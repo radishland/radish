@@ -1,8 +1,9 @@
-import { assertObjectMatch } from "@std/assert";
-import { isElementNode } from "@radish/htmlcrunch";
-import { Handler, handlerFor } from "@radish/effect-system";
 import { manifest } from "$effects/manifest.ts";
+import { io } from "$effects/mod.ts";
 import { type Manifest, render } from "$effects/render.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
+import { isElementNode, shadowRoot } from "@radish/htmlcrunch";
+import { assertObjectMatch } from "@std/assert";
 import { manifestShape } from "../../hooks/manifest/mod.ts";
 import { transformNode } from "../transform-node.ts";
 
@@ -22,11 +23,13 @@ export const handleRenderTransformInsertTemplate = handlerFor(
 
     const element = _manifest.elements[node.tagName];
 
-    if (element?.templateLoader) {
-      const template = await Promise.all(
-        element.templateLoader().map(transformNode),
+    if (element?.templatePath) {
+      const template = shadowRoot.parseOrThrow(
+        await io.read(element.templatePath),
       );
-      node.children = [...template, ...(node?.children ?? [])];
+      const transformed = await Promise.all(template.map(transformNode));
+
+      node.children = [...transformed, ...(node?.children ?? [])];
     }
 
     return Handler.continue(node);

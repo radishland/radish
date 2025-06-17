@@ -1,6 +1,7 @@
+import { io } from "$effects/mod.ts";
 import { render } from "$effects/render.ts";
 import { handlerFor } from "@radish/effect-system";
-import { serializeFragments } from "@radish/htmlcrunch";
+import { serializeFragments, shadowRoot } from "@radish/htmlcrunch";
 import { assertExists } from "@std/assert";
 import { transformNode } from "../transforms/transform-node.ts";
 
@@ -14,10 +15,10 @@ import { transformNode } from "../transforms/transform-node.ts";
 export const handleRenderComponents = handlerFor(
   render.component,
   async (element) => {
-    assertExists(element.templateLoader);
-    const nodes = await Promise.all(
-      element.templateLoader().map(transformNode),
-    );
+    assertExists(element.templatePath);
+    const template = await io.read(element.templatePath);
+    const fragments = shadowRoot.parseOrThrow(template);
+    const nodes = await Promise.all(fragments.map(transformNode));
     return serializeFragments(nodes);
   },
 );
