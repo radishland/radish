@@ -99,9 +99,6 @@ export const pluginManifest: Plugin = {
     handleManifestSet,
     handleManifestGet,
     handleManifestWrite,
-    /**
-     * Extracts imports from .js & .ts files into the manifest for the importmap generation
-     */
     handleManifestUpdateExtractImports,
     handleManifestUpdateTerminal,
     handlerFor(hmr.update, async ({ event, paths }) => {
@@ -121,6 +118,11 @@ export const pluginManifest: Plugin = {
 };
 
 /**
+ * Do not insert test files or declaration files in the manifest
+ */
+export const skipManifest = /\.(d|spec|test)\.(js|ts)$/;
+
+/**
  * Performs the manifest/update effect on all entries matching the glob
  */
 export const updateManifest = async (
@@ -128,6 +130,8 @@ export const updateManifest = async (
   options?: ExpandGlobOptions,
 ): Promise<void> => {
   for await (const entry of expandGlobWorkspaceRelative(glob, options)) {
-    await manifest.update(entry);
+    if (!skipManifest.test(entry.path)) {
+      await manifest.update(entry);
+    }
   }
 };
