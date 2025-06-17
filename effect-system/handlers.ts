@@ -531,7 +531,7 @@ export const Snapshot = (): () => HandlerScope => {
  * A file-based router can dynamically generate route handlers and add them to the current `HandlerScope` when scanning the file system
  *
  * ```ts
- * const newRouteHandler = handlerFor(router.handleRoute, (context) => {
+ * const newRouteHandler = handlerFor(router.onRequest, (context) => {
  *   // create the route
  * });
  *

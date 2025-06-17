@@ -84,7 +84,7 @@ export async function startApp(config: Config) {
       await router.addRoute({
         method: "GET",
         pattern: new URLPattern({ pathname: `/${folder}/*` }),
-        handleRoute: async ({ request }) => {
+        onRequest: async ({ request }) => {
           return await serveDir(request, { fsRoot });
         },
       });

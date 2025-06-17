@@ -18,13 +18,13 @@ describe("server", () => {
     assertEquals(cleanup, 1);
   });
 
-  test("server/handleRequest: handles requests", async () => {
+  test("server/onRequest: handles requests", async () => {
     await using _ = new HandlerScope(pluginServer, handleRouterAddRoute);
 
     await router.addRoute({
       method: "GET",
       pattern: new URLPattern({ pathname: "/about" }),
-      handleRoute: () => {
+      onRequest: () => {
         return new Response("hi", {
           headers: { "content-type": "text/plain" },
         });

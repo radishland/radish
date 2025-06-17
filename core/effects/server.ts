@@ -6,7 +6,7 @@ interface Server {
       | Deno.ServeTcpOptions
       | (Deno.ServeTcpOptions & Deno.TlsCertifiedKeyPem),
   ) => void;
-  handleRequest: (
+  onRequest: (
     request: Request,
     info: Deno.ServeHandlerInfo,
   ) => Response;
@@ -18,11 +18,11 @@ export const server: {
       | Deno.ServeTcpOptions
       | (Deno.ServeTcpOptions & Deno.TlsCertifiedKeyPem),
   ) => Effect<void>;
-  handleRequest: (
+  onRequest: (
     request: Request,
     info: Deno.ServeHandlerInfo,
   ) => Effect<Response>;
 } = {
   start: createEffect<Server["start"]>("server/start"),
-  handleRequest: createEffect<Server["handleRequest"]>("server/handle-request"),
+  onRequest: createEffect<Server["onRequest"]>("server/on-request"),
 };
