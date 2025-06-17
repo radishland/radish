@@ -2,6 +2,7 @@
   "workspace": [
     "./core",
     "./effect-system",
+    "./elements",
     "./init",
     "./runtime",
     "./app",
