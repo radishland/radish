@@ -1,18 +1,21 @@
 import {
-  bracket,
+  alt,
+  between,
   createParser,
-  first,
+  fail,
   many,
   type Parser,
   result,
   sepBy,
-  sequence,
-  zero,
+  seq,
 } from "@fcrozatier/monarch";
-import { literal, regex, whitespaces } from "@fcrozatier/monarch/common";
+import {
+  literal,
+  regex,
+  whitespaces,
+  whitespaces1,
+} from "@fcrozatier/monarch/common";
 import { assertExists } from "@std/assert";
-
-export const whitespaces1: Parser<string> = regex(/^\s+/);
 
 /**
  * A comment node
@@ -76,7 +79,7 @@ export const commentNode = (text: string): MCommentNode => ({
  *
  * https://html.spec.whatwg.org/#comments
  */
-export const comment: Parser<MCommentNode> = bracket(
+export const comment: Parser<MCommentNode> = between(
   literal("<!--"),
   regex(/^(?!>|->)(?:.|\n)*?(?=(?:<\!--|-->|--!>|<!-)|$)/),
   literal("-->"),
@@ -85,12 +88,10 @@ export const comment: Parser<MCommentNode> = bracket(
 /**
  * Parses a sequence of comments maybe surrounded by whitespace
  */
-export const spacesAndComments: Parser<MSpacesAndComments> = sequence(
-  [
-    whitespaceOnlyText,
-    sepBy(comment, whitespaces),
-    whitespaceOnlyText,
-  ],
+export const spacesAndComments: Parser<MSpacesAndComments> = seq(
+  whitespaceOnlyText,
+  sepBy(comment, whitespaces),
+  whitespaceOnlyText,
 ).map((res) => res.flat());
 
 /**
@@ -98,12 +99,8 @@ export const spacesAndComments: Parser<MSpacesAndComments> = sequence(
  *
  * https://html.spec.whatwg.org/#syntax-doctype
  */
-export const doctype: Parser<MTextNode> = sequence([
-  regex(/^<!DOCTYPE/i),
-  whitespaces1,
-  regex(/^html/i).skip(whitespaces),
-  literal(">"),
-]).map(() => textNode("<!DOCTYPE html>"))
+export const doctype: Parser<MTextNode> = regex(/^<!DOCTYPE\s+html\s*>/i)
+  .map(() => textNode("<!DOCTYPE html>"))
   .error("Expected a valid doctype");
 
 const singleQuote = literal("'");
@@ -116,23 +113,23 @@ const rawText = regex(/^[^<]+/).map(textNode);
  * https://html.spec.whatwg.org/#attributes-2
  */
 const attributeName = regex(/^[^\s="'>\/\p{Noncharacter_Code_Point}]+/u)
-  .skip(whitespaces)
+  .skipTrailing(whitespaces)
   .error("Expected a valid attribute name");
 
-const attributeValue = first(
-  bracket(singleQuote, regex(/^[^']*/), singleQuote),
-  bracket(doubleQuote, regex(/^[^"]*/), doubleQuote),
+const attributeValue = alt(
+  between(singleQuote, regex(/^[^']*/), singleQuote),
+  between(doubleQuote, regex(/^[^"]*/), doubleQuote),
   regex(/^[^\s='"<>`]+/),
 );
 
-export const attribute: Parser<[string, string]> = first<[string, string]>(
-  sequence([
+export const attribute: Parser<[string, string]> = alt<[string, string]>(
+  seq(
     attributeName,
-    literal("=").skip(whitespaces),
+    literal("=").skipTrailing(whitespaces),
     attributeValue,
-  ]).map(([name, _, value]) => [name, value]),
+  ).map(([name, _, value]) => [name, value]),
   attributeName.map((name) => [name, ""]),
-).skip(whitespaces);
+).skipTrailing(whitespaces);
 
 const FORBIDDEN_CUSTOM_ELEMENT_NAMES = [
   "annotation-xml",
@@ -152,10 +149,10 @@ const potentialCustomElementNameChars = regex(
   /^(?:[-._]|[0-9]|[a-z]|\xB7|[\xC0-\xD6]|[\xD8-\xF6]|[\xF8-\u037D]|[\u037F-\u1FFF]|[\u200C-\u200D]|[\u203F-\u2040]|[\u2070-\u218F]|[\u2C00-\u2FEF]|[\u3001-\uD7FF]|[\uF900-\uFDCF]|[\uFDF0-\uFFFD]|[\u{10000}-\u{EFFFF}])*/ui,
 );
 
-const potentialCustomElementName = sequence([
+const potentialCustomElementName = seq(
   regex(/^[a-z]/i),
   potentialCustomElementNameChars,
-]).map((value) => value.join("").toLowerCase())
+).map((value) => value.join("").toLowerCase())
   .error("Invalid custom element name");
 
 /**
@@ -163,12 +160,12 @@ const potentialCustomElementName = sequence([
  * https://html.spec.whatwg.org/multipage/custom-elements.html#valid-custom-element-name
  */
 export const customElementName: Parser<string> = potentialCustomElementName
-  .bind((name) => {
+  .chain((name) => {
     if (FORBIDDEN_CUSTOM_ELEMENT_NAMES.includes(name)) {
-      return zero.error("Forbidden custom element name");
+      return fail.error("Forbidden custom element name");
     }
     if (!name.includes("-")) {
-      return zero.error("Invalid custom element name (should include a dash)");
+      return fail.error("Invalid custom element name (should include a dash)");
     }
     return result(name);
   });
@@ -188,24 +185,24 @@ const htmlTagName = regex(/^[a-z][a-z0-9]*/i)
  * More generally XML names can have colons, dashes etc.
  * https://www.w3.org/TR/REC-xml/#NT-NameStartChar
  */
-export const tagName = first(customElementName, htmlTagName);
+export const tagName = alt(customElementName, htmlTagName);
 
 // https://html.spec.whatwg.org/#start-tags
-const startTag: Parser<MElement> = sequence([
+const startTag: Parser<MElement> = seq(
   literal("<"),
   tagName,
-  first(
-    whitespaces1.bind(() => many(attribute)),
+  alt(
+    whitespaces1.chain(() => many(attribute)),
     result([]),
   ),
   regex(/\/?>/),
-]).error("Invalid start tag")
-  .bind(([_, tagName, attributes, end]) => {
+).error("Invalid start tag")
+  .chain(([_, tagName, attributes, end]) => {
     const selfClosing = end === "/>";
     const kind = elementKind(tagName);
 
     if (selfClosing && kind !== Kind.VOID) {
-      return zero.error("Unexpected self-closing tag on a non-void element");
+      return fail.error("Unexpected self-closing tag on a non-void element");
     }
 
     return result({ tagName, kind, attributes });
@@ -295,7 +292,7 @@ export const element: Parser<MElement> = createParser((input, position) => {
  * The fragments parser
  */
 export const fragments: Parser<MFragment> = many(
-  first<MNode>(rawText, element, comment),
+  alt<MNode>(rawText, element, comment),
 );
 
 /**
@@ -303,10 +300,10 @@ export const fragments: Parser<MFragment> = many(
  */
 export const shadowRoot: Parser<MFragment> = createParser(
   (input, position) => {
-    const result = sequence([
+    const result = seq(
       spacesAndComments,
       element,
-    ]).map((res) => res.flat()).parse(input, position);
+    ).map((res) => res.flat()).parse(input, position);
 
     if (!result.success) return result;
 
@@ -341,13 +338,13 @@ export const shadowRoot: Parser<MFragment> = createParser(
  *
  * https://html.spec.whatwg.org/#writing
  */
-export const html: Parser<MFragment> = sequence([
+export const html: Parser<MFragment> = seq(
   spacesAndComments,
   doctype,
   spacesAndComments,
   element,
   spacesAndComments,
-]).map((fragments) => fragments.flat());
+).map((fragments) => fragments.flat());
 
 /**
  * The monarch serialization options
