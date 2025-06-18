@@ -122,6 +122,9 @@ const attributeValue = alt(
   regex(/^[^\s='"<>`]+/),
 );
 
+/**
+ * Parsers an HTML attribute
+ */
 export const attribute: Parser<[string, string]> = alt<[string, string]>(
   seq(
     attributeName,
@@ -185,7 +188,7 @@ const htmlTagName = regex(/^[a-z][a-z0-9]*/i)
  * More generally XML names can have colons, dashes etc.
  * https://www.w3.org/TR/REC-xml/#NT-NameStartChar
  */
-export const tagName = alt(customElementName, htmlTagName);
+export const tagName: Parser<string> = alt(customElementName, htmlTagName);
 
 // https://html.spec.whatwg.org/#start-tags
 const startTag: Parser<MElement> = seq(
@@ -414,6 +417,9 @@ export const Kind = {
   NORMAL: "NORMAL",
 } as const;
 
+/**
+ * The different types HTML elements
+ */
 type Kind = keyof typeof Kind;
 
 /**
@@ -427,14 +433,23 @@ const elementKind = (tag: string): Kind => {
   return Kind.NORMAL;
 };
 
+/**
+ * Checks whether a {@linkcode MNode} is an {@linkcode MTextNode}
+ */
 export const isCommentNode = (node: MNode): node is MCommentNode => {
   return node.kind === "COMMENT";
 };
 
+/**
+ * Checks whether a {@linkcode MNode} is an {@linkcode MTextNode}
+ */
 export const isTextNode = (node: MNode): node is MTextNode => {
   return node.kind === "TEXT";
 };
 
+/**
+ * Checks whether a {@linkcode MNode} is an {@linkcode MElement}
+ */
 export const isElementNode = (node: MNode): node is MElement => {
   return node.kind !== "COMMENT" && node.kind !== "TEXT";
 };
