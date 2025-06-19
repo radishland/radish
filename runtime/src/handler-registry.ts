@@ -2,15 +2,11 @@ import { bindingConfig, booleanAttributes } from "./utils.ts";
 
 import { effect, isState } from "./reactivity.ts";
 import type {
-  AttrRequestDetail,
   AutonomousCustomElement,
-  BindableProperty,
-  BindRequestDetail,
   Destructor,
   EffectCallback,
-  HandleRequestDetail,
-  OnRequestDetail,
-  PropRequestDetail,
+  HandleDirectiveEvent,
+  HandleDirectiveEventDetail,
 } from "./types.d.ts";
 
 /**
@@ -51,199 +47,184 @@ export class HandlerRegistry extends HTMLElement
     return this[identifier];
   }
 
-  #handleAttr(e: Event) {
-    if (e instanceof CustomEvent) {
-      const { identifier, attribute, target }: AttrRequestDetail = e.detail;
+  #handleAttr(e: HandleDirectiveEvent) {
+    const { identifier, key, target } = e.detail;
 
-      if (
-        identifier in this && target instanceof HTMLElement &&
-        attribute in target
-      ) {
-        const ref = this.lookup(identifier);
+    if (
+      identifier in this && target instanceof HTMLElement &&
+      key in target
+    ) {
+      const ref = this.lookup(identifier);
 
-        this.effect(() => {
-          if (booleanAttributes.includes(attribute)) {
-            target.toggleAttribute(attribute, ref.valueOf());
-          } else {
-            target.setAttribute(attribute, `${ref}`);
-          }
-        });
+      this.effect(() => {
+        if (booleanAttributes.includes(key)) {
+          target.toggleAttribute(key, ref.valueOf());
+        } else {
+          target.setAttribute(key, `${ref}`);
+        }
+      });
 
-        target.removeAttribute("attr:" + attribute);
-        e.stopPropagation();
-      }
+      target.removeAttribute("attr:" + key);
+      e.stopPropagation();
     }
   }
 
-  #handleBool(e: Event) {
-    if (e instanceof CustomEvent) {
-      const { identifier, attribute, target }: AttrRequestDetail = e.detail;
+  #handleBool(e: HandleDirectiveEvent) {
+    const { identifier, key, target } = e.detail;
 
-      if (identifier in this && target instanceof HTMLElement) {
-        const ref = this.lookup(identifier);
+    if (identifier in this && target instanceof HTMLElement) {
+      const ref = this.lookup(identifier);
 
-        this.effect(() => {
-          target.toggleAttribute(attribute, ref.valueOf());
-        });
+      this.effect(() => {
+        target.toggleAttribute(key, ref.valueOf());
+      });
 
-        target.removeAttribute("bool:" + attribute);
-        e.stopPropagation();
-      }
+      target.removeAttribute("bool:" + key);
+      e.stopPropagation();
     }
   }
 
-  #handleOn(e: Event) {
-    if (e instanceof CustomEvent) {
-      const { identifier, type, target }: OnRequestDetail = e.detail;
+  #handleOn(e: HandleDirectiveEvent) {
+    const { identifier, key, target } = e.detail;
 
-      if (
-        identifier in this && target instanceof HTMLElement &&
-        typeof this.lookup(identifier) === "function"
-      ) {
-        target.addEventListener(type, this.lookup(identifier).bind(this));
+    if (
+      identifier in this && target instanceof HTMLElement &&
+      typeof this.lookup(identifier) === "function"
+    ) {
+      target.addEventListener(key, this.lookup(identifier).bind(this));
 
-        target.removeAttribute("on:" + type);
-        e.stopPropagation();
-      }
+      target.removeAttribute("on:" + key);
+      e.stopPropagation();
     }
   }
 
-  #handleClass(e: Event) {
-    if (e instanceof CustomEvent) {
-      const { identifier, target }: HandleRequestDetail = e.detail;
+  #handleClass(e: HandleDirectiveEvent) {
+    const { identifier, target } = e.detail;
 
-      if (identifier in this && target instanceof HTMLElement) {
-        this.effect(() => {
-          const classList = this.lookup(identifier)?.valueOf();
-          if (
-            target instanceof HTMLElement &&
-            classList &&
-            typeof classList === "object"
-          ) {
-            for (const [k, v] of Object.entries(classList)) {
-              const force = !!(v?.valueOf());
-              for (const className of k.split(" ")) {
-                target.classList.toggle(className, force);
-              }
+    if (identifier in this && target instanceof HTMLElement) {
+      this.effect(() => {
+        const classList = this.lookup(identifier)?.valueOf();
+        if (
+          target instanceof HTMLElement &&
+          classList &&
+          typeof classList === "object"
+        ) {
+          for (const [k, v] of Object.entries(classList)) {
+            const force = !!(v?.valueOf());
+            for (const className of k.split(" ")) {
+              target.classList.toggle(className, force);
             }
           }
-        });
-
-        target.removeAttribute("classList");
-        e.stopPropagation();
-      }
-    }
-  }
-
-  #handleUse(e: Event) {
-    if (e instanceof CustomEvent) {
-      const { identifier, target }: HandleRequestDetail = e.detail;
-
-      if (
-        identifier in this && typeof this.lookup(identifier) === "function" &&
-        target instanceof HTMLElement
-      ) {
-        const cleanup = this.lookup(identifier).bind(this)(target);
-        if (typeof cleanup === "function") {
-          this.#cleanup.push(cleanup);
         }
+      });
 
-        target.removeAttribute("use:" + identifier);
-        e.stopPropagation();
-      }
+      target.removeAttribute("classList");
+      e.stopPropagation();
     }
   }
 
-  #handleProp(e: Event) {
-    if (e instanceof CustomEvent) {
-      const { identifier, property, target }: PropRequestDetail = e.detail;
+  #handleUse(e: HandleDirectiveEvent) {
+    const { key, target } = e.detail;
 
-      if (
-        identifier in this && property in target &&
-        target instanceof HTMLElement
-      ) {
-        const ref = this.lookup(identifier);
+    if (
+      key in this && typeof this.lookup(key) === "function" &&
+      target instanceof HTMLElement
+    ) {
+      const cleanup = this.lookup(key).bind(this)(target);
+      if (typeof cleanup === "function") {
+        this.#cleanup.push(cleanup);
+      }
 
+      target.removeAttribute("use:" + key);
+      e.stopPropagation();
+    }
+  }
+
+  #handleProp(e: HandleDirectiveEvent) {
+    const { identifier, key, target } = e.detail;
+
+    if (
+      identifier in this && key in target &&
+      target instanceof HTMLElement
+    ) {
+      const ref = this.lookup(identifier);
+
+      this.effect(() => {
+        // @ts-ignore property is in target
+        if (isState(target[key])) {
+          // @ts-ignore property is in target
+          target[key].value = ref.valueOf();
+        } else {
+          // @ts-ignore property is in target
+          target[key] = ref.valueOf();
+        }
+      });
+
+      target.removeAttribute("prop:" + key);
+      e.stopPropagation();
+    }
+  }
+
+  #handleText(e: HandleDirectiveEvent) {
+    const { identifier, target } = e.detail;
+
+    if (identifier in this && target instanceof HTMLElement) {
+      const ref = this.lookup(identifier);
+
+      this.effect(() => {
+        target.textContent = `${ref}`;
+      });
+
+      target.removeAttribute("text");
+      e.stopPropagation();
+    }
+  }
+
+  #handleHTML(e: HandleDirectiveEvent) {
+    const { identifier, target } = e.detail;
+
+    if (identifier in this && target instanceof HTMLElement) {
+      const ref = this.lookup(identifier);
+
+      this.effect(() => {
+        target.innerHTML = `${ref}`;
+      });
+
+      target.removeAttribute("html");
+      e.stopPropagation();
+    }
+  }
+
+  #handleBind(e: HandleDirectiveEvent) {
+    const { identifier, key, target } = e.detail;
+
+    if (
+      identifier in this && target instanceof HTMLElement &&
+      key in target
+    ) {
+      const state = this.lookup(identifier);
+      if (isState(state)) {
+        // @ts-ignore property is in target
+        state.value = target[key];
+
+        // Add change listener
+        target.addEventListener(
+          bindingConfig[key as keyof typeof bindingConfig].event,
+          () => {
+            // @ts-ignore property is in target
+            state.value = target[key];
+          },
+        );
+
+        // Sync
         this.effect(() => {
           // @ts-ignore property is in target
-          if (isState(target[property])) {
-            // @ts-ignore property is in target
-            target[property].value = ref.valueOf();
-          } else {
-            // @ts-ignore property is in target
-            target[property] = ref.valueOf();
-          }
+          target[key] = state.value;
         });
-
-        target.removeAttribute("prop:" + property);
-        e.stopPropagation();
       }
-    }
-  }
 
-  #handleText(e: Event) {
-    if (e instanceof CustomEvent) {
-      const { identifier, target }: HandleRequestDetail = e.detail;
-
-      if (identifier in this && target instanceof HTMLElement) {
-        const ref = this.lookup(identifier);
-
-        this.effect(() => {
-          target.textContent = `${ref}`;
-        });
-
-        target.removeAttribute("text");
-        e.stopPropagation();
-      }
-    }
-  }
-
-  #handleHTML(e: Event) {
-    if (e instanceof CustomEvent) {
-      const { identifier, target }: HandleRequestDetail = e.detail;
-
-      if (identifier in this && target instanceof HTMLElement) {
-        const ref = this.lookup(identifier);
-
-        this.effect(() => {
-          target.innerHTML = `${ref}`;
-        });
-
-        target.removeAttribute("html");
-        e.stopPropagation();
-      }
-    }
-  }
-
-  #handleBind(e: Event) {
-    if (e instanceof CustomEvent) {
-      const { identifier, property, target }: BindRequestDetail = e.detail;
-
-      if (
-        identifier in this && target instanceof HTMLElement &&
-        property in target
-      ) {
-        const state = this.lookup(identifier);
-        if (isState(state)) {
-          // @ts-ignore property is in target
-          state.value = target[property];
-
-          // Add change listener
-          target.addEventListener(bindingConfig[property].event, () => {
-            // @ts-ignore property is in target
-            state.value = target[property];
-          });
-
-          // Sync
-          this.effect(() => {
-            // @ts-ignore property is in target
-            target[property] = state.value;
-          });
-        }
-
-        target.removeAttribute("bind:" + property);
-        e.stopPropagation();
-      }
+      target.removeAttribute("bind:" + key);
+      e.stopPropagation();
     }
   }
 
@@ -263,10 +244,10 @@ export class HandlerRegistry extends HTMLElement
         cancelable: true,
         composed: true,
         detail: {
-          attribute: key,
+          key,
           identifier: attribute.value || key,
           target: element,
-        } satisfies AttrRequestDetail,
+        } satisfies HandleDirectiveEventDetail,
       });
 
       element.dispatchEvent(attrRequest);
@@ -282,10 +263,10 @@ export class HandlerRegistry extends HTMLElement
           cancelable: true,
           composed: true,
           detail: {
-            property: property as BindableProperty,
+            key: property,
             identifier,
             target: element,
-          } satisfies BindRequestDetail,
+          } satisfies HandleDirectiveEventDetail,
         });
 
         element.dispatchEvent(bindRequest);
@@ -305,10 +286,10 @@ export class HandlerRegistry extends HTMLElement
           cancelable: true,
           composed: true,
           detail: {
-            attribute: key,
+            key,
             identifier: bool.value || key,
             target: element,
-          } satisfies AttrRequestDetail,
+          } satisfies HandleDirectiveEventDetail,
         }),
       );
     }
@@ -322,8 +303,9 @@ export class HandlerRegistry extends HTMLElement
         composed: true,
         detail: {
           identifier: classList,
+          key: "classList",
           target: element,
-        } satisfies HandleRequestDetail,
+        } satisfies HandleDirectiveEventDetail,
       });
 
       element.dispatchEvent(classRequest);
@@ -338,8 +320,9 @@ export class HandlerRegistry extends HTMLElement
         composed: true,
         detail: {
           identifier: html,
+          key: "innerHTML",
           target: element,
-        } satisfies HandleRequestDetail,
+        } satisfies HandleDirectiveEventDetail,
       });
 
       element.dispatchEvent(htmlRequest);
@@ -357,10 +340,10 @@ export class HandlerRegistry extends HTMLElement
         cancelable: true,
         composed: true,
         detail: {
-          type,
+          key: type,
           identifier: event.value || type,
           target: element,
-        } satisfies OnRequestDetail,
+        } satisfies HandleDirectiveEventDetail,
       });
 
       element.dispatchEvent(onRequest);
@@ -378,10 +361,10 @@ export class HandlerRegistry extends HTMLElement
         cancelable: true,
         composed: true,
         detail: {
-          property: key,
+          key,
           identifier: prop.value || key,
           target: element,
-        } satisfies PropRequestDetail,
+        } satisfies HandleDirectiveEventDetail,
       });
 
       element.dispatchEvent(propRequest);
@@ -396,8 +379,9 @@ export class HandlerRegistry extends HTMLElement
         composed: true,
         detail: {
           identifier: text,
+          key: "textContent",
           target: element,
-        } satisfies HandleRequestDetail,
+        } satisfies HandleDirectiveEventDetail,
       });
 
       element.dispatchEvent(textRequest);
@@ -415,9 +399,10 @@ export class HandlerRegistry extends HTMLElement
         cancelable: true,
         composed: true,
         detail: {
-          identifier,
+          key: identifier,
+          identifier: "",
           target: element,
-        } satisfies HandleRequestDetail,
+        } satisfies HandleDirectiveEventDetail,
       });
 
       element.dispatchEvent(useRequest);

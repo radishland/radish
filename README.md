@@ -640,7 +640,7 @@ The `use` directive runs a lifecycle hook on an element.
 
 ```html
 <handle-hook>
-  <span use="hook">I'm hooked</span>
+  <span use:hook>I'm hooked</span>
 </handle-hook>
 ```
 

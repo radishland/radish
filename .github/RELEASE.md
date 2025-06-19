@@ -9,6 +9,7 @@ To cut a release, follow these steps:
    ```sh
    deno publish --dry-run
    deno doc --lint */*.ts
+   deno test --doc
    ```
 
 2. Create a release branch and run the version bump script from the root:

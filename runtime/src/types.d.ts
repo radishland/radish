@@ -1,24 +1,33 @@
-export interface HandleRequestDetail {
+import type { HandlerRegistry } from "./handler-registry.ts";
+
+export type TypedEvent<T extends EventTarget, Detail> = CustomEvent<Detail> & {
+  target: T;
+};
+
+type HandlerRegistryEvent<D> = TypedEvent<HandlerRegistry, D>;
+
+export interface HandleDirectiveEventDetail {
   target: EventTarget;
   identifier: string;
+  key: string;
 }
 
-export interface OnRequestDetail extends HandleRequestDetail {
-  type: string;
-}
+export type HandleDirectiveEvent = HandlerRegistryEvent<
+  HandleDirectiveEventDetail
+>;
 
-export interface AttrRequestDetail extends HandleRequestDetail {
-  attribute: string;
-}
-
-export interface PropRequestDetail extends HandleRequestDetail {
-  property: string;
-}
-
-export type BindableProperty = "checked" | "value";
-
-export interface BindRequestDetail extends HandleRequestDetail {
-  property: BindableProperty;
+declare global {
+  interface GlobalEventHandlersEventMap {
+    "rad::attr": HandleDirectiveEvent;
+    "rad::bind": HandleDirectiveEvent;
+    "rad::bool": HandleDirectiveEvent;
+    "rad::classlist": HandleDirectiveEvent;
+    "rad::html": HandleDirectiveEvent;
+    "rad::on": HandleDirectiveEvent;
+    "rad::prop": HandleDirectiveEvent;
+    "rad::text": HandleDirectiveEvent;
+    "rad::use": HandleDirectiveEvent;
+  }
 }
 
 export interface AutonomousCustomElement {
