@@ -3,7 +3,7 @@ import { fs } from "$effects/fs.ts";
 import { workspaceRelative } from "$lib/utils/path.ts";
 import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
 import { unimplemented } from "@std/assert";
-import { ensureDir, exists } from "@std/fs";
+import { ensureDir, exists, walk } from "@std/fs";
 import { dirname, fromFileUrl } from "@std/path";
 
 /**
@@ -107,6 +107,10 @@ export const onFSRemove = handlerFor(fs.remove, async (path) => {
   invalidateFileCache(workspaceRelative(path));
 });
 
+const onFSWalk = handlerFor(fs.walk, async (root, options) => {
+  return await Array.fromAsync(walk(root, options));
+});
+
 /**
  * The fs plugin
  *
@@ -121,6 +125,7 @@ export const pluginFS: Plugin = {
     onFSRead,
     onFSWrite,
     onFSRemove,
+    onFSWalk,
     /**
      * Invalidates the file cache when a file is modified or removed
      */
