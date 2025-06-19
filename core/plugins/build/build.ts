@@ -6,7 +6,7 @@ import { expandGlobWorkspaceRelative } from "$lib/utils/fs.ts";
 import { workspaceRelative } from "$lib/utils/path.ts";
 import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
 import { distinctBy } from "@std/collections";
-import { emptyDirSync, ensureDirSync, type WalkEntry } from "@std/fs";
+import type { WalkEntry } from "@std/fs";
 import { join } from "@std/path";
 import { buildHMRHook } from "./hooks/hmr.update.ts";
 
@@ -41,7 +41,9 @@ const handleBuildStart = handlerFor(
     console.log("Building...");
 
     if (!options.incremental) {
-      emptyDirSync(buildFolder);
+      if (await fs.exists(buildFolder)) {
+        await fs.remove(buildFolder);
+      }
     }
 
     const entryArrays = await Promise.all(
@@ -56,7 +58,7 @@ const handleBuildStart = handlerFor(
         await build.file(entry.path);
       } else {
         const dest = await build.dest(entry.path);
-        ensureDirSync(dest);
+        await fs.ensureDir(dest);
       }
     }
   },

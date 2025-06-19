@@ -1,13 +1,12 @@
-import { hmr } from "$effects/hmr.ts";
 import { fs } from "$effects/fs.ts";
+import { hmr } from "$effects/hmr.ts";
 import { manifest, manifestPath } from "$effects/manifest.ts";
-import { generatedFolder } from "$lib/conventions.ts";
 import type { ManifestBase } from "$lib/types.d.ts";
 import { expandGlobWorkspaceRelative } from "$lib/utils/fs.ts";
 import { extractImports } from "$lib/utils/parse.ts";
 import { stringifyObject } from "$lib/utils/stringify.ts";
 import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
-import { ensureDirSync, type ExpandGlobOptions } from "@std/fs";
+import type { ExpandGlobOptions } from "@std/fs";
 import { extname } from "@std/path";
 
 let manifestObject: ManifestBase = {
@@ -77,8 +76,6 @@ export const handleManifestUpdateTerminal = handlerFor(
  * - `fs.write`
  */
 const handleManifestWrite = handlerFor(manifest.write, async () => {
-  ensureDirSync(generatedFolder);
-
   let file = "export const manifest = ";
   file += stringifyObject(manifestObject);
 
