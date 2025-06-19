@@ -1,13 +1,11 @@
 import { build } from "$effects/build.ts";
 import { fs } from "$effects/fs.ts";
+import { config } from "$effects/mod.ts";
 import { buildFolder } from "$lib/conventions.ts";
 import { id } from "$lib/utils/algebraic-structures.ts";
-import { expandGlobWorkspaceRelative } from "$lib/utils/fs.ts";
 import { workspaceRelative } from "$lib/utils/path.ts";
-import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
-import { distinctBy } from "@std/collections";
-import type { WalkEntry } from "@std/fs";
-import { join } from "@std/path";
+import { handlerFor, type Plugin } from "@radish/effect-system";
+import { globToRegExp, join } from "@std/path";
 import { buildHMRHook } from "./hooks/hmr.update.ts";
 
 /**
@@ -34,10 +32,14 @@ const onBuildFile = handlerFor(build.file, async (path: string) => {
  * - `build/file`
  * - `build/sort`
  * - `build/dest`
+ * - `config/read`
+ * - `fs/exists`
+ * - `fs/remove`
+ * - `fs/walk`
  */
-const handleBuildStart = handlerFor(
-  build.start,
-  async (paths, options = { incremental: false }): Promise<void> => {
+const onBuildStart = handlerFor(
+  build.files,
+  async (glob, options = { incremental: false }): Promise<void> => {
     console.log("Building...");
 
     if (!options.incremental) {
@@ -46,46 +48,31 @@ const handleBuildStart = handlerFor(
       }
     }
 
-    const entryArrays = await Promise.all(
-      paths.map((p) => Array.fromAsync(expandGlobWorkspaceRelative(p))),
-    );
-    const entries: WalkEntry[] = entryArrays.flat();
-    const uniqueEntries = distinctBy(entries, (entry) => entry.path);
-    const sortedEntries = await build.sort(uniqueEntries);
+    const match = globToRegExp(glob);
+
+    const entries = await fs.walk(Deno.cwd(), {
+      match: [match],
+      includeDirs: false,
+      skip: (await config.read()).build?.skip ?? [/(\.test|\.spec)\.ts$/],
+    });
+
+    const sortedEntries = await build.sort(entries);
 
     for (const entry of sortedEntries) {
-      if (entry.isFile) {
-        await build.file(entry.path);
-      } else {
-        const dest = await build.dest(entry.path);
-        await fs.ensureDir(dest);
-      }
+      await build.file(entry.path);
     }
   },
 );
 
-const skipBuild = /\.(d|spec|test)\.(js|ts)$/;
-
-/**
- * Skips test files and declaration files during the build
- */
-const handleBuildSortFilterTestFiles = handlerFor(build.sort, (entries) => {
-  entries = entries.filter((entry) =>
-    entry.isFile && !skipBuild.test(entry.path)
-  );
-
-  return Handler.continue(entries);
-});
-
 /**
  * Base handler for the build/sort effect
  */
-const handleBuildSortTerminal = handlerFor(build.sort, id);
+const onBuildSortTerminal = handlerFor(build.sort, id);
 
 /**
  * Canonically handles {@linkcode build.transform} as an identity transform
  */
-export const handleBuildTransformTerminal = handlerFor(
+export const onBuildTransformTerminal = handlerFor(
   build.transform,
   (_, content) => content,
 );
@@ -93,7 +80,7 @@ export const handleBuildTransformTerminal = handlerFor(
 /**
  * Handles {@linkcode build.dest} effects
  */
-export const handleBuildDest = handlerFor(
+export const onBuildDest = handlerFor(
   build.dest,
   (path) => join(buildFolder, workspaceRelative(path)),
 );
@@ -105,18 +92,21 @@ export const handleBuildDest = handlerFor(
  * - `hmr/update`
  *
  * @performs
+ * - `config/read`
+ * - `fs/exists`
  * - `fs/read`
+ * - `fs/remove`
+ * - `fs/walk`
  * - `fs/write`
  */
 export const pluginBuild: Plugin = {
   name: "plugin-build",
   handlers: [
     onBuildFile,
-    handleBuildSortFilterTestFiles,
-    handleBuildSortTerminal,
-    handleBuildStart,
-    handleBuildTransformTerminal,
-    handleBuildDest,
+    onBuildSortTerminal,
+    onBuildStart,
+    onBuildTransformTerminal,
+    onBuildDest,
     buildHMRHook,
   ],
 };
