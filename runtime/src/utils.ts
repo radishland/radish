@@ -102,4 +102,4 @@ export const bindingConfig = {
     type: ["string", "number"],
     event: "input",
   },
-};
+} as const;
