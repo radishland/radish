@@ -6,9 +6,9 @@ import {
   pluginBuild,
   pluginConfig,
   pluginEnv,
+  pluginFS,
   pluginHMR,
   pluginImportmap,
-  pluginIO,
   pluginManifest,
   pluginRender,
   pluginRouter,
@@ -80,7 +80,7 @@ const scope = new HandlerScope(
   pluginBuild,
   pluginEnv,
   pluginConfig,
-  pluginIO,
+  pluginFS,
 );
 onDispose(scope[Symbol.asyncDispose]);
 

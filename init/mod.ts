@@ -60,8 +60,8 @@
  * @module
  */
 
-import { io } from "@radish/core/effects";
-import { pluginIO } from "@radish/core/plugins";
+import { fs } from "@radish/core/effects";
+import { pluginFS } from "@radish/core/plugins";
 import { HandlerScope } from "@radish/effect-system";
 import {
   assert,
@@ -77,13 +77,13 @@ import { emptyDirSync, existsSync, walkSync } from "@std/fs";
 import { dirname, join, relative, SEPARATOR } from "@std/path";
 import { UntarStream } from "@std/tar";
 
-using _ = new HandlerScope(pluginIO);
+using _ = new HandlerScope(pluginFS);
 
 const module = import.meta.url;
 const moduleDir = dirname(module);
 console.log("module:", module);
 
-const denoConfig = await io.read(join(moduleDir, "deno.jsonc"));
+const denoConfig = await fs.read(join(moduleDir, "deno.jsonc"));
 const version = await JSON.parse(denoConfig)["version"];
 
 assertExists(version, ". Version couldn't be determined");
@@ -155,7 +155,7 @@ try {
     moduleDirURL.protocol === "https:" && moduleDirURL.hostname === "jsr.io"
   ) {
     const metaURL = moduleDir + `_meta.json`;
-    const content = await io.read(metaURL);
+    const content = await fs.read(metaURL);
     const metadata = JSON.parse(content);
     assertObjectMatch(metadata, { manifest: {} });
 
@@ -244,7 +244,7 @@ try {
       const dest = join(projectPath, ...path.split(SEPARATOR).slice(3));
 
       Deno.mkdirSync(dirname(dest), { recursive: true });
-      await io.write(dest, content);
+      await fs.write(dest, content);
     }
   } else if (moduleDirURL.protocol === "file:") {
     const templatePath = join(moduleDirURL.pathname, "template");
@@ -261,14 +261,14 @@ try {
       .map((e) => e.path);
 
     for (const path of paths) {
-      const content = await io.read(path);
+      const content = await fs.read(path);
       const dest = join(
         projectPath,
         ...relative(templatePath, path).split(SEPARATOR).slice(1),
       );
 
       Deno.mkdirSync(dirname(dest), { recursive: true });
-      await io.write(dest, content);
+      await fs.write(dest, content);
     }
   } else {
     unimplemented("init method");
