@@ -12,7 +12,13 @@ const elementsDir = join(rootDir, "elements");
 export const onManifest = handlerFor(manifest.set, async (_manifest) => {
   await manifest.set(_manifest);
 
-  for (const entry of walkSync(elementsDir, { includeDirs: false })) {
-    await manifest.update({ ...entry, path: relative(Deno.cwd(), entry.path) });
+  // Ensure we're not updating an empty manifest
+  if (Object.hasOwn(_manifest, "elements")) {
+    for (const entry of walkSync(elementsDir, { includeDirs: false })) {
+      await manifest.update({
+        ...entry,
+        path: relative(Deno.cwd(), entry.path),
+      });
+    }
   }
 }, { once: true, reentrant: false });
