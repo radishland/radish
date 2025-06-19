@@ -120,6 +120,7 @@ export const pluginFS: Plugin = {
     onFSExists,
     onFSRead,
     onFSWrite,
+    onFSRemove,
     /**
      * Invalidates the file cache when a file is modified or removed
      */

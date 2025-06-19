@@ -41,7 +41,9 @@ const handleBuildStart = handlerFor(
     console.log("Building...");
 
     if (!options.incremental) {
-      await fs.remove(buildFolder);
+      if (await fs.exists(buildFolder)) {
+        await fs.remove(buildFolder);
+      }
     }
 
     const entryArrays = await Promise.all(
