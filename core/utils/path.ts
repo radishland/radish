@@ -1,12 +1,5 @@
 import { assert } from "@std/assert";
-import {
-  basename,
-  common,
-  extname,
-  isAbsolute,
-  relative,
-  resolve,
-} from "@std/path";
+import { basename, extname, isAbsolute, relative, SEPARATOR } from "@std/path";
 
 /**
  * Returns the file name without the extension
@@ -27,15 +20,9 @@ export const workspaceRelative = (path: string) => {
 /**
  * Checks whether two paths are in a parent - child relation
  *
- * @param parent The parent path. Must be a directory
+ * @param parent The parent path
  * @param child The child path
- *
- * @throws {AssertionError} if the parent path is not a directory
  */
 export const isParent = (parent: string, child: string): boolean => {
-  assert(extname(parent) === "");
-
-  const resolvedParent = resolve(parent);
-  const resolvedChild = resolve(child);
-  return common([resolvedParent, resolvedChild]) === resolvedParent;
+  return relative(parent, child).split(SEPARATOR).at(0) !== "..";
 };
