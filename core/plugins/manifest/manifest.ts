@@ -1,5 +1,5 @@
 import { hmr } from "$effects/hmr.ts";
-import { io } from "$effects/io.ts";
+import { fs } from "$effects/fs.ts";
 import { manifest, manifestPath } from "$effects/manifest.ts";
 import { generatedFolder } from "$lib/conventions.ts";
 import type { ManifestBase } from "$lib/types.d.ts";
@@ -42,14 +42,14 @@ export const handleManifestGet = handlerFor(manifest.get, () => manifestObject);
  * - manifest/update
  *
  * @performs
- * - io/read
+ * - fs/read
  */
 export const handleManifestUpdateExtractImports = handlerFor(
   manifest.update,
   async (entry) => {
     if (entry.isFile && [".js", ".ts"].includes(extname(entry.path))) {
       const manifestObject = await manifest.get();
-      const content = await io.read(entry.path);
+      const content = await fs.read(entry.path);
       const imports = extractImports(content);
       manifestObject.imports[entry.path] = imports;
     }
@@ -74,7 +74,7 @@ export const handleManifestUpdateTerminal = handlerFor(
  * - `manifest/write`
  *
  * @performs
- * - `io.write`
+ * - `fs.write`
  */
 const handleManifestWrite = handlerFor(manifest.write, async () => {
   ensureDirSync(generatedFolder);
@@ -82,7 +82,7 @@ const handleManifestWrite = handlerFor(manifest.write, async () => {
   let file = "export const manifest = ";
   file += stringifyObject(manifestObject);
 
-  await io.write(manifestPath, file);
+  await fs.write(manifestPath, file);
 });
 
 /**
@@ -90,8 +90,8 @@ const handleManifestWrite = handlerFor(manifest.write, async () => {
  * - `hmr/update`
  *
  * @performs
- * - `io/read`
- * - `io/write`
+ * - `fs/read`
+ * - `fs/write`
  */
 export const pluginManifest: Plugin = {
   name: "plugin-manifest",

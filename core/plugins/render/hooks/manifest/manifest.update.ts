@@ -1,4 +1,4 @@
-import { io } from "$effects/io.ts";
+import { fs } from "$effects/fs.ts";
 import { manifest } from "$effects/manifest.ts";
 import type {
   ElementManifest,
@@ -26,7 +26,7 @@ import { dependencies } from "../../utils/walk.ts";
  * - `manifest/update`
  *
  * @performs
- * - `io/read`
+ * - `fs/read`
  */
 export const handleManifestUpdateRenderHook = handlerFor(
   manifest.update,
@@ -75,7 +75,7 @@ export const handleManifestUpdateRenderHook = handlerFor(
 
             let fragment;
             try {
-              const content = await io.read(entry.path);
+              const content = await fs.read(entry.path);
               fragment = shadowRoot.parseOrThrow(content);
             } catch (error) {
               console.error(
@@ -121,7 +121,7 @@ export const handleManifestUpdateRenderHook = handlerFor(
       if (extname(entry.name) === ".html") {
         let fragment;
         try {
-          const content = await io.read(entry.path);
+          const content = await fs.read(entry.path);
           fragment = fragments.parseOrThrow(content);
         } catch (error) {
           console.error(`Something went wrong while parsing ${entry.path}`);

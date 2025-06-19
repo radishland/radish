@@ -3,7 +3,7 @@ export { config, denoConfig } from "./config.ts";
 export { env } from "./env.ts";
 export { hmr, type HmrEvent } from "./hmr.ts";
 export { importmap } from "./importmap.ts";
-export { io } from "./io.ts";
+export { fs } from "./fs.ts";
 export { manifest } from "./manifest.ts";
 export {
   type ElementManifest,

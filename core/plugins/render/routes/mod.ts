@@ -7,7 +7,7 @@ import { handleSpeculationRules } from "./speculation-rules.ts";
  * @performs
  * - `config/read`
  * - `build/dest`
- * - `io/read`
+ * - `fs/read`
  * - `manifest/get`
  */
 export const handleRoutes = [

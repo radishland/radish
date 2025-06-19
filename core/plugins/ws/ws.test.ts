@@ -1,6 +1,6 @@
 import { manifest } from "$effects/manifest.ts";
-import { build, config, io, render } from "$effects/mod.ts";
-import { pluginIO, pluginRender, pluginWS } from "$lib/plugins/mod.ts";
+import { build, config, fs, render } from "$effects/mod.ts";
+import { pluginFS, pluginRender, pluginWS } from "$lib/plugins/mod.ts";
 import { Handler, handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals, unreachable } from "@std/assert";
 import { join } from "@std/path";
@@ -17,7 +17,7 @@ describe("ws plugin", () => {
         if (path === "routes/_app.html") return "build/routes/_app.html";
         unreachable();
       }),
-      handlerFor(io.read, (path) => {
+      handlerFor(fs.read, (path) => {
         if (path === "build/routes/_app.html") return app;
         return Handler.continue(path);
       }),
@@ -28,7 +28,7 @@ describe("ws plugin", () => {
       handlerFor(manifest.get, () => manifestShape),
       pluginWS,
       pluginRender,
-      pluginIO,
+      pluginFS,
     );
 
     const output = await Deno.readTextFile(

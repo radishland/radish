@@ -1,5 +1,5 @@
 import { hmr } from "$effects/hmr.ts";
-import { io } from "$effects/io.ts";
+import { fs } from "$effects/fs.ts";
 import { workspaceRelative } from "$lib/utils/path.ts";
 import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
 import { unimplemented } from "@std/assert";
@@ -30,7 +30,7 @@ const readLocalTextFile = async (path: string) => {
 };
 
 /**
- * Handles {@linkcode io.read} and returns the content of a local or remote file
+ * Handles {@linkcode fs.read} and returns the content of a local or remote file
  *
  * Caches the result of read operations for efficient file access
  *
@@ -40,7 +40,7 @@ const readLocalTextFile = async (path: string) => {
  *
  * @throws {AssertionError Unimplemented} If the the path URL is not on the `file:` or `https:` protocol
  */
-export const handleIORead = handlerFor(io.read, async (path) => {
+export const onFSRead = handlerFor(fs.read, async (path) => {
   try {
     const url = new URL(path);
 
@@ -68,17 +68,17 @@ export const handleIORead = handlerFor(io.read, async (path) => {
     throw error;
   }
 });
-handleIORead[Symbol.dispose] = () => {
+onFSRead[Symbol.dispose] = () => {
   fileCache.clear();
 };
 
 /**
- * Handles {@linkcode io.write} effects by writing string data to the given path, creating a new file if needed, else overwriting.
+ * Handles {@linkcode fs.write} effects by writing string data to the given path, creating a new file if needed, else overwriting.
  *
  * Invalidates the file cache after a file write
  */
-export const handleIOWrite = handlerFor(
-  io.write,
+export const onFSWrite = handlerFor(
+  fs.write,
   async (path, data) => {
     path = workspaceRelative(path);
     await ensureDir(dirname(path));
@@ -88,16 +88,16 @@ export const handleIOWrite = handlerFor(
 );
 
 /**
- * The io plugin
+ * The fs plugin
  *
  * @hooks
  * - `hmr/update`
  */
-export const pluginIO: Plugin = {
-  name: "plugin-io",
+export const pluginFS: Plugin = {
+  name: "plugin-fs",
   handlers: [
-    handleIORead,
-    handleIOWrite,
+    onFSRead,
+    onFSWrite,
     /**
      * Invalidates the file cache when a file is modified or removed
      */

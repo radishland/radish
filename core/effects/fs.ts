@@ -1,11 +1,11 @@
 import { createEffect, type Effect } from "@radish/effect-system";
 
-interface IO {
+interface FS {
   read: (path: string) => string;
   write: (path: string, content: string) => void;
 }
 
-export const io: {
+export const fs: {
   /**
    * Reads a file from a path
    */
@@ -15,6 +15,6 @@ export const io: {
    */
   write: (path: string, content: string) => Effect<void>;
 } = {
-  read: createEffect<IO["read"]>("io/read"),
-  write: createEffect<IO["write"]>("io/write"),
+  read: createEffect<FS["read"]>("fs/read"),
+  write: createEffect<FS["write"]>("fs/write"),
 };

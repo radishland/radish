@@ -1,9 +1,9 @@
-import { assertEquals } from "@std/assert";
 import { config } from "$effects/config.ts";
-import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { env } from "$effects/env.ts";
-import { io } from "$effects/io.ts";
-import { pluginEnv } from "../env/env.ts";
+import { fs } from "$effects/fs.ts";
+import { pluginEnv } from "$lib/plugins/mod.ts";
+import { handlerFor, HandlerScope } from "@radish/effect-system";
+import { assertEquals } from "@std/assert";
 
 const handlers = [
   handlerFor(
@@ -20,8 +20,8 @@ const handlers = [
     }),
   ),
 
-  handlerFor(io.read, () => envFile),
-  handlerFor(io.write, (_path, content) => {
+  handlerFor(fs.read, () => envFile),
+  handlerFor(fs.write, (_path, content) => {
     result = content;
   }),
 ];

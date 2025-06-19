@@ -1,4 +1,4 @@
-import { config, io, render } from "$effects/mod.ts";
+import { config, fs, render } from "$effects/mod.ts";
 import { indent } from "$lib/utils/text.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { dirname, join } from "@std/path";
@@ -12,7 +12,7 @@ const moduleDir = dirname(import.meta.url);
  *
  * @performs
  * - `config/read`
- * - `io/read` Retrieves the ws script to insert
+ * - `fs/read` Retrieves the ws script to insert
  */
 export const handleInsertWebSocketScript = handlerFor(
   render.route,
@@ -21,7 +21,7 @@ export const handleInsertWebSocketScript = handlerFor(
 
     if (args?.dev) {
       // the script can be remote in preview contexts
-      const rawScript = await io.read(join(moduleDir, "./script.nofmt.html"));
+      const rawScript = await fs.read(join(moduleDir, "./script.nofmt.html"));
 
       insertHead += "\n" + indent(rawScript, 2 * 2);
     }

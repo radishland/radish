@@ -1,4 +1,4 @@
-import { io } from "$effects/io.ts";
+import { fs } from "$effects/fs.ts";
 import { manifest } from "$effects/manifest.ts";
 import {
   handleManifestGet,
@@ -48,7 +48,7 @@ describe("manifest render hook", () => {
     };
 
     using _ = new HandlerScope(
-      handlerFor(io.read, (path) => {
+      handlerFor(fs.read, (path) => {
         const content = files[path];
         assertExists(content);
         return content;

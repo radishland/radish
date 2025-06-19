@@ -1,19 +1,19 @@
 import { appPath, target_head } from "$lib/conventions.ts";
 import { handlerFor } from "@radish/effect-system";
-import { io } from "$effects/io.ts";
+import { fs } from "$effects/fs.ts";
 import { render } from "$effects/render.ts";
 import { build } from "$effects/mod.ts";
 
 /**
  * @performs
  * - `build/dest`
- * - `io/read`
+ * - `fs/read`
  */
 export const handleRouteBase = handlerFor(
   render.route,
   async (_route, insertHead, insertBody) => {
     const appSkeletonPath = await build.dest(appPath);
-    const appSkeleton = await io.read(appSkeletonPath);
+    const appSkeleton = await fs.read(appSkeletonPath);
 
     return appSkeleton
       .replace(target_head, insertHead)

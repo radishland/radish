@@ -1,5 +1,5 @@
 import { manifest } from "$effects/manifest.ts";
-import { io } from "$effects/mod.ts";
+import { fs } from "$effects/mod.ts";
 import { type LayoutManifest, type Manifest, render } from "$effects/render.ts";
 import { dev } from "$lib/environment.ts";
 import { isParent } from "$lib/utils/path.ts";
@@ -25,12 +25,12 @@ export const handleRouteLayoutsAndHeadElements = handlerFor(
 
     const pageFragments = await Promise.all(
       layouts.map(async (layout) => {
-        const template = await io.read(layout.templatePath);
+        const template = await fs.read(layout.templatePath);
         return fragments.parseOrThrow(template);
       }),
     );
 
-    const routeTemplate = await io.read(route.templatePath);
+    const routeTemplate = await fs.read(route.templatePath);
     const routeFragmentsTransformed = await Promise.all(
       fragments.parseOrThrow(routeTemplate).map(transformNode),
     );
