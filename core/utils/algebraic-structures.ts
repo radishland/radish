@@ -11,9 +11,9 @@ interface Monad<T> {
   bind<U>(fn: (value: T) => Monad<U>): Monad<U>;
 }
 
-export abstract class Option<T> {
+export abstract class Option<T> implements Functor<T>, Monad<T> {
   abstract map<U>(fn: (value: T) => U): Option<U>;
-  abstract flatMap<U>(fn: (value: T) => Option<U>): Option<U>;
+  abstract bind<U>(fn: (value: T) => Option<U>): Option<U>;
 
   abstract isSome(): this is Some<T>;
   abstract isNone(): this is None<T>;
@@ -51,7 +51,7 @@ class Some<T> extends Option<T> {
     return new Some(fn(this.#value));
   }
 
-  override flatMap<U>(fn: (v: T) => Option<U>): Option<U> {
+  override bind<U>(fn: (v: T) => Option<U>): Option<U> {
     return fn(this.#value);
   }
 
@@ -88,7 +88,7 @@ class None<T> extends Option<T> {
     return new None();
   }
 
-  override flatMap<U>(_fn: (value: T) => Option<U>): Option<U> {
+  override bind<U>(_fn: (value: T) => Option<U>): Option<U> {
     return new None();
   }
 

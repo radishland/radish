@@ -42,19 +42,3 @@ export class TtlCache<K, V> extends Map<K, V> implements Disposable {
     this.clear();
   }
 }
-
-/**
- * Generic memoize decorator for a function with no arguments
- */
-export const memoize = <T>(fn: () => T): () => T => {
-  let computed = false;
-  let result: T;
-
-  return () => {
-    if (!computed) {
-      computed = true;
-      result = fn();
-    }
-    return result;
-  };
-};

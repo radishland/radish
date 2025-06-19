@@ -1,6 +1,6 @@
 import { hmr } from "$effects/hmr.ts";
 import { build, fs } from "$effects/mod.ts";
-import { throwUnlessNotFound } from "$lib/utils/io.ts";
+import { throwUnlessNotFound } from "$lib/utils/fs.ts";
 import { isParent } from "$lib/utils/path.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 

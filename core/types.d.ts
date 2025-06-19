@@ -20,7 +20,7 @@ export interface Config {
    */
   build?: {
     /**
-     * If specified, entries matching the patterns specified by this option are excluded from the build
+     * Entries matching the patterns specified by this option are excluded from the build
      *
      * @default
      * [/(\.test|\.spec)\.ts$/]
@@ -36,6 +36,18 @@ export interface Config {
     envPath?: string;
   };
   importmap?: ImportMapOptions;
+  /**
+   * The manifest options
+   */
+  manifest?: {
+    /**
+     * Entries matching the patterns specified by this option are excluded from the manifest
+     *
+     * @default
+     * [/(\.test|\.spec)\.ts$/]
+     */
+    skip?: RegExp[];
+  };
   router?: {
     /**
      * An object mapping matcher names to their corresponding regexp definition.

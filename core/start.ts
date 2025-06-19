@@ -46,9 +46,9 @@ export async function startApp(config: Config) {
 
   if (cliArgs.manifest) {
     console.log("Generating manifest...");
-    await updateManifest("**", { root: libFolder });
-    await updateManifest("**", { root: elementsFolder });
-    await updateManifest("**", { root: routesFolder });
+    await updateManifest(
+      `+(${libFolder}|${elementsFolder}|${routesFolder})/**`,
+    );
     await manifest.write();
   }
 

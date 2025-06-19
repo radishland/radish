@@ -1,21 +1,5 @@
-import { expandGlob, type ExpandGlobOptions, type WalkEntry } from "@std/fs";
+import type { WalkEntry } from "@std/fs";
 import { basename } from "@std/path";
-import { mapAsyncIterator } from "./iter.ts";
-import { workspaceRelative } from "./path.ts";
-
-/**
- * Maps the `@std/expandGlob` async iterator so that file paths are
- * normalized relative to the workspace root
- */
-export function expandGlobWorkspaceRelative(
-  glob: string | URL,
-  options?: ExpandGlobOptions,
-): AsyncIterableIterator<WalkEntry> {
-  return mapAsyncIterator(
-    expandGlob(glob, options),
-    (entry) => ({ ...entry, path: workspaceRelative(entry.path) }),
-  );
-}
 
 /**
  * Creates a WalkEntry from a path
@@ -29,3 +13,12 @@ export const createWalkEntry = (path: string): WalkEntry => {
     isSymlink: false,
   };
 };
+
+/**
+ * Rethrows errors only if they're not a Deno.errors.NotFound instance
+ */
+export function throwUnlessNotFound(error: unknown) {
+  if (!(error instanceof Deno.errors.NotFound)) {
+    throw error;
+  }
+}
