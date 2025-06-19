@@ -17,6 +17,7 @@ import {
   pluginWS,
 } from "@radish/core/plugins";
 import { Handler, handlerFor, HandlerScope } from "@radish/effect-system";
+import { elementsPlugin } from "@radish/elements";
 import { serveDir, UserAgent } from "@std/http";
 import { join } from "@std/path";
 
@@ -122,6 +123,7 @@ const scope = new HandlerScope(
       }),
     );
   }),
+  elementsPlugin,
   pluginWS,
   pluginServer,
   pluginRouter,
