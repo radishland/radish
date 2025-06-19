@@ -45,9 +45,9 @@ describe("effects snapshots", () => {
     // const content = ["a", "b", "c"];
 
     // const handleTransformSurround = handlerFor(
-    //   io.transform,
+    //   fs.transform,
     //   async (path, data) => {
-    //     const result = await io.transform(path, data);
+    //     const result = await fs.transform(path, data);
     //     return "_" + result + "_";
     //   },
     //   { suspend: true },
@@ -58,7 +58,7 @@ describe("effects snapshots", () => {
       // using _ = new HandlerScope(handleTransformSurround, handleTransformUpper);
 
       // const promiseAllTransformed = await Promise.all(
-      //   content.map((c) => io.transform("path", c)),
+      //   content.map((c) => fs.transform("path", c)),
       // );
       // assertEquals(promiseAllTransformed, ["_A_", "B", "C"]);
     }
@@ -67,7 +67,7 @@ describe("effects snapshots", () => {
       // using _ = new HandlerScope(handleTransformSurround, handleTransformUpper);
 
       // const transformed = await Handler.all(
-      //   content.map((c) => io.transform("path", c)),
+      //   content.map((c) => fs.transform("path", c)),
       // );
       // assertEquals(transformed, ["_A_", "_B_", "_C_"]);
     }

@@ -76,22 +76,22 @@ export type HandlerOptions = {
    * @example One-shot handlers
    *
    * ```ts
-   * const readSecret = handlerFor(io.read, (path) => {
+   * const readSecret = handlerFor(fs.read, (path) => {
    *  if (path === "secret") {
    *    return "token";
    *  }
    *  return Handler.continue(path);
    * }, { once: true });
    *
-   * using _ = new HandlerScope(readSecret, handleIOReadBase);
+   * using _ = new HandlerScope(readSecret, handleFSReadBase);
    *
-   * const content = await io.read("/path");
+   * const content = await fs.read("/path");
    * assertEquals(content, "file content");
    *
-   * const token = await io.read("secret");
+   * const token = await fs.read("secret");
    * assertEquals(token, "token");
    *
-   * const token2 = await io.read("secret");
+   * const token2 = await fs.read("secret");
    * assertEquals(token2, "file content");
    *
    * ```
@@ -213,12 +213,12 @@ export class Continue<P extends any[]> {
  *
  * ```ts
  * {
- *   using _ = new HandlerScope(handleIO);
- *   const content = await io.read("path");
+ *   using _ = new HandlerScope(handleFS);
+ *   const content = await fs.read("path");
  * }
  *
  * // not in scope
- * await io.read("other/path"); // throws UnhandledEffectError
+ * await fs.read("other/path"); // throws UnhandledEffectError
  * ```
  *
  * @example Order handlers
@@ -228,8 +228,8 @@ export class Continue<P extends any[]> {
  * ```ts
  * using _ = new HandlerScope(handleTXTOnly, handleReadOp);
  *
- * const txtFile = await io.read("hello.txt"); // "I can only handle .txt files"
- * const jsonFile = await io.read("hello.json"); // ...
+ * const txtFile = await fs.read("hello.txt"); // "I can only handle .txt files"
+ * const jsonFile = await fs.read("hello.json"); // ...
  * ```
  */
 export class HandlerScope {

@@ -48,7 +48,7 @@ export class Effect<A> implements PromiseLike<A> {
  * ```ts
  * import { createEffect } from "@radish/effect-system";
  *
- * interface IO {
+ * interface FS {
  *  transform: (content: string) => string;
  * }
  *
@@ -57,10 +57,10 @@ export class Effect<A> implements PromiseLike<A> {
  * }
  *
  * // Provide a globally unique key when creating an effect.
- * // Here `io/transform` and `render/transform` do not clash
+ * // Here `fs/transform` and `render/transform` do not clash
  *
- * const io = {
- *  transform: createEffect<IO['transform']>('io/transform'),
+ * const fs = {
+ *  transform: createEffect<FS['transform']>('fs/transform'),
  * }
  *
  * const render = {
@@ -94,23 +94,23 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  *
  * and they can be freely mixed and composed as needed.
  *
- * @example IO effect
+ * @example FS effect
  *
- * The examples in this section assume the following `io` effect is defined
+ * The examples in this section assume the following `fs` effect is defined
  *
  * ```ts
  * import { createEffect } from "@radish/effect-system";
  *
- * interface IO {
+ * interface FS {
  *   read: (path: string) => string;
  *   transform: (content: string) => string;
- *   write: (path: string; content: string) => void;
+ *   write: (path: string, content: string) => void;
  * }
  *
- * const io = {
- *   read: createEffect<IO['read']>('io/read'),
- *   transform: createEffect<IO['transform']>('io/read'),
- *   write: createEffect<IO['write']>('io/write')
+ * const fs = {
+ *   read: createEffect<FS['read']>('fs/read'),
+ *   transform: createEffect<FS['transform']>('fs/read'),
+ *   write: createEffect<FS['write']>('fs/write')
  * }
  * ```
  *
@@ -154,17 +154,17 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  *
  * ```ts
  * // this handler needs to perform its own effect non-recursively to do some postprocessing
- * const handlerTransformA = handlerFor(io.transform, async (path, content) => {
- *   const transformed = await io.transform(path, content);
+ * const handlerTransformA = handlerFor(fs.transform, async (path, content) => {
+ *   const transformed = await fs.transform(path, content);
  *   return "a" + transformed + "a";
  * }, { reentrant: false });
  *
- * const handleTransformB = handlerFor(io.transform, async (path, content) => {
- *   const transformed = await io.transform(path, content);
+ * const handleTransformB = handlerFor(fs.transform, async (path, content) => {
+ *   const transformed = await fs.transform(path, content);
  *   return "b" + transformed + "b";
  * }, { reentrant: false });
  *
- * const handleTransformUpper = handlerFor(io.transform, (_path, content) => {
+ * const handleTransformUpper = handlerFor(fs.transform, (_path, content) => {
  *   return content.toUpperCase();
  * })
  *
@@ -174,7 +174,7 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  *   handleTransformUpper,
  * );
  *
- * const transformed = await io.transform("/path", "content");
+ * const transformed = await fs.transform("/path", "content");
  * assertEquals(transformed, "abCONTENTba");
  * ```
  *
@@ -188,21 +188,21 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  * import { handlerFor } from "@radish/effect-system";
  *
  * // This handler is asynchronous
- * const IOReadHandler = handlerFor(io.read, async (path: string) => {
+ * const FSReadHandler = handlerFor(fs.read, async (path: string) => {
  *   console.log(`reading ${path}`);
  *   return await Deno.readTextFile(path);
  * })
  *
  * // This handler is synchronous
- * const IOWriteHandler = handlerFor(io.write, (path: string, content: string) => {
+ * const FSWriteHandler = handlerFor(fs.write, (path: string, content: string) => {
  *   console.log(`writing ${path}`);
  *   return Deno.writeTextFileSync(content);
  * })
  *
- * // In a testing environment we could swap our `IOReadHandler` with `IOReadHandlerMock`
+ * // In a testing environment we could swap our `FSReadHandler` with `FSReadHandlerMock`
  * const files = new Map([['notes.txt', 'TODO']]);
  *
- * const IOReadHandlerMock = handlerFor(io.read, (path: string) => {
+ * const FSReadHandlerMock = handlerFor(fs.read, (path: string) => {
  *   return files.get(path) ?? ''
  * })
  * ```
@@ -225,7 +225,7 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  * import { Handler } from "@radish/effect-system";
  *
  * // This handler relies on delegation
- * const IOReadTXTOnly = handlerFor(io.read, (path: string) => {
+ * const FSReadTXTOnly = handlerFor(fs.read, (path: string) => {
  *   if(path.endsWith(".txt")) {
  *     return "I can only handle .txt files"
  *   }
@@ -233,7 +233,7 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  * })
  *
  * // A decorator handler that modifies content before writing
- * const IODecorateTXT = handlerFor(io.write, (path: string, content: string)=>{
+ * const FSDecorateTXT = handlerFor(fs.write, (path: string, content: string)=>{
  *   if(path.endsWith(".txt")) {
  *     content = "/ Copyright notice /" + content
  *   }
@@ -242,7 +242,7 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  *
  * let count = 0;
  * // A listener that performs orthogonal logic
- * const IOCountTXTReads = handlerFor(io.read, (path: string) => {
+ * const FSCountTXTReads = handlerFor(fs.read, (path: string) => {
  *   if(path.endsWith(".txt")) {
  *     count += 1;
  *   }
@@ -258,13 +258,13 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  * ```ts
  * let count = 0;
  *
- * const handleIORead = handlerFor(io.read, (path: string) => {
+ * const handleFSRead = handlerFor(fs.read, (path: string) => {
  *   if(path.endsWith(".txt")) {
  *     count += 1;
  *   }
  *   return Handler.continue(path);
  * });
- * handleIORead[Symbol.dispose] = () => {
+ * handleFSRead[Symbol.dispose] = () => {
  *   count = 0;
  * }
  * ```
