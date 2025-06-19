@@ -85,8 +85,10 @@ const handleManifestWrite = handlerFor(manifest.write, async () => {
  * - `hmr/update`
  *
  * @performs
+ * - `config/read`
  * - `fs/read`
  * - `fs/write`
+ * - `fs/walk`
  */
 export const pluginManifest: Plugin = {
   name: "plugin-manifest",
@@ -114,6 +116,11 @@ export const pluginManifest: Plugin = {
 
 /**
  * Performs the manifest/update effect on all entries matching the glob
+ *
+ * @performs
+ * - `config/read`
+ * - `fs/walk`
+ * - `manifest/update`
  */
 export const updateManifest = async (glob: string): Promise<void> => {
   const match = globToRegExp(glob);
