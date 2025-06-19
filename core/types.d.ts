@@ -15,6 +15,18 @@ export interface Config {
    * The arguments of the current running command
    */
   args?: CLIArgs;
+  /**
+   * The build options
+   */
+  build?: {
+    /**
+     * If specified, entries matching the patterns specified by this option are excluded from the build
+     *
+     * @default
+     * [/(\.test|\.spec)\.ts$/]
+     */
+    skip?: RegExp[];
+  };
   env?: {
     /**
      * Path to the env file.

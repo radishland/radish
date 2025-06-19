@@ -1,10 +1,12 @@
 import { createEffect, type Effect } from "@radish/effect-system";
+import type { WalkEntry, WalkOptions } from "@std/fs";
 
 interface FS {
   ensureDir: (path: string) => void;
   exists: (path: string) => boolean;
   read: (path: string) => string;
   remove: (path: string) => void;
+  walk: (root: string, options?: WalkOptions) => WalkEntry[];
   write: (path: string, content: string) => void;
 }
 
@@ -29,10 +31,15 @@ export const fs: {
    * Removes the named file or directory
    */
   remove: (path: string) => Effect<void>;
+  /**
+   * Recursively walks through a directory and yields information about each file and directory encountered
+   */
+  walk: (root: string, options?: WalkOptions) => Effect<WalkEntry[]>;
 } = {
-  ensureDir: createEffect<(path: string) => void>("fs/ensure-dir"),
-  exists: createEffect<(path: string) => boolean>("fs/exists"),
+  ensureDir: createEffect<FS["ensureDir"]>("fs/ensure-dir"),
+  exists: createEffect<FS["exists"]>("fs/exists"),
   read: createEffect<FS["read"]>("fs/read"),
   write: createEffect<FS["write"]>("fs/write"),
-  remove: createEffect<(path: string) => void>("fs/remove"),
+  remove: createEffect<FS["remove"]>("fs/remove"),
+  walk: createEffect<FS["walk"]>("fs/walk"),
 };

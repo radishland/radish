@@ -6,7 +6,7 @@ type BuildOptions = { incremental?: boolean };
 interface Build {
   sort: (entries: WalkEntry[]) => WalkEntry[];
   file: (path: string) => void;
-  start: (paths: string[], options?: BuildOptions) => void;
+  files: (glob: string, options?: BuildOptions) => void;
   transform: (path: string, content: string) => string;
   dest: (path: string) => string;
 }
@@ -14,7 +14,7 @@ interface Build {
 export const build: {
   file: (path: string) => Effect<void>;
   sort: (entries: WalkEntry[]) => Effect<WalkEntry[]>;
-  start: (paths: string[], options?: BuildOptions | undefined) => Effect<void>;
+  files: (glob: string, options?: BuildOptions | undefined) => Effect<void>;
   transform: (path: string, content: string) => Effect<string>;
   dest: (path: string) => Effect<string>;
 } = {
@@ -29,7 +29,7 @@ export const build: {
   /**
    * Starts the build pipeline, performing build/sort and build/file on every file
    */
-  start: createEffect<Build["start"]>("build/start"),
+  files: createEffect<Build["files"]>("build/files"),
   transform: createEffect<Build["transform"]>("build/transform"),
   /**
    * Returns the destination path where a file or folder will be emitted after the build
