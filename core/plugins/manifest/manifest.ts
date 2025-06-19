@@ -113,11 +113,6 @@ export const pluginManifest: Plugin = {
 };
 
 /**
- * Do not insert test files or declaration files in the manifest
- */
-export const skipManifest = /\.(d|spec|test)\.(js|ts)$/;
-
-/**
  * Performs the manifest/update effect on all entries matching the glob
  */
 export const updateManifest = async (glob: string): Promise<void> => {

@@ -24,9 +24,7 @@ describe("manifest", () => {
       pluginManifest,
     );
 
-    await updateManifest("**", { root: "lib" });
-    await updateManifest("**", { root: "elements" });
-    await updateManifest("**", { root: "routes" });
+    await updateManifest("+(lib|elements|routes)**");
 
     const manifestObject = await manifest.get();
 
