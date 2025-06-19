@@ -1,4 +1,5 @@
 import { type ErrorStatus, STATUS_TEXT, type StatusCode } from "@std/http";
+
 /**
  * Utility to create errors
  */

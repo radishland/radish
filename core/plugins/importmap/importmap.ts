@@ -7,7 +7,7 @@ import { config, denoConfig, fs, manifest } from "$effects/mod.ts";
 import { ts_extension_regex } from "$lib/constants.ts";
 import { dev } from "$lib/environment.ts";
 import type { ManifestBase } from "$lib/types.d.ts";
-import { throwUnlessNotFound } from "$lib/utils/io.ts";
+import { throwUnlessNotFound } from "$lib/utils/fs.ts";
 import { handlerFor, type Plugin } from "@radish/effect-system";
 import { assert, assertExists, unimplemented } from "@std/assert";
 import { extname } from "@std/path";

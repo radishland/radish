@@ -1,13 +1,11 @@
 import { fs } from "$effects/fs.ts";
 import { hmr } from "$effects/hmr.ts";
 import { manifest, manifestPath } from "$effects/manifest.ts";
+import { config } from "$effects/mod.ts";
 import type { ManifestBase } from "$lib/types.d.ts";
-import { expandGlobWorkspaceRelative } from "$lib/utils/fs.ts";
-import { extractImports } from "$lib/utils/parse.ts";
 import { stringifyObject } from "$lib/utils/stringify.ts";
 import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
-import type { ExpandGlobOptions } from "@std/fs";
-import { extname } from "@std/path";
+import { extname, globToRegExp } from "@std/path";
 
 let manifestObject: ManifestBase = {
   imports: {},
@@ -87,8 +85,10 @@ const handleManifestWrite = handlerFor(manifest.write, async () => {
  * - `hmr/update`
  *
  * @performs
+ * - `config/read`
  * - `fs/read`
  * - `fs/write`
+ * - `fs/walk`
  */
 export const pluginManifest: Plugin = {
   name: "plugin-manifest",
@@ -115,20 +115,39 @@ export const pluginManifest: Plugin = {
 };
 
 /**
- * Do not insert test files or declaration files in the manifest
- */
-export const skipManifest = /\.(d|spec|test)\.(js|ts)$/;
-
-/**
  * Performs the manifest/update effect on all entries matching the glob
+ *
+ * @performs
+ * - `config/read`
+ * - `fs/walk`
+ * - `manifest/update`
  */
-export const updateManifest = async (
-  glob: string | URL,
-  options?: ExpandGlobOptions,
-): Promise<void> => {
-  for await (const entry of expandGlobWorkspaceRelative(glob, options)) {
-    if (!skipManifest.test(entry.path)) {
-      await manifest.update(entry);
-    }
+export const updateManifest = async (glob: string): Promise<void> => {
+  const match = globToRegExp(glob);
+
+  const entries = await fs.walk(Deno.cwd(), {
+    match: [new RegExp(match.source.slice(1))],
+    includeDirs: false,
+    skip: (await config.read()).manifest?.skip ?? [/(\.test|\.spec)\.ts$/],
+  });
+
+  for (const entry of entries) {
+    await manifest.update(entry);
   }
 };
+
+/**
+ * Extracts import specifiers from import declarations or dynamic imports
+ */
+export const import_regex =
+  /from\s["']([^'"]+)["']|import\(["']([^"']+)["']\)/g;
+
+/**
+ * Returns the deduped array of (maybe dynamic) import specifiers from a js/ts
+ * source file
+ */
+export function extractImports(source: string) {
+  return Array.from(
+    new Set(source.matchAll(import_regex).map((match) => match[1] || match[2])),
+  ).filter((str) => str !== undefined);
+}

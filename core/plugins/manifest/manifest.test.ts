@@ -1,5 +1,6 @@
 import { fs } from "$effects/fs.ts";
 import { manifest } from "$effects/manifest.ts";
+import { config } from "$effects/mod.ts";
 import { pluginManifest } from "$lib/plugins/mod.ts";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals, assertExists, assertObjectMatch } from "@std/assert";
@@ -21,12 +22,16 @@ describe("manifest", () => {
         assertExists(content);
         return content;
       }),
+      handlerFor(fs.walk, (_root, options) => {
+        return Object.keys(files)
+          .filter((path) => !options?.skip?.some((r) => r.test(path)))
+          .map((path) => createWalkEntry(path));
+      }),
+      handlerFor(config.read, () => ({})),
       pluginManifest,
     );
 
-    await updateManifest("**", { root: "lib" });
-    await updateManifest("**", { root: "elements" });
-    await updateManifest("**", { root: "routes" });
+    await updateManifest("+(lib|elements|routes)**");
 
     const manifestObject = await manifest.get();
 
