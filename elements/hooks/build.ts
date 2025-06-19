@@ -8,15 +8,15 @@ assertExists(moduleDir);
 const rootDir = join(moduleDir, "..");
 const elementsDir = join(rootDir, "elements");
 
-export const onBuildStart = handlerFor(build.start, async (args) => {
-  await build.start([`${elementsDir}/**`]);
+export const onBuildStart = handlerFor(build.files, async (args) => {
+  await build.files(`${elementsDir}/**`);
 
   return Handler.continue(args);
 });
 
 export const onBuildDest = handlerFor(build.dest, async (path) => {
   if (path.startsWith(relative(Deno.cwd(), elementsDir))) {
-    await build.start([`${elementsDir}/**`]);
+    await build.files(`${elementsDir}/**`);
     return await build.dest(relative(rootDir, path));
   }
 
