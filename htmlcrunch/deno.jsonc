@@ -8,11 +8,6 @@
   "exports": {
     ".": "./mod.ts"
   },
-  "publish": {
-    "exclude": [
-      "./tests/**/*"
-    ]
-  },
   "imports": {
     "@fcrozatier/monarch": "jsr:@fcrozatier/monarch@^3.1.0"
   }
