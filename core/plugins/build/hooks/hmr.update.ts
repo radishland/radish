@@ -1,5 +1,5 @@
 import { hmr } from "$effects/hmr.ts";
-import { build } from "$effects/mod.ts";
+import { build, fs } from "$effects/mod.ts";
 import { throwUnlessNotFound } from "$lib/utils/io.ts";
 import { isParent } from "$lib/utils/path.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
@@ -14,7 +14,7 @@ export const buildHMRHook = handlerFor(hmr.update, async ({ event, paths }) => {
   if (event.kind === "remove") {
     try {
       const target = await build.dest(event.path);
-      await Deno.remove(target, { recursive: !event.isFile });
+      await fs.remove(target);
       console.log(`removed`, event.path);
 
       // don't process files under the removed path

@@ -1,9 +1,8 @@
-import { assertExists } from "@std/assert";
-import { existsSync } from "@std/fs";
-import * as JSONC from "@std/jsonc";
-import { handlerFor, type Plugin } from "@radish/effect-system";
-import { fs } from "$effects/fs.ts";
 import { config, denoConfig } from "$effects/config.ts";
+import { fs } from "$effects/fs.ts";
+import { handlerFor, type Plugin } from "@radish/effect-system";
+import { assertExists } from "@std/assert";
+import * as JSONC from "@std/jsonc";
 import { id } from "../utils/algebraic-structures.ts";
 
 /**
@@ -18,7 +17,7 @@ export const pluginConfig: Plugin = {
     handlerFor(config.transform, id),
     handlerFor(denoConfig.read, async () => {
       const fileName = ["deno.json", "deno.jsonc"]
-        .find((fileName) => existsSync(fileName));
+        .find(async (fileName) => await fs.exists(fileName));
       assertExists(fileName, "deno config not found");
 
       const content = await fs.read(fileName);

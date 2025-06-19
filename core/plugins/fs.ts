@@ -3,13 +3,21 @@ import { fs } from "$effects/fs.ts";
 import { workspaceRelative } from "$lib/utils/path.ts";
 import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
 import { unimplemented } from "@std/assert";
-import { ensureDir } from "@std/fs";
+import { ensureDir, exists } from "@std/fs";
 import { dirname, fromFileUrl } from "@std/path";
 
 /**
- * A file store caching `Deno.readTextFile` calls for efficient file access
+ * A file store caching files content for efficient file access
  */
 const fileCache = new Map<string, string>();
+
+const onFSEnsureDir = handlerFor(fs.ensureDir, async (path) => {
+  return await ensureDir(path);
+});
+
+const onFSExists = handlerFor(fs.exists, async (path) => {
+  return await exists(path, { isReadable: true });
+});
 
 /**
  * Removes a file from the cache
@@ -48,6 +56,7 @@ export const onFSRead = handlerFor(fs.read, async (path) => {
       case "file:":
         path = fromFileUrl(url);
         return readLocalTextFile(path);
+
       case "https:": {
         const res = await fetch(url);
         const content = await res.text();
@@ -81,11 +90,22 @@ export const onFSWrite = handlerFor(
   fs.write,
   async (path, data) => {
     path = workspaceRelative(path);
-    await ensureDir(dirname(path));
+    await fs.ensureDir(dirname(path));
     await Deno.writeTextFile(path, data);
     invalidateFileCache(path);
   },
 );
+
+/**
+ * Handles {@linkcode fs.remove} effects by delegating to `Deno.remove`
+ *
+ * Invalidates the file cache
+ */
+export const onFSRemove = handlerFor(fs.remove, async (path) => {
+  await Deno.remove(path, { recursive: true });
+
+  invalidateFileCache(workspaceRelative(path));
+});
 
 /**
  * The fs plugin
@@ -96,6 +116,8 @@ export const onFSWrite = handlerFor(
 export const pluginFS: Plugin = {
   name: "plugin-fs",
   handlers: [
+    onFSEnsureDir,
+    onFSExists,
     onFSRead,
     onFSWrite,
     /**
