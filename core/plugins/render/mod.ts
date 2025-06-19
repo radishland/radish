@@ -15,13 +15,13 @@ import { handleTransformNode } from "./transforms/mod.ts";
  * - `build/sort`
  * - `hmr/update`
  * - `build/transform`
- * - `io/write` Inserts parser imports in the generated manifest module
+ * - `fs/write` Inserts parser imports in the generated manifest module
  * - `manifest/update`
  *
  * @performs
  * - `config/read`
  * - `build/dest`
- * - `io/read`
+ * - `fs/read`
  * - `manifest/get`
  * - `manifest/update`
  */

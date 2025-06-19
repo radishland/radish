@@ -15,7 +15,7 @@ export const manifestShape = {
  * - `manifest/update`
  *
  * @performs
- * - `io/read`
+ * - `fs/read`
  * - `manifest/load`
  * - `manifest/set`
  */

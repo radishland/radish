@@ -1,4 +1,4 @@
-import { config, env, hmr, io } from "$effects/mod.ts";
+import { config, env, fs, hmr } from "$effects/mod.ts";
 import { generatedFolder } from "$lib/conventions.ts";
 import { stringifyObject } from "$lib/utils/stringify.ts";
 import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
@@ -39,7 +39,7 @@ const envModulePath = join(generatedFolder, "env.ts");
  *
  * @performs
  * - `config/read`
- * - `io/read`
+ * - `fs/read`
  */
 export const pluginEnv: Plugin = {
   name: "plugin-env",
@@ -61,11 +61,11 @@ export const pluginEnv: Plugin = {
 
 /**
  * @performs
- * - `io/read`
+ * - `fs/read`
  */
 async function load() {
   const envPath = await getEnvPath();
-  const envFile = await io.read(envPath);
+  const envFile = await fs.read(envPath);
   const envObject = parse(envFile);
   let envModule = "";
 
@@ -75,7 +75,7 @@ async function load() {
     Deno.env.set(key, value);
   }
 
-  await io.write(envModulePath, envModule);
+  await fs.write(envModulePath, envModule);
 }
 
 /**

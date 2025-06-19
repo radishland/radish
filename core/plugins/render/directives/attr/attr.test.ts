@@ -1,7 +1,7 @@
 import { manifest } from "$effects/manifest.ts";
 import { build, render } from "$effects/mod.ts";
 import { globals } from "$lib/globals.ts";
-import { pluginIO, pluginRender } from "$lib/plugins/mod.ts";
+import { pluginFS, pluginRender } from "$lib/plugins/mod.ts";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals } from "@std/assert";
 import { dirname, fromFileUrl, join } from "@std/path";
@@ -31,7 +31,7 @@ describe("attr directive", () => {
         };
       }),
       pluginRender,
-      pluginIO,
+      pluginFS,
     );
 
     const output = await Deno.readTextFile(

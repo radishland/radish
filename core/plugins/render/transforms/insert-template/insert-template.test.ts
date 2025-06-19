@@ -1,7 +1,7 @@
 import { manifest } from "$effects/manifest.ts";
-import { build, io, render } from "$effects/mod.ts";
+import { build, fs, render } from "$effects/mod.ts";
 import { globals } from "$lib/globals.ts";
-import { pluginBuild, pluginIO, pluginRender } from "$lib/plugins/mod.ts";
+import { pluginBuild, pluginFS, pluginRender } from "$lib/plugins/mod.ts";
 import { Handler, handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals } from "@std/assert";
 import { join } from "@std/path";
@@ -31,7 +31,7 @@ describe("render/transform template insertion", () => {
         },
       })),
       pluginRender,
-      pluginIO,
+      pluginFS,
     );
 
     const output = await Deno.readTextFile(
@@ -53,11 +53,11 @@ describe("render/transform template insertion", () => {
     const testDataDir = join(moduleDir, "testdata", "built-templates");
 
     using _ = new HandlerScope(
-      handlerFor(io.read, async (path) => {
+      handlerFor(fs.read, async (path) => {
         // this is wrong but ok for testing (`join` normalizes paths) but in reality we have workspace relative paths anyway
         const dest = await build.dest(join(testDataDir, "my-component.html"));
         if (path.includes(dest)) {
-          return await io.read(join(testDataDir, "my-component.built.html"));
+          return await fs.read(join(testDataDir, "my-component.built.html"));
         }
         return Handler.continue(path);
       }, { reentrant: false }),
@@ -80,7 +80,7 @@ describe("render/transform template insertion", () => {
       })),
       pluginRender,
       pluginBuild,
-      pluginIO,
+      pluginFS,
     );
 
     const output = await Deno.readTextFile(

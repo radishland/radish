@@ -1,5 +1,6 @@
 import { manifest } from "$effects/manifest.ts";
 import { render } from "$effects/mod.ts";
+import { pluginFS, pluginRender } from "$lib/plugins/mod.ts";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
 import {
   assertEquals,
@@ -9,9 +10,7 @@ import {
 } from "@std/assert";
 import { join } from "@std/path";
 import { describe, test } from "@std/testing/bdd";
-import { pluginIO } from "../../io.ts";
 import { manifestShape } from "../hooks/manifest/mod.ts";
-import { pluginRender } from "../mod.ts";
 
 const moduleDir = import.meta.dirname!;
 const testDataDir = join(moduleDir, "testdata");
@@ -22,7 +21,7 @@ describe("render/component", () => {
       using _ = new HandlerScope(
         handlerFor(manifest.get, () => manifestShape),
         pluginRender,
-        pluginIO,
+        pluginFS,
       );
 
       await render.component({
@@ -44,7 +43,7 @@ describe("render/component", () => {
       using _ = new HandlerScope(
         handlerFor(manifest.get, () => manifestShape),
         pluginRender,
-        pluginIO,
+        pluginFS,
       );
 
       await render.component({
@@ -65,7 +64,7 @@ describe("render/component", () => {
     using _ = new HandlerScope(
       handlerFor(manifest.get, () => manifestShape),
       pluginRender,
-      pluginIO,
+      pluginFS,
     );
 
     const output = await Deno.readTextFile(

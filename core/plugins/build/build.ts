@@ -1,5 +1,5 @@
 import { build } from "$effects/build.ts";
-import { io } from "$effects/io.ts";
+import { fs } from "$effects/fs.ts";
 import { buildFolder } from "$lib/conventions.ts";
 import { id } from "$lib/utils/algebraic-structures.ts";
 import { expandGlobWorkspaceRelative } from "$lib/utils/fs.ts";
@@ -12,16 +12,16 @@ import { buildHMRHook } from "./hooks/hmr.update.ts";
 
 /**
  * @performs
- * - `io/read`
+ * - `fs/read`
  * - `build/transform`
  * - `build/dest`
- * - `io/write`
+ * - `fs/write`
  */
-const handleBuildFile = handlerFor(build.file, async (path: string) => {
-  const content = await io.read(path);
+const onBuildFile = handlerFor(build.file, async (path: string) => {
+  const content = await fs.read(path);
   const transformed = await build.transform(path, content);
   const dest = await build.dest(path);
-  await io.write(dest, transformed);
+  await fs.write(dest, transformed);
 });
 
 /**
@@ -103,13 +103,13 @@ export const handleBuildDest = handlerFor(
  * - `hmr/update`
  *
  * @performs
- * - `io/read`
- * - `io/write`
+ * - `fs/read`
+ * - `fs/write`
  */
 export const pluginBuild: Plugin = {
   name: "plugin-build",
   handlers: [
-    handleBuildFile,
+    onBuildFile,
     handleBuildSortFilterTestFiles,
     handleBuildSortTerminal,
     handleBuildStart,

@@ -1,4 +1,4 @@
-import { build, io, type Manifest, manifest } from "$effects/mod.ts";
+import { build, fs, type Manifest, manifest } from "$effects/mod.ts";
 import { render } from "$effects/render.ts";
 import { Handler, handlerFor, HandlerScope } from "@radish/effect-system";
 import { serializeFragments, shadowRoot } from "@radish/htmlcrunch";
@@ -17,12 +17,12 @@ export const handleRenderComponents = handlerFor(
   render.component,
   async (element) => {
     assertExists(element.templatePath);
-    const template = await io.read(element.templatePath);
+    const template = await fs.read(element.templatePath);
     const fragments = shadowRoot.parseOrThrow(template);
 
     using scope = new HandlerScope();
 
-    // Perf: locally override io/read to return built templates for depended-upon elements
+    // Perf: locally override fs/read to return built templates for depended-upon elements
     // This is sound since building is ordered
     // But only makes sense for pre-rendered elements
     if (element?.dependencies?.length) {
@@ -36,10 +36,10 @@ export const handleRenderComponents = handlerFor(
         dependenciesPaths.push(element.templatePath);
       }
 
-      scope.addHandler(handlerFor(io.read, async (path) => {
+      scope.addHandler(handlerFor(fs.read, async (path) => {
         if (dependenciesPaths.includes(path)) {
           const builtTemplate = await build.dest(path);
-          return await io.read(builtTemplate);
+          return await fs.read(builtTemplate);
         }
 
         return Handler.continue(path);

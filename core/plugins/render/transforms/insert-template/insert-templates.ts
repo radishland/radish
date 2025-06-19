@@ -1,5 +1,5 @@
 import { manifest } from "$effects/manifest.ts";
-import { io } from "$effects/mod.ts";
+import { fs } from "$effects/mod.ts";
 import { type Manifest, render } from "$effects/render.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { isElementNode, shadowRoot } from "@radish/htmlcrunch";
@@ -24,7 +24,7 @@ export const handleRenderTransformInsertTemplate = handlerFor(
     const element = _manifest.elements[node.tagName];
 
     if (element?.templatePath) {
-      const template = await io.read(element.templatePath);
+      const template = await fs.read(element.templatePath);
       const fragments = shadowRoot.parseOrThrow(template);
       const transformed = await Promise.all(fragments.map(transformNode));
 

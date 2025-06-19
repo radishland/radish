@@ -1,14 +1,14 @@
 import type { Config } from "@radish/core";
 import { importmapPath, manifestPath, onDispose, startApp } from "@radish/core";
-import { hmr, importmap, io, manifest, router } from "@radish/core/effects";
+import { fs, hmr, importmap, manifest, router } from "@radish/core/effects";
 import { dev } from "@radish/core/environment";
 import {
   pluginBuild,
   pluginConfig,
   pluginEnv,
+  pluginFS,
   pluginHMR,
   pluginImportmap,
-  pluginIO,
   pluginManifest,
   pluginRender,
   pluginRouter,
@@ -111,7 +111,7 @@ const scope = new HandlerScope(
   handlerFor(importmap.write, async () => {
     const importmapObject = await importmap.get();
 
-    await io.write(
+    await fs.write(
       importmapPath,
       JSON.stringify({
         imports: {
@@ -134,7 +134,7 @@ const scope = new HandlerScope(
   pluginBuild,
   pluginEnv,
   pluginConfig,
-  pluginIO,
+  pluginFS,
 );
 onDispose(scope[Symbol.asyncDispose]);
 
