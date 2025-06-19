@@ -51,7 +51,7 @@ const onBuildStart = handlerFor(
     const match = globToRegExp(glob);
 
     const entries = await fs.walk(Deno.cwd(), {
-      match: [match],
+      match: [new RegExp(match.source.slice(1))],
       includeDirs: false,
       skip: (await config.read()).build?.skip ?? [/(\.test|\.spec)\.ts$/],
     });

@@ -9,7 +9,8 @@ import { appPath, elementsFolder, routesFolder } from "$lib/conventions.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { assertExists, assertObjectMatch, unreachable } from "@std/assert";
 import type { WalkEntry } from "@std/fs";
-import { basename, extname } from "@std/path";
+import { extname } from "@std/path";
+import { createWalkEntry } from "../../../utils/fs.ts";
 import { filename, isParent } from "../../../utils/path.ts";
 import { manifestShape } from "./manifest/mod.ts";
 
@@ -133,13 +134,7 @@ export const handleSort = handlerFor(
         const path = c.files.find((f) => f.endsWith(".html"));
         assertExists(path);
 
-        return {
-          isDirectory: false,
-          isFile: true,
-          isSymlink: false,
-          name: basename(c.path),
-          path,
-        } satisfies WalkEntry;
+        return createWalkEntry(path);
       });
 
     return Handler.continue([...otherEntries, ...layouts, ...sorted]);

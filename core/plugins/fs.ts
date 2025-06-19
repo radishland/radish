@@ -108,7 +108,8 @@ export const onFSRemove = handlerFor(fs.remove, async (path) => {
 });
 
 const onFSWalk = handlerFor(fs.walk, async (root, options) => {
-  return await Array.fromAsync(walk(root, options));
+  return (await Array.fromAsync(walk(root, options)))
+    .map((entry) => ({ ...entry, path: workspaceRelative(entry.path) }));
 });
 
 /**
