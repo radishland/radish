@@ -1,4 +1,4 @@
-import { build } from "$effects/build.ts";
+import { build, type BuildOptions } from "$effects/build.ts";
 import { fs } from "$effects/fs.ts";
 import { config } from "$effects/mod.ts";
 import { buildFolder } from "$lib/conventions.ts";
@@ -39,18 +39,17 @@ const onBuildFile = handlerFor(build.file, async (path: string) => {
  */
 const onBuildStart = handlerFor(
   build.files,
-  async (glob, options = { incremental: false }): Promise<void> => {
+  async (glob, options): Promise<void> => {
     console.log("Building...");
 
-    if (!options.incremental) {
-      if (await fs.exists(buildFolder)) {
-        await fs.remove(buildFolder);
-      }
-    }
+    const optionsWithDefaults: Required<BuildOptions> = {
+      root: Deno.cwd(),
+      ...options,
+    };
 
     const match = globToRegExp(glob);
 
-    const entries = await fs.walk(Deno.cwd(), {
+    const entries = await fs.walk(optionsWithDefaults.root, {
       match: [new RegExp(match.source.slice(1))],
       includeDirs: false,
       skip: (await config.read()).build?.skip ?? [/(\.test|\.spec)\.ts$/],
