@@ -19,14 +19,14 @@ import { addHandler, HandlerScope, id } from "../mod.ts";
 import {
   Console,
   createState,
+  fs,
   handleConsole,
-  handleIOReadBase,
+  handleFSReadBase,
   handleIoReadTXT,
   handleNumberRandom,
   handleNumberTransform,
   handlerServerStart,
   handleTransformUpper,
-  io,
   logs,
   number,
   serverStart,
@@ -162,25 +162,25 @@ describe("effect system", () => {
   });
 
   test("plugin", async () => {
-    const pluginIO = {
-      name: "plugin-io",
-      handlers: [handleIoReadTXT, handleIOReadBase],
+    const pluginFS = {
+      name: "plugin-fs",
+      handlers: [handleIoReadTXT, handleFSReadBase],
     };
 
-    using _ = new HandlerScope(pluginIO);
+    using _ = new HandlerScope(pluginFS);
 
-    const txt = await io.read("note.txt");
+    const txt = await fs.read("note.txt");
     assertEquals(txt, "txt content");
 
-    const ts = await io.read("script.ts");
+    const ts = await fs.read("script.ts");
     assertEquals(ts, "file content");
   });
 
   test("delegation", async () => {
-    using _ = new HandlerScope(handleIoReadTXT, handleIOReadBase);
+    using _ = new HandlerScope(handleIoReadTXT, handleFSReadBase);
 
-    const txt = await io.read("note.txt");
-    const css = await io.read("style.css");
+    const txt = await fs.read("note.txt");
+    const css = await fs.read("style.css");
 
     assertEquals(txt, "txt content");
     assertEquals(css, "file content");
@@ -190,7 +190,7 @@ describe("effect system", () => {
     using _ = new HandlerScope(handleIoReadTXT);
 
     try {
-      await io.read("style.css");
+      await fs.read("style.css");
       unreachable();
     } catch (error) {
       assertInstanceOf(error, MissingTerminalHandlerError);
@@ -201,18 +201,18 @@ describe("effect system", () => {
     using _ = new HandlerScope();
     addHandler(handleIoReadTXT);
 
-    const txt = await io.read("note.txt");
+    const txt = await fs.read("note.txt");
     assertEquals(txt, "txt content");
   });
 
   test("dynamic delegation", async () => {
-    using _ = new HandlerScope(handleIOReadBase);
+    using _ = new HandlerScope(handleFSReadBase);
     addHandler(handleIoReadTXT);
 
-    const txt = await io.read("note.txt");
+    const txt = await fs.read("note.txt");
     assertEquals(txt, "txt content");
 
-    const ts = await io.read("script.ts");
+    const ts = await fs.read("script.ts");
     assertEquals(ts, "file content");
   });
 
@@ -227,14 +227,14 @@ describe("effect system", () => {
 
   test("simple scoping", async () => {
     {
-      using _ = new HandlerScope(handleIOReadBase);
+      using _ = new HandlerScope(handleFSReadBase);
 
-      const txt = await io.read("note.txt");
+      const txt = await fs.read("note.txt");
       assertEquals(txt, "file content");
     }
 
     try {
-      await io.read("note.txt");
+      await fs.read("note.txt");
       unreachable();
     } catch (error) {
       assertInstanceOf(error, MissingHandlerScopeError);
@@ -242,42 +242,42 @@ describe("effect system", () => {
   });
 
   test("handlers can be in a parent scope", async () => {
-    using _ = new HandlerScope(handleIOReadBase);
+    using _ = new HandlerScope(handleFSReadBase);
 
     {
       using __ = new HandlerScope(handleNumberRandom);
 
-      const content = await io.read("file");
+      const content = await fs.read("file");
       assertEquals(content, "file content");
     }
   });
 
   test("delegation to a parent scope handler", async () => {
-    using _ = new HandlerScope(handleIOReadBase);
+    using _ = new HandlerScope(handleFSReadBase);
     using __ = new HandlerScope(handleIoReadTXT);
 
-    const content = await io.read("file.ts");
+    const content = await fs.read("file.ts");
     assertEquals(content, "file content");
   });
 
   test("decoration", async () => {
     // `transformTXT` only modifies the payload without doing the handling
-    // io.transformFile is handled trivially
-    const toUpperCase = handlerFor(io.transform, (path, data) => {
+    // fs.transformFile is handled trivially
+    const toUpperCase = handlerFor(fs.transform, (path, data) => {
       if (path.endsWith(".txt")) {
         data = data.toUpperCase();
       }
       return Handler.continue(path, data);
     });
 
-    const prefix = handlerFor(io.transform, (path, data) => {
+    const prefix = handlerFor(fs.transform, (path, data) => {
       if (path.endsWith(".txt")) {
         data = "a" + data;
       }
       return Handler.continue(path, data);
     });
 
-    const suffix = handlerFor(io.transform, (path, data) => {
+    const suffix = handlerFor(fs.transform, (path, data) => {
       if (path.endsWith(".txt")) {
         data = data + "b";
       }
@@ -290,7 +290,7 @@ describe("effect system", () => {
       suffix.flatMap((_, d) => d),
     );
 
-    const data = await io.transform("note.txt", "some todos");
+    const data = await fs.transform("note.txt", "some todos");
 
     assertEquals(data, "aSOME TODOSb");
   });
@@ -298,13 +298,13 @@ describe("effect system", () => {
   test("observation", async () => {
     const state = createState(0);
 
-    // the countWrite handler only observe the io/write effect and does something orthogonal
-    const countWrites = handlerFor(io.write, async (path, data) => {
+    // the countWrite handler only observe the fs/write effect and does something orthogonal
+    const countWrites = handlerFor(fs.write, async (path, data) => {
       await state.update((old) => old + 1);
       return Handler.continue(path, data);
     });
 
-    const handleWrite = handlerFor(io.write, async (path, data) => {
+    const handleWrite = handlerFor(fs.write, async (path, data) => {
       await Console.log(`writing to "${path}": "${data}"`);
     });
 
@@ -315,9 +315,9 @@ describe("effect system", () => {
       handleConsole,
     );
 
-    await io.write("todo.txt", "garden");
-    await io.write("styles.css", "some styles");
-    await io.write("script.ts", "my script");
+    await fs.write("todo.txt", "garden");
+    await fs.write("styles.css", "some styles");
+    await fs.write("script.ts", "my script");
 
     assertEquals(logs, [
       'writing to "todo.txt": "garden"',
@@ -328,7 +328,7 @@ describe("effect system", () => {
   });
 
   test("effects can perform other effects", async () => {
-    const readAndLog = handlerFor(io.read, async (path: string) => {
+    const readAndLog = handlerFor(fs.read, async (path: string) => {
       await Console.log(`reading ${path}...`);
       return `content of ${path}`;
     });
@@ -336,7 +336,7 @@ describe("effect system", () => {
     // ... and `flatMap` returns early if the return is not `Continue`
     using _ = new HandlerScope(readAndLog.flatMap(id), handleConsole);
 
-    const res = await io.read("/path/to/file");
+    const res = await fs.read("/path/to/file");
     assertEquals(logs, ["reading /path/to/file..."]);
     assertEquals(res, "content of /path/to/file");
   });
@@ -349,13 +349,13 @@ describe("effect system", () => {
   });
 
   test("suspended handlers", async () => {
-    const suspendedEffectA = handlerFor(io.transform, async (path, content) => {
-      const transformed = await io.transform(path, content);
+    const suspendedEffectA = handlerFor(fs.transform, async (path, content) => {
+      const transformed = await fs.transform(path, content);
       return "a" + transformed + "a";
     }, { reentrant: false });
 
-    const suspendedEffectB = handlerFor(io.transform, async (path, content) => {
-      const transformed = await io.transform(path, content);
+    const suspendedEffectB = handlerFor(fs.transform, async (path, content) => {
+      const transformed = await fs.transform(path, content);
       return "b" + transformed + "b";
     }, { reentrant: false });
 
@@ -365,33 +365,33 @@ describe("effect system", () => {
       handleTransformUpper,
     );
 
-    const transformed = await io.transform("/path", "content");
+    const transformed = await fs.transform("/path", "content");
     assertEquals(transformed, "abCONTENTba");
   });
 
   test("one-shot handlers", async () => {
-    const readSecret = handlerFor(io.read, (path) => {
+    const readSecret = handlerFor(fs.read, (path) => {
       if (path === "secret") {
         return "token";
       }
       return Handler.continue(path);
     }, { once: true });
 
-    using _ = new HandlerScope(readSecret, handleIOReadBase);
+    using _ = new HandlerScope(readSecret, handleFSReadBase);
 
-    const content = await io.read("/path");
+    const content = await fs.read("/path");
     assertEquals(content, "file content");
 
-    const token = await io.read("secret");
+    const token = await fs.read("secret");
     assertEquals(token, "token");
 
-    const token2 = await io.read("secret");
+    const token2 = await fs.read("secret");
     assertEquals(token2, "file content");
   });
 
   test("one-shot suspended handlers", async () => {
-    const surroundOnce = handlerFor(io.transform, async (path, content) => {
-      const transformed = await io.transform(path, content);
+    const surroundOnce = handlerFor(fs.transform, async (path, content) => {
+      const transformed = await fs.transform(path, content);
       return "_" + transformed + "_";
     }, { reentrant: false, once: true });
 
@@ -400,10 +400,10 @@ describe("effect system", () => {
       handleTransformUpper,
     );
 
-    const a = await io.transform("/path", "content");
+    const a = await fs.transform("/path", "content");
     assertEquals(a, "_CONTENT_");
 
-    const b = await io.transform("/path", "hello");
+    const b = await fs.transform("/path", "hello");
     assertEquals(b, "HELLO");
   });
 });

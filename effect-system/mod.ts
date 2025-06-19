@@ -33,10 +33,10 @@
  * ```ts
  * import { createEffect } from "@radish/effect-system";
  *
- * const io = {
- *   read: createEffect<(path: string) => string>('io/read'),
- *   transform: createEffect<(content: string)=> string>('io/transform'),
- *   write: createEffect<(path: string, data: string)=> void>('io/write'),
+ * const fs = {
+ *   read: createEffect<(path: string) => string>('fs/read'),
+ *   transform: createEffect<(content: string)=> string>('fs/transform'),
+ *   write: createEffect<(path: string, data: string)=> void>('fs/write'),
  * }
  * ```
  *
@@ -48,9 +48,9 @@
  *
  * ```ts
  * // a sequence of effects
- * const content = await io.read("/path/to/input");
- * const transformed = await io.transform(content);
- * await io.write("/path/to/output", transformed);
+ * const content = await fs.read("/path/to/input");
+ * const transformed = await fs.transform(content);
+ * await fs.write("/path/to/output", transformed);
  * ```
  *
  * @example Create an effect handler
@@ -60,15 +60,15 @@
  * ```ts
  * import { handlerFor } from "@radish/effect-system";
  *
- * const handleIORead = handlerFor(io.read, (path: string) => {
+ * const handleFSRead = handlerFor(fs.read, (path: string) => {
  *   return "my content";
  * });
  *
- * const handleIOTransform = handlerFor(io.transform, (content: string) => {
+ * const handleFSTransform = handlerFor(fs.transform, (content: string) => {
  *   return content.toUpperCase();
  * });
  *
- * const handleIOWrite = handlerFor(io.transform, (path: string, data: string) => {
+ * const handleFSWrite = handlerFor(fs.transform, (path: string, data: string) => {
  *   console.log(`writing to ${path}: ${data}`);
  * });
  * ```
@@ -79,11 +79,11 @@
  *
  * ```ts
  * {
- *  using _ = new HandlerScope(handleIORead, handleIOTransform, handleIOWrite);
+ *  using _ = new HandlerScope(handleFSRead, handleFSTransform, handleFSWrite);
  *
- *  const content = await io.read("/path/to/input");
- *  const transformed = await io.transform(content);
- *  await io.write("/path/to/output", transformed);
+ *  const content = await fs.read("/path/to/input");
+ *  const transformed = await fs.transform(content);
+ *  await fs.write("/path/to/output", transformed);
  *  // logs "writing to /path/to/output: MY CONTENT"
  * }
  * ```
@@ -93,18 +93,18 @@
  * Export your handlers as a {@linkcode Plugin} for the reusability of related functionality. The {@linkcode HandlerScope} constructor also accepts plugins as arguments.
  *
  * ```ts
- * const pluginIO = {
- *   name: "plugin-io",
- *   handlers: [handleIORead, handleIOTransform, handleIOWrite]
+ * const pluginFS = {
+ *   name: "plugin-fs",
+ *   handlers: [handleFSRead, handleFSTransform, handleFSWrite]
  * };
  *
  * // Usage
  * {
- *  using _ = new HandlerScope(pluginIO);
+ *  using _ = new HandlerScope(pluginFS);
  *
- *  const content = await io.read("/path/to/input");
- *  const transformed = await io.transform(content);
- *  await io.write("/path/to/output", transformed);
+ *  const content = await fs.read("/path/to/input");
+ *  const transformed = await fs.transform(content);
+ *  await fs.write("/path/to/output", transformed);
  *  // logs "writing to /path/to/output: MY CONTENT"
  * }
  *

@@ -113,10 +113,10 @@ export const handleNumberTransform = handlerFor(
 );
 
 /**
- * IO
+ * FS
  */
 
-interface IO {
+interface FS {
   read: (path: string) => string;
   write: (path: string, data: string) => void;
   transform: (path: string, data: string) => string;
@@ -125,16 +125,16 @@ interface IO {
 /**
  * @internal
  */
-export const io = {
-  read: createEffect<IO["read"]>("io/read"),
-  write: createEffect<IO["write"]>("io/write"),
-  transform: createEffect<IO["transform"]>("io/transform"),
+export const fs = {
+  read: createEffect<FS["read"]>("fs/read"),
+  write: createEffect<FS["write"]>("fs/write"),
+  transform: createEffect<FS["transform"]>("fs/transform"),
 };
 
 /**
  * @internal
  */
-export const handleIoReadTXT = handlerFor(io.read, (path: string) => {
+export const handleIoReadTXT = handlerFor(fs.read, (path: string) => {
   if (path.endsWith(".txt")) {
     return "txt content";
   }
@@ -144,14 +144,14 @@ export const handleIoReadTXT = handlerFor(io.read, (path: string) => {
 /**
  * @internal
  */
-export const handleIOReadBase = handlerFor(io.read, () => {
+export const handleFSReadBase = handlerFor(fs.read, () => {
   return "file content";
 });
 
 /**
  * @internal
  */
-export const handleTransformUpper = handlerFor(io.transform, (_path, data) => {
+export const handleTransformUpper = handlerFor(fs.transform, (_path, data) => {
   return data.toUpperCase();
 });
 
