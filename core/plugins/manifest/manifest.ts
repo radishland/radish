@@ -131,7 +131,7 @@ export const updateManifest = async (glob: string): Promise<void> => {
     skip: (await config.read()).manifest?.skip ?? [/(\.test|\.spec)\.ts$/],
   });
 
-  for await (const entry of entries) {
+  for (const entry of entries) {
     await manifest.update(entry);
   }
 };
