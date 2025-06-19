@@ -1,12 +1,12 @@
 import { manifest } from "$effects/manifest.ts";
 import { build } from "$effects/mod.ts";
 import { type Manifest, render } from "$effects/render.ts";
-import { elementsFolder, routesFolder } from "$lib/conventions.ts";
-import { filename, isParent } from "$lib/utils/path.ts";
+import { filename } from "$lib/utils/path.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { assertObjectMatch } from "@std/assert";
 import { extname } from "@std/path";
 import { assertEmptyHandlerRegistryStack } from "../state.ts";
+import { getFileKind } from "../utils/getFileKind.ts";
 import { manifestShape } from "./manifest/mod.ts";
 
 /**
@@ -28,7 +28,9 @@ export const handleTransformFile = handlerFor(
 
     assertEmptyHandlerRegistryStack();
 
-    if (isParent(elementsFolder, path)) {
+    const fileKind = getFileKind(path);
+
+    if (fileKind === "element") {
       const tagName = filename(path);
       const element = manifestObject.elements[tagName];
 
@@ -38,7 +40,7 @@ export const handleTransformFile = handlerFor(
       return Handler.continue(path, rendered);
     }
 
-    if (isParent(routesFolder, path)) {
+    if (fileKind === "route") {
       const route = manifestObject.routes[path];
 
       if (!route) return Handler.continue(path, content);
