@@ -2,6 +2,7 @@ import {
   build,
   config as configEffect,
   env,
+  fs,
   importmap,
   manifest,
   router,
@@ -58,6 +59,9 @@ export async function startApp(config: Config) {
   }
 
   if (cliArgs.build) {
+    if (await fs.exists(buildFolder)) {
+      await fs.remove(buildFolder);
+    }
     await build.files(`+(${libFolder}|${elementsFolder}|${routesFolder})/**`);
   }
 

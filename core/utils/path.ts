@@ -11,7 +11,9 @@ export function filename(path: string): string {
 }
 
 /**
- * Normalizes paths relative to the project workspace
+ * Normalizes absolute paths relative to the project workspace
+ *
+ * If the path is already relative then this is a no-op
  */
 export const workspaceRelative = (path: string) => {
   return isAbsolute(path) ? relative(Deno.cwd(), path) : path;

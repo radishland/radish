@@ -1,7 +1,7 @@
 import type { WalkEntry } from "@std/fs";
 import { createEffect, type Effect } from "@radish/effect-system";
 
-type BuildOptions = { incremental?: boolean };
+export type BuildOptions = { root?: string };
 
 interface Build {
   sort: (entries: WalkEntry[]) => WalkEntry[];
