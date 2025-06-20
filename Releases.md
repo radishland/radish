@@ -1,3 +1,38 @@
+### 2025.06.20
+
+#### @radish/core 1.0.0-alpha.45 (prerelease)
+
+- BREAKING(core): rename `io` to `fs`
+- BREAKING(core): rename `handleRequest` and `handleRoute` to `onRequest` (#141)
+- BREAKING(core): simplify manifest/set operation (#135)
+- feat(core): packaging plugin (#149)
+- feat(core): add a fs/walk effect (#145)
+- feat(core): adds `fs` effects (#144)
+- perf(core): reuse pre-rendered templates for depended-upon elements (#140)
+- perf(core): only override manifest/load once (#139)
+- refactor(core): rewrite isParent without resolving paths (#147)
+- refactor(core): updateManifest takes a glob (#146)
+
+#### @radish/effect-system 0.5.0 (minor)
+
+- BREAKING(effect-system): recursive and suspended handlers (#134)
+- feat(effect-system): one-shot handlers (#138)
+
+#### @radish/htmlcrunch 1.2.1 (patch)
+
+- chore(htmlcrunch): update dependencies (#142)
+
+#### @radish/init 1.0.0-alpha.32 (prerelease)
+
+- fix(init): remove the manifest from the templates (#136)
+- chore(init): rename `io` to `fs`
+
+#### @radish/runtime 0.5.0 (minor)
+
+- BREAKING(runtime): the use directive takes a key (#148)
+- refactor(runtime): revert slow-types (#150)
+- chore(runtime): update dependencies (#137)
+
 ### 2025.06.11
 
 #### @radish/init 1.0.0-alpha.31 (prerelease)
