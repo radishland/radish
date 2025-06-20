@@ -1,13 +1,13 @@
-import { assertObjectMatch } from "@std/assert";
-import { Handler, handlerFor } from "@radish/effect-system";
 import { manifest } from "$effects/manifest.ts";
+import { build } from "$effects/mod.ts";
 import {
   type ElementManifest,
   type Manifest,
   render,
 } from "$effects/render.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
+import { assertObjectMatch } from "@std/assert";
 import { manifestShape } from "../hooks/manifest/mod.ts";
-import { ts_extension_regex } from "$lib/constants.ts";
 
 /**
  * @performs
@@ -19,18 +19,18 @@ export const handleAutoImport = handlerFor(
     const _manifest = await manifest.get() as Manifest;
     assertObjectMatch(_manifest, manifestShape);
 
-    const imports = route.dependencies
-      .toReversed()
-      .map((dependency) => {
-        const element: ElementManifest | undefined =
-          _manifest.elements[dependency];
+    const imports: string[] = [];
 
-        if (!element) return undefined;
+    for (const dependency of route.dependencies.toReversed()) {
+      const element: ElementManifest | undefined =
+        _manifest.elements[dependency];
 
-        return element.files
-          .find((p) => p.endsWith(".ts") || p.endsWith(".js"))
-          ?.replace(ts_extension_regex, ".js");
-      }).filter((i) => i !== undefined);
+      const source = element?.files
+        .find((p) => p.endsWith(".ts") || p.endsWith(".js"));
+      if (!source) continue;
+
+      imports.push(await build.dest(source));
+    }
 
     if (imports.length > 0) {
       insertHead += `\n

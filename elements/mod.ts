@@ -6,9 +6,9 @@
 
 import type { Plugin } from "@radish/effect-system";
 import { onManifest } from "./hooks/manifest.ts";
-import { onBuildFiles } from "./hooks/build.ts";
+import { onBuildDest, onBuildFiles } from "./hooks/build.ts";
 
 export const elementsPlugin: Plugin = {
   name: "elements-plugin",
-  handlers: [onManifest, onBuildFiles],
+  handlers: [onManifest, onBuildDest, onBuildFiles],
 };

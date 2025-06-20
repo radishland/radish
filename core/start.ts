@@ -71,9 +71,7 @@ export async function startApp(config: Config) {
     await router.init();
 
     const staticRoutes: [string, string][] = [
-      [routesFolder, buildFolder],
-      [elementsFolder, buildFolder],
-      [libFolder, buildFolder],
+      [buildFolder, "."],
       [staticFolder, "."],
       dev
         ? [`/node_modules/*`, join(config.router?.nodeModulesRoot ?? ".")]

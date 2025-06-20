@@ -1,5 +1,5 @@
 import { build } from "@radish/core/effects";
-import { Handler, handlerFor, HandlerScope } from "@radish/effect-system";
+import { Handler, handlerFor } from "@radish/effect-system";
 import { assertExists } from "@std/assert";
 import { join, relative } from "@std/path";
 
@@ -8,15 +8,15 @@ assertExists(moduleDir);
 const rootDir = join(moduleDir, "..");
 
 export const onBuildFiles = handlerFor(build.files, async (glob, options) => {
-  {
-    using _ = new HandlerScope(onBuildDest);
-
-    await build.files(`+(elements|routes)/**`, { root: rootDir });
-  }
+  await build.files(`+(elements|routes)/**`, { root: rootDir });
 
   return Handler.continue(glob, options);
 }, { reentrant: false });
 
-const onBuildDest = handlerFor(build.dest, async (path) => {
-  return await build.dest(relative(rootDir, path));
+export const onBuildDest = handlerFor(build.dest, async (path) => {
+  if (path.startsWith(relative(Deno.cwd(), rootDir))) {
+    return await build.dest(relative(rootDir, path));
+  }
+
+  return Handler.continue(path);
 }, { reentrant: false });
