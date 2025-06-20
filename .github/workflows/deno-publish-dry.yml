@@ -21,4 +21,4 @@ jobs:
         uses: denoland/setup-deno@v2
 
       - name: Run deno publish --dry-run
-        run: deno publish --dry-run --allow-slow-types
+        run: deno publish --dry-run
