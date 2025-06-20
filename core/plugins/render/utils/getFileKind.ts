@@ -1,5 +1,6 @@
-import { SEPARATOR } from "@std/path";
 import { elementsFolder, libFolder, routesFolder } from "$lib/conventions.ts";
+import { unreachable } from "@std/assert";
+import { SEPARATOR } from "@std/path";
 
 export type FileKind = "element" | "route" | "lib" | "unknown";
 
@@ -13,8 +14,22 @@ export type FileKind = "element" | "route" | "lib" | "unknown";
 export const getFileKind = (path: string): FileKind => {
   const segments = path.split(SEPARATOR);
 
-  if (segments.includes(elementsFolder)) return "element";
-  if (segments.includes(routesFolder)) return "route";
-  if (segments.includes(libFolder)) return "lib";
-  return "unknown";
+  const kind = new Set(
+    segments.filter((s) =>
+      s === elementsFolder || s === routesFolder || s === libFolder
+    ),
+  );
+
+  if (kind.size !== 1) return "unknown";
+
+  switch (Array.from(kind).at(0)) {
+    case "elements":
+      return "element";
+    case "routes":
+      return "route";
+    case "lib":
+      return "lib";
+    default:
+      unreachable();
+  }
 };

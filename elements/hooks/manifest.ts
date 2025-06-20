@@ -13,7 +13,7 @@ export const onManifest = handlerFor(manifest.set, async (_manifest) => {
   await manifest.set(_manifest);
 
   // Ensure we're not updating an empty manifest
-  if (Object.hasOwn(_manifest, "elements")) {
+  if (_manifest && Object.hasOwn(_manifest, "elements")) {
     for (const entry of walkSync(elementsDir, { includeDirs: false })) {
       await manifest.update({
         ...entry,
