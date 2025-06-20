@@ -58,6 +58,7 @@ export async function startApp(config: Config) {
   }
 
   if (cliArgs.build) {
+    console.log("Building...");
     if (await fs.exists(buildFolder)) {
       await fs.remove(buildFolder);
     }
