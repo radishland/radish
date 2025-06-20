@@ -1,6 +1,6 @@
 {
   "name": "@radish/init",
-  "version": "1.0.0-alpha.31",
+  "version": "1.0.0-alpha.32",
   "license": "MIT",
   "exports": {
     ".": "./mod.ts"
