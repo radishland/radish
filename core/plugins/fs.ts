@@ -1,10 +1,9 @@
-import { hmr } from "$effects/hmr.ts";
 import { fs } from "$effects/fs.ts";
-import { workspaceRelative } from "$lib/utils/path.ts";
+import { hmr } from "$effects/hmr.ts";
 import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
 import { unimplemented } from "@std/assert";
 import { ensureDir, exists, walk } from "@std/fs";
-import { dirname, fromFileUrl } from "@std/path";
+import { dirname, fromFileUrl, relative } from "@std/path";
 
 /**
  * A file store caching files content for efficient file access
@@ -23,12 +22,12 @@ const onFSExists = handlerFor(fs.exists, async (path) => {
  * Removes a file from the cache
  */
 const invalidateFileCache = (path: string): boolean => {
-  path = workspaceRelative(path);
+  path = relative(Deno.cwd(), path);
   return fileCache.delete(path);
 };
 
 const readLocalTextFile = async (path: string) => {
-  path = workspaceRelative(path);
+  path = relative(Deno.cwd(), path);
 
   if (fileCache.has(path)) return fileCache.get(path)!;
 
@@ -89,7 +88,7 @@ onFSRead[Symbol.dispose] = () => {
 export const onFSWrite = handlerFor(
   fs.write,
   async (path, data) => {
-    path = workspaceRelative(path);
+    path = relative(Deno.cwd(), path);
     await fs.ensureDir(dirname(path));
     await Deno.writeTextFile(path, data);
     invalidateFileCache(path);
@@ -104,12 +103,12 @@ export const onFSWrite = handlerFor(
 export const onFSRemove = handlerFor(fs.remove, async (path) => {
   await Deno.remove(path, { recursive: true });
 
-  invalidateFileCache(workspaceRelative(path));
+  invalidateFileCache(relative(Deno.cwd(), path));
 });
 
 const onFSWalk = handlerFor(fs.walk, async (root, options) => {
   return (await Array.fromAsync(walk(root, options)))
-    .map((entry) => ({ ...entry, path: workspaceRelative(entry.path) }));
+    .map((entry) => ({ ...entry, path: relative(Deno.cwd(), entry.path) }));
 });
 
 /**
