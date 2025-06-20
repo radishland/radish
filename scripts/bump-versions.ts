@@ -79,7 +79,7 @@ if (newVersions.runtime !== oldVersions.runtime) {
 }
 
 { // Update versions in init/template/base/denojson
-  const path = join("init", "template", "base", "denojson");
+  const path = join("init", "template", "base", "denojsonc");
   let content = Deno.readTextFileSync(path);
 
   // Core
