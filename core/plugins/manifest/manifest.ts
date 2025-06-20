@@ -21,10 +21,10 @@ let manifestObject: ManifestBase = {
  * @hooks
  * - `manifest/set`
  */
-export const handleManifestSet = handlerFor(manifest.set, (_manifestObject) => {
+export const onManifestSet = handlerFor(manifest.set, (_manifestObject) => {
   manifestObject = _manifestObject;
 });
-handleManifestSet[Symbol.dispose] = () => {
+onManifestSet[Symbol.dispose] = () => {
   manifestObject = { imports: {} };
 };
 
@@ -34,18 +34,19 @@ handleManifestSet[Symbol.dispose] = () => {
  * @hooks
  * - `manifest/get`
  */
-export const handleManifestGet = handlerFor(manifest.get, () => manifestObject);
+export const onManifestGet = handlerFor(manifest.get, () => manifestObject);
 
 /**
  * Updates the manifest file by extracting imports from .js or .ts files
  *
  * @hooks
- * - manifest/update
+ * - `manifest/update-entry`
  *
  * @performs
- * - fs/read
+ * - `fs/read`
+ * - `manifest/get`
  */
-export const handleManifestUpdateExtractImports = handlerFor(
+export const onManifestUpdateExtractImports = handlerFor(
   manifest.updateEntry,
   async (entry) => {
     if (entry.isFile && [".js", ".ts"].includes(extname(entry.path))) {
@@ -61,7 +62,7 @@ export const handleManifestUpdateExtractImports = handlerFor(
 /**
  * Terminal `manifest/update` handler
  */
-export const handleManifestUpdateTerminal = handlerFor(
+export const onManifestUpdateTerminal = handlerFor(
   manifest.updateEntry,
   () => {},
 );
@@ -77,7 +78,7 @@ export const handleManifestUpdateTerminal = handlerFor(
  * @performs
  * - `fs.write`
  */
-const handleManifestWrite = handlerFor(manifest.write, async () => {
+const onManifestWrite = handlerFor(manifest.write, async () => {
   let file = "export const manifest = ";
   file += stringifyObject(manifestObject);
 
@@ -85,48 +86,16 @@ const handleManifestWrite = handlerFor(manifest.write, async () => {
 });
 
 /**
+ * Performs the manifest/update-entries effect on all entries matching the glob
+ *
  * @hooks
- * - `hmr/update`
- *
- * @performs
- * - `config/read`
- * - `fs/read`
- * - `fs/write`
- * - `fs/walk`
- */
-export const pluginManifest: Plugin = {
-  name: "plugin-manifest",
-  handlers: [
-    handleManifestSet,
-    handleManifestGet,
-    handleManifestWrite,
-    handleManifestUpdateExtractImports,
-    handleManifestUpdateTerminal,
-    handlerFor(hmr.update, async ({ event, paths }) => {
-      if (event.isFile) {
-        const manifestObject = await manifest.get();
-        const manifestImports = manifestObject.imports;
-
-        if (event.kind === "remove") {
-          delete manifestImports[event.path];
-        } else if (event.kind === "modify") {
-          await manifest.updateEntries(event.path);
-        }
-      }
-      return Handler.continue({ event, paths });
-    }),
-  ],
-};
-
-/**
- * Performs the manifest/update effect on all entries matching the glob
+ * - `manifest/update-entries`
  *
  * @performs
  * - `config/read`
  * - `fs/walk`
- * - `manifest/update`
+ * - `manifest/update-entry`
  */
-
 export const onManifestUpdateEntries = handlerFor(
   manifest.updateEntries,
   async (glob: string, options): Promise<void> => {
@@ -147,6 +116,41 @@ export const onManifestUpdateEntries = handlerFor(
     }
   },
 );
+
+/**
+ * @hooks
+ * - `hmr/update`
+ *
+ * @performs
+ * - `config/read`
+ * - `fs/read`
+ * - `fs/write`
+ * - `fs/walk`
+ */
+export const pluginManifest: Plugin = {
+  name: "plugin-manifest",
+  handlers: [
+    onManifestSet,
+    onManifestGet,
+    onManifestWrite,
+    onManifestUpdateExtractImports,
+    onManifestUpdateTerminal,
+    onManifestUpdateEntries,
+    handlerFor(hmr.update, async ({ event, paths }) => {
+      if (event.isFile) {
+        const manifestObject = await manifest.get();
+        const manifestImports = manifestObject.imports;
+
+        if (event.kind === "remove") {
+          delete manifestImports[event.path];
+        } else if (event.kind === "modify") {
+          await manifest.updateEntries(event.path);
+        }
+      }
+      return Handler.continue({ event, paths });
+    }),
+  ],
+};
 
 /**
  * Extracts import specifiers from import declarations or dynamic imports
