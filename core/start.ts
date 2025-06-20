@@ -9,6 +9,7 @@ import {
   server,
 } from "$effects/mod.ts";
 import {
+  appPath,
   buildFolder,
   elementsFolder,
   libFolder,
@@ -62,6 +63,7 @@ export async function startApp(config: Config) {
     if (await fs.exists(buildFolder)) {
       await fs.remove(buildFolder);
     }
+    await build.file(appPath);
     await build.files(`+(${libFolder}|${elementsFolder}|${routesFolder})/**`);
   }
 

@@ -6,16 +6,15 @@ import { join, relative } from "@std/path";
 const moduleDir = import.meta.dirname;
 assertExists(moduleDir);
 const rootDir = join(moduleDir, "..");
-const elementsDir = join(rootDir, "elements");
 
 export const onBuildFiles = handlerFor(build.files, async (glob, options) => {
   {
     using _ = new HandlerScope(onBuildDest);
 
-    await build.files(`${elementsDir}/**`, { root: rootDir });
+    await build.files(`+(elements|routes)/**`, { root: rootDir });
   }
 
-  return Handler.continue(glob, { ...options, incremental: true });
+  return Handler.continue(glob, options);
 }, { reentrant: false });
 
 const onBuildDest = handlerFor(build.dest, async (path) => {

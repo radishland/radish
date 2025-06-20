@@ -3,9 +3,8 @@ import { fs } from "$effects/fs.ts";
 import { config } from "$effects/mod.ts";
 import { buildFolder } from "$lib/conventions.ts";
 import { id } from "$lib/utils/algebraic-structures.ts";
-import { workspaceRelative } from "$lib/utils/path.ts";
 import { handlerFor, type Plugin } from "@radish/effect-system";
-import { globToRegExp, join } from "@std/path";
+import { globToRegExp, join, relative } from "@std/path";
 import { buildHMRHook } from "./hooks/hmr.update.ts";
 
 /**
@@ -37,23 +36,23 @@ const onBuildFile = handlerFor(build.file, async (path: string) => {
  * - `fs/remove`
  * - `fs/walk`
  */
-const onBuildStart = handlerFor(
+const onBuildFiles = handlerFor(
   build.files,
   async (glob, options): Promise<void> => {
-    console.log("Building...");
-
     const optionsWithDefaults: Required<BuildOptions> = {
       root: Deno.cwd(),
       ...options,
     };
 
-    const match = globToRegExp(glob);
-
-    const entries = await fs.walk(optionsWithDefaults.root, {
-      match: [new RegExp(match.source.slice(1))],
+    const allEntries = await fs.walk(optionsWithDefaults.root, {
       includeDirs: false,
       skip: (await config.read()).build?.skip ?? [/(\.test|\.spec)\.ts$/],
     });
+
+    const match = globToRegExp(glob);
+    const entries = allEntries.filter((e) =>
+      relative(optionsWithDefaults.root, e.path).match(match)
+    );
 
     const sortedEntries = await build.sort(entries);
 
@@ -81,7 +80,7 @@ export const onBuildTransformTerminal = handlerFor(
  */
 export const onBuildDest = handlerFor(
   build.dest,
-  (path) => join(buildFolder, workspaceRelative(path)),
+  (path) => join(buildFolder, relative(Deno.cwd(), path)),
 );
 
 /**
@@ -103,7 +102,7 @@ export const pluginBuild: Plugin = {
   handlers: [
     onBuildFile,
     onBuildSortTerminal,
-    onBuildStart,
+    onBuildFiles,
     onBuildTransformTerminal,
     onBuildDest,
     buildHMRHook,

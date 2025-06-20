@@ -93,17 +93,15 @@ export const handleSort = handlerFor(
             elementsOrRoutes.push(elementOrRoute);
           }
 
-          elementsOrRoutes.push(
-            ...Object.values(
-              manifestObject.elements,
-            ).filter((element) => element.dependencies?.includes(tagName)),
-          );
+          const dependantElements = Object.values(
+            manifestObject.elements,
+          ).filter((element) => element.dependencies?.includes(tagName));
+          elementsOrRoutes.push(...dependantElements);
 
-          elementsOrRoutes.push(
-            ...Object.values(
-              manifestObject.routes,
-            ).filter((element) => element.dependencies?.includes(tagName)),
-          );
+          const dependantRoutes = Object.values(
+            manifestObject.routes,
+          ).filter((element) => element.dependencies?.includes(tagName));
+          elementsOrRoutes.push(...dependantRoutes);
         } else if (fileKind === "route") {
           const route = manifestObject.routes[entry.path];
           if (route) {

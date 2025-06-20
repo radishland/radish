@@ -9,7 +9,7 @@ import { config } from "$effects/mod.ts";
 import type { ManifestBase } from "$lib/types.d.ts";
 import { stringifyObject } from "$lib/utils/stringify.ts";
 import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
-import { extname, globToRegExp } from "@std/path";
+import { extname, globToRegExp, relative } from "@std/path";
 
 let manifestObject: ManifestBase = {
   imports: {},
@@ -103,13 +103,18 @@ export const onManifestUpdateEntries = handlerFor(
       root: Deno.cwd(),
       ...options,
     };
-    const match = globToRegExp(glob);
 
-    const entries = await fs.walk(optionsWithDefaults.root, {
-      match: [new RegExp(match.source.slice(1))],
+    const allEntries = await fs.walk(optionsWithDefaults.root, {
       includeDirs: false,
       skip: (await config.read()).manifest?.skip ?? [/(\.test|\.spec)\.ts$/],
     });
+
+    // Not using the `match` option from `walk` as `globToRegExp` returns a RegExp matching from start to end like /^elements...$/
+    // Slicing it is also wrong as it would match against subfolders like build/elements...
+    const match = globToRegExp(glob);
+    const entries = allEntries.filter((e) =>
+      relative(optionsWithDefaults.root, e.path).match(match)
+    );
 
     for (const entry of entries) {
       await manifest.updateEntry(entry);
