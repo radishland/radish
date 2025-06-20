@@ -22,7 +22,8 @@ To cut a release, follow these steps:
 3. Review the changes and manually update the following version numbers if
    relevant:
    - runtime/package.json if @radish/runtime was bumped
-   - init/template/base/denojsonc if core, runtime, std-elements or effect-system were bumped
+   - init/template/base/denojsonc if core, runtime, std-elements or
+     effect-system were bumped
    - (ensure init/deno.jsonc is bumped if the previous step was executed)
    - README/try-it-out section if @radish/init was bumped
 
