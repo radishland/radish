@@ -32,7 +32,7 @@
         "no-sync-fn-in-async-fn",
         "verbatim-module-syntax"
       ],
-      "exclude": ["no-explicit-any", "ban-types", "no-slow-types"],
+      "exclude": ["no-explicit-any", "ban-types"],
       "tags": ["jsr", "recommended"]
     }
   },

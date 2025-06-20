@@ -1,33 +1,7 @@
-import type { HandlerRegistry } from "./handler-registry.ts";
-
-export type TypedEvent<T extends EventTarget, Detail> = CustomEvent<Detail> & {
-  target: T;
-};
-
-type HandlerRegistryEvent<D> = TypedEvent<HandlerRegistry, D>;
-
-export interface HandleDirectiveEventDetail {
+export interface DirectiveEventDetail {
   target: EventTarget;
   identifier: string;
   key: string;
-}
-
-export type HandleDirectiveEvent = HandlerRegistryEvent<
-  HandleDirectiveEventDetail
->;
-
-declare global {
-  interface GlobalEventHandlersEventMap {
-    "rad::attr": HandleDirectiveEvent;
-    "rad::bind": HandleDirectiveEvent;
-    "rad::bool": HandleDirectiveEvent;
-    "rad::classlist": HandleDirectiveEvent;
-    "rad::html": HandleDirectiveEvent;
-    "rad::on": HandleDirectiveEvent;
-    "rad::prop": HandleDirectiveEvent;
-    "rad::text": HandleDirectiveEvent;
-    "rad::use": HandleDirectiveEvent;
-  }
 }
 
 export interface AutonomousCustomElement {
