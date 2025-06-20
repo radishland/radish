@@ -1,17 +1,25 @@
 <demo-switch>
-  <!-- Fallback only -->
-  <r-switch data-testid="fallback-only">
-    <div slot="fallback">fallback only</div>
-  </r-switch>
-
-  <!-- Only r-match children can match  -->
-  <r-switch data-testid="r-match-only">
-    <div>not matching</div>
-    <div slot="fallback">fallback only</div>
-  </r-switch>
-
-  <!-- Switches between matches with fallthrough and fallback -->
   <section>
+    <p>Only the fallback is provided here:</p>
+    <r-switch data-testid="fallback-only">
+      <div slot="fallback">fallback only</div>
+    </r-switch>
+  </section>
+
+  <section>
+    <p>
+      Only r-match children can match: a div with text "not matching" is not
+      visible
+    </p>
+    <r-switch data-testid="r-match-only">
+      <div>not matching</div>
+      <div slot="fallback">fallback only</div>
+    </r-switch>
+  </section>
+
+  <section>
+    <p>Switches between matches with fallthrough and fallback</p>
+
     <div>
       <label>
         <input name="tab" type="checkbox" bind:checked="condition1"> tab 1
@@ -33,8 +41,8 @@
     </r-switch>
   </section>
 
-  <!-- Exclusive options without fallback -->
   <section>
+    <p>Exclusive options without fallback</p>
     <div>
       <label>
         <input type="number" bind:value="number"> number
