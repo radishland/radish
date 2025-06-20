@@ -1,5 +1,5 @@
 {
-  "name": "@radish/elements",
+  "name": "@radish/std-elements",
   "version": "0.1.0",
   "license": "MIT",
   "exports": {
