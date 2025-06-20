@@ -26,7 +26,7 @@ import { dependencies } from "../../utils/walk.ts";
  * - `fs/read`
  */
 export const handleManifestUpdateRenderHook = handlerFor(
-  manifest.update,
+  manifest.updateEntry,
   async (entry) => {
     const manifestObject = await manifest.get();
     const extension = extname(entry.name);

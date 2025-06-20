@@ -1,6 +1,10 @@
 import { fs } from "$effects/fs.ts";
 import { hmr } from "$effects/hmr.ts";
-import { manifest, manifestPath } from "$effects/manifest.ts";
+import {
+  manifest,
+  manifestPath,
+  type ManifestUpdateOptions,
+} from "$effects/manifest.ts";
 import { config } from "$effects/mod.ts";
 import type { ManifestBase } from "$lib/types.d.ts";
 import { stringifyObject } from "$lib/utils/stringify.ts";
@@ -42,7 +46,7 @@ export const handleManifestGet = handlerFor(manifest.get, () => manifestObject);
  * - fs/read
  */
 export const handleManifestUpdateExtractImports = handlerFor(
-  manifest.update,
+  manifest.updateEntry,
   async (entry) => {
     if (entry.isFile && [".js", ".ts"].includes(extname(entry.path))) {
       const manifestObject = await manifest.get();
@@ -58,7 +62,7 @@ export const handleManifestUpdateExtractImports = handlerFor(
  * Terminal `manifest/update` handler
  */
 export const handleManifestUpdateTerminal = handlerFor(
-  manifest.update,
+  manifest.updateEntry,
   () => {},
 );
 
@@ -106,7 +110,7 @@ export const pluginManifest: Plugin = {
         if (event.kind === "remove") {
           delete manifestImports[event.path];
         } else if (event.kind === "modify") {
-          await updateManifest(event.path);
+          await manifest.updateEntries(event.path);
         }
       }
       return Handler.continue({ event, paths });
@@ -122,19 +126,27 @@ export const pluginManifest: Plugin = {
  * - `fs/walk`
  * - `manifest/update`
  */
-export const updateManifest = async (glob: string): Promise<void> => {
-  const match = globToRegExp(glob);
 
-  const entries = await fs.walk(Deno.cwd(), {
-    match: [new RegExp(match.source.slice(1))],
-    includeDirs: false,
-    skip: (await config.read()).manifest?.skip ?? [/(\.test|\.spec)\.ts$/],
-  });
+export const onManifestUpdateEntries = handlerFor(
+  manifest.updateEntries,
+  async (glob: string, options): Promise<void> => {
+    const optionsWithDefaults: Required<ManifestUpdateOptions> = {
+      root: Deno.cwd(),
+      ...options,
+    };
+    const match = globToRegExp(glob);
 
-  for (const entry of entries) {
-    await manifest.update(entry);
-  }
-};
+    const entries = await fs.walk(optionsWithDefaults.root, {
+      match: [new RegExp(match.source.slice(1))],
+      includeDirs: false,
+      skip: (await config.read()).manifest?.skip ?? [/(\.test|\.spec)\.ts$/],
+    });
+
+    for (const entry of entries) {
+      await manifest.updateEntry(entry);
+    }
+  },
+);
 
 /**
  * Extracts import specifiers from import declarations or dynamic imports

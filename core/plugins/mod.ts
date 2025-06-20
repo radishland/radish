@@ -7,10 +7,10 @@
 export { pluginBuild } from "./build/build.ts";
 export { pluginConfig } from "./config.ts";
 export { pluginEnv } from "./env/env.ts";
+export { pluginFS } from "./fs.ts";
 export { pluginHMR } from "./hmr/hmr.ts";
 export { pluginImportmap } from "./importmap/importmap.ts";
-export { pluginFS } from "./fs.ts";
-export { pluginManifest, updateManifest } from "./manifest/manifest.ts";
+export { pluginManifest } from "./manifest/manifest.ts";
 export { pluginRender } from "./render/mod.ts";
 export { pluginRouter } from "./router/router.ts";
 export { pluginServer } from "./server/mod.ts";

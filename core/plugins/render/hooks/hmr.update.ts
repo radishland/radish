@@ -5,7 +5,6 @@ import { filename } from "$lib/utils/path.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { assertObjectMatch } from "@std/assert";
 import { extname } from "@std/path";
-import { updateManifest } from "../../manifest/manifest.ts";
 import { getFileKind } from "../utils/getFileKind.ts";
 import { manifestShape } from "./manifest/mod.ts";
 
@@ -61,7 +60,7 @@ export const handleHotUpdate = handlerFor(
         }
       }
     } else if (event.kind === "create" || event.kind === "modify") {
-      await updateManifest(event.path);
+      await manifest.updateEntries(event.path);
     }
     return Handler.continue({ event, paths });
   },

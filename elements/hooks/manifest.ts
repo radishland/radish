@@ -15,7 +15,7 @@ export const onManifest = handlerFor(manifest.set, async (_manifest) => {
   // Ensure we're not updating an empty manifest
   if (_manifest && Object.hasOwn(_manifest, "elements")) {
     for (const entry of walkSync(elementsDir, { includeDirs: false })) {
-      await manifest.update({
+      await manifest.updateEntry({
         ...entry,
         path: relative(Deno.cwd(), entry.path),
       });

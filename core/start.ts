@@ -22,7 +22,6 @@ import { parseArgs } from "@std/cli";
 import { serveDir } from "@std/http";
 import { join } from "@std/path";
 import { generateImportmap } from "./plugins/importmap/importmap.ts";
-import { updateManifest } from "./plugins/manifest/manifest.ts";
 import type { CLIArgs, Config } from "./types.d.ts";
 
 const cliArgs: CLIArgs = Object.freeze(parseArgs(Deno.args, {
@@ -47,7 +46,7 @@ export async function startApp(config: Config) {
 
   if (cliArgs.manifest) {
     console.log("Generating manifest...");
-    await updateManifest(
+    await manifest.updateEntries(
       `+(${libFolder}|${elementsFolder}|${routesFolder})/**`,
     );
     await manifest.write();
