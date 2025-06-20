@@ -7,7 +7,7 @@ import {
 } from "$effects/render.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { assertObjectMatch } from "@std/assert";
-import { manifestShape } from "../hooks/manifest/mod.ts";
+import { manifestShape } from "../../hooks/manifest/mod.ts";
 
 /**
  * @performs
@@ -29,7 +29,8 @@ export const handleAutoImport = handlerFor(
         .find((p) => p.endsWith(".ts") || p.endsWith(".js"));
       if (!source) continue;
 
-      imports.push(await build.dest(source));
+      const dest = await build.dest(source);
+      imports.push(dest);
     }
 
     if (imports.length > 0) {
