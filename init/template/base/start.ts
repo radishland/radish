@@ -17,6 +17,7 @@ import {
   pluginWS,
 } from "@radish/core/plugins";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
+import { pluginStdElements } from "@radish/std-elements";
 
 const config: Config = {
   importmap: {
@@ -68,6 +69,7 @@ const handleManifestLoad = handlerFor(manifest.load, async () => {
 });
 
 const scope = new HandlerScope(
+  pluginStdElements,
   pluginWS,
   pluginServer,
   pluginRouter,
