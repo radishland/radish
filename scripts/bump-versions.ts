@@ -1,6 +1,17 @@
 import { join } from "@std/path";
-import {} from "@std/fs";
 import { existsSync } from "node:fs";
+
+const packages = [
+  "core",
+  "effect-system",
+  "htmlcrunch",
+  "init",
+  "runtime",
+] as const;
+
+type Versions = {
+  [K in typeof packages[number]]: string;
+};
 
 const getVersion = (module: string) => {
   const cwd = Deno.cwd();
@@ -15,12 +26,7 @@ const getVersion = (module: string) => {
   return JSON.parse(content).version;
 };
 
-type Versions = {
-  [K in "core" | "effect-system" | "htmlcrunch" | "init" | "runtime"]: string;
-};
-
 const getVersions = (): Versions => {
-  const packages = ["core", "effect-system", "htmlcrunch", "init", "runtime"];
   return Object.fromEntries(
     packages.map((p) => [p, getVersion(p)]),
   ) as Versions;

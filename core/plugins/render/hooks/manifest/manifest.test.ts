@@ -1,9 +1,9 @@
 import { fs } from "$effects/fs.ts";
 import { manifest } from "$effects/manifest.ts";
 import {
-  handleManifestGet,
-  handleManifestSet,
-  handleManifestUpdateTerminal,
+  onManifestGet,
+  onManifestSet,
+  onManifestUpdateTerminal,
 } from "$lib/plugins/manifest/manifest.ts";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals, assertExists, assertObjectMatch } from "@std/assert";
@@ -53,16 +53,16 @@ describe("manifest render hook", () => {
         assertExists(content);
         return content;
       }),
-      handleManifestGet,
-      handleManifestSet,
+      onManifestGet,
+      onManifestSet,
       handleManifestUpdateRenderHook,
-      handleManifestUpdateTerminal,
+      onManifestUpdateTerminal,
     );
 
     await manifest.set(manifestShape);
 
     for (const path of Object.keys(files)) {
-      await manifest.update(createWalkEntry(path));
+      await manifest.updateEntry(createWalkEntry(path));
     }
 
     assertObjectMatch(await manifest.get(), {

@@ -9,11 +9,17 @@ import type { ManifestBase } from "../types.d.ts";
  */
 export const manifestPath: string = join(generatedFolder, "manifest.ts");
 
+export type ManifestUpdateOptions = { root?: string };
+
 interface ManifestOperations {
   load: () => ManifestBase;
   set: (manifest: ManifestBase) => void;
   get: () => ManifestBase;
-  update: (entry: WalkEntry) => void;
+  updateEntry: (entry: WalkEntry) => void;
+  updateEntries: (
+    glob: string,
+    options?: ManifestUpdateOptions | undefined,
+  ) => void;
   write: () => void;
 }
 
@@ -36,7 +42,14 @@ export const manifest: {
   /**
    * Updates the manifest object
    */
-  update: (entry: WalkEntry) => Effect<void>;
+  updateEntry: (entry: WalkEntry) => Effect<void>;
+  /**
+   * Updates all entries matching the glob
+   */
+  updateEntries: (
+    glob: string,
+    options?: ManifestUpdateOptions | undefined,
+  ) => Effect<void>;
   /**
    * Serializes the manifest object and saves it to disk
    */
@@ -45,8 +58,11 @@ export const manifest: {
   load: createEffect<ManifestOperations["load"]>("manifest/load"),
   set: createEffect<ManifestOperations["set"]>("manifest/set"),
   get: createEffect<ManifestOperations["get"]>("manifest/get"),
-  update: createEffect<ManifestOperations["update"]>(
-    "manifest/update",
+  updateEntry: createEffect<ManifestOperations["updateEntry"]>(
+    "manifest/update-entry",
+  ),
+  updateEntries: createEffect<ManifestOperations["updateEntries"]>(
+    "manifest/update-entries",
   ),
   write: createEffect<ManifestOperations["write"]>("manifest/write"),
 };

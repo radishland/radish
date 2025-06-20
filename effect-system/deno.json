@@ -7,11 +7,5 @@
   },
   "compilerOptions": {
     "checkJs": false
-  },
-  "publish": {
-    "exclude": [
-      "**/*.test.ts",
-      "tests"
-    ]
   }
 }

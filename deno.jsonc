@@ -1,11 +1,12 @@
 {
   "workspace": [
+    "./app",
     "./core",
     "./effect-system",
+    "./htmlcrunch",
     "./init",
     "./runtime",
-    "./app",
-    "./htmlcrunch"
+    "./std-elements"
   ],
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check",
@@ -13,8 +14,15 @@
     "test:e2e": "cd app && deno task e2e",
     "test": "deno task test:unit && deno task test:e2e"
   },
-  "test": {
-    "exclude": ["app/build"]
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"],
+    "checkJs": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true
+  },
+  "fmt": {
+    "exclude": ["**/*nofmt*", "**/pnpm-lock.yaml"]
   },
   "lint": {
     "rules": {
@@ -28,15 +36,8 @@
       "tags": ["jsr", "recommended"]
     }
   },
-  "fmt": {
-    "exclude": ["**/*nofmt*", "**/pnpm-lock.yaml"]
-  },
-  "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"],
-    "checkJs": true,
-    "noImplicitOverride": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true
+  "publish": {
+    "exclude": ["**/*.test.ts", "**/testdata/**"]
   },
   "nodeModulesDir": "auto",
   "imports": {

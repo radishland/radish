@@ -1,5 +1,5 @@
 import { assert } from "@std/assert";
-import { basename, extname, isAbsolute, relative, SEPARATOR } from "@std/path";
+import { basename, extname, relative, SEPARATOR } from "@std/path";
 
 /**
  * Returns the file name without the extension
@@ -9,13 +9,6 @@ export function filename(path: string): string {
   assert(extension, `Expected "${path}" to be a file path`);
   return basename(path, extension);
 }
-
-/**
- * Normalizes paths relative to the project workspace
- */
-export const workspaceRelative = (path: string) => {
-  return isAbsolute(path) ? relative(Deno.cwd(), path) : path;
-};
 
 /**
  * Checks whether two paths are in a parent - child relation

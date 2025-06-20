@@ -2,12 +2,14 @@ import {
   build,
   config as configEffect,
   env,
+  fs,
   importmap,
   manifest,
   router,
   server,
 } from "$effects/mod.ts";
 import {
+  appPath,
   buildFolder,
   elementsFolder,
   libFolder,
@@ -21,7 +23,6 @@ import { parseArgs } from "@std/cli";
 import { serveDir } from "@std/http";
 import { join } from "@std/path";
 import { generateImportmap } from "./plugins/importmap/importmap.ts";
-import { updateManifest } from "./plugins/manifest/manifest.ts";
 import type { CLIArgs, Config } from "./types.d.ts";
 
 const cliArgs: CLIArgs = Object.freeze(parseArgs(Deno.args, {
@@ -46,7 +47,7 @@ export async function startApp(config: Config) {
 
   if (cliArgs.manifest) {
     console.log("Generating manifest...");
-    await updateManifest(
+    await manifest.updateEntries(
       `+(${libFolder}|${elementsFolder}|${routesFolder})/**`,
     );
     await manifest.write();
@@ -58,6 +59,11 @@ export async function startApp(config: Config) {
   }
 
   if (cliArgs.build) {
+    console.log("Building...");
+    if (await fs.exists(buildFolder)) {
+      await fs.remove(buildFolder);
+    }
+    await build.file(appPath);
     await build.files(`+(${libFolder}|${elementsFolder}|${routesFolder})/**`);
   }
 
@@ -65,9 +71,7 @@ export async function startApp(config: Config) {
     await router.init();
 
     const staticRoutes: [string, string][] = [
-      [routesFolder, buildFolder],
-      [elementsFolder, buildFolder],
-      [libFolder, buildFolder],
+      [buildFolder, "."],
       [staticFolder, "."],
       dev
         ? [`/node_modules/*`, join(config.router?.nodeModulesRoot ?? ".")]

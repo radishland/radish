@@ -6,7 +6,6 @@ import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals, assertExists, assertObjectMatch } from "@std/assert";
 import { describe, test } from "@std/testing/bdd";
 import { createWalkEntry } from "../../utils/fs.ts";
-import { updateManifest } from "./manifest.ts";
 
 describe("manifest", () => {
   test("skips test files", async () => {
@@ -31,7 +30,7 @@ describe("manifest", () => {
       pluginManifest,
     );
 
-    await updateManifest("+(lib|elements|routes)**");
+    await manifest.updateEntries("+(lib|elements|routes)**");
 
     const manifestObject = await manifest.get();
 
@@ -58,7 +57,7 @@ describe("manifest", () => {
     );
 
     for (const path of Object.keys(files)) {
-      await manifest.update(createWalkEntry(path));
+      await manifest.updateEntry(createWalkEntry(path));
     }
 
     const manifestObject = await manifest.get();

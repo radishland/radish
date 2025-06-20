@@ -30,7 +30,7 @@ const handleHMRPipeline = handlerFor(hmr.pipeline, async (event: HmrEvent) => {
   await manifest.load();
   await generateImportmap();
   for (const path of paths) {
-    await build.files(path, { incremental: true });
+    await build.files(path);
   }
   await ws.send("reload");
 });

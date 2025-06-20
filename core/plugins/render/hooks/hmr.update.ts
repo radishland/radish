@@ -1,12 +1,11 @@
 import { hmr } from "$effects/hmr.ts";
 import { manifest } from "$effects/manifest.ts";
 import type { Manifest } from "$effects/render.ts";
-import { elementsFolder, routesFolder } from "$lib/conventions.ts";
-import { filename, isParent } from "$lib/utils/path.ts";
+import { filename } from "$lib/utils/path.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { assertObjectMatch } from "@std/assert";
 import { extname } from "@std/path";
-import { updateManifest } from "../../manifest/manifest.ts";
+import { getFileKind } from "../utils/getFileKind.ts";
 import { manifestShape } from "./manifest/mod.ts";
 
 /**
@@ -29,7 +28,9 @@ export const handleHotUpdate = handlerFor(
     }
 
     if (event.kind === "remove") {
-      if (isParent(elementsFolder, event.path)) {
+      const fileKind = getFileKind(event.path);
+
+      if (fileKind === "element") {
         const tagName = filename(event.path);
         const element = _manifest.elements[tagName];
 
@@ -51,7 +52,7 @@ export const handleHotUpdate = handlerFor(
             }
           }
         }
-      } else if (isParent(routesFolder, event.path)) {
+      } else if (fileKind === "route") {
         const route = _manifest.routes[event.path];
 
         if (route) {
@@ -59,7 +60,7 @@ export const handleHotUpdate = handlerFor(
         }
       }
     } else if (event.kind === "create" || event.kind === "modify") {
-      await updateManifest(event.path);
+      await manifest.updateEntries(event.path);
     }
     return Handler.continue({ event, paths });
   },

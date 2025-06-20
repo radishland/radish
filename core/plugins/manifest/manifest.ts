@@ -1,11 +1,15 @@
 import { fs } from "$effects/fs.ts";
 import { hmr } from "$effects/hmr.ts";
-import { manifest, manifestPath } from "$effects/manifest.ts";
+import {
+  manifest,
+  manifestPath,
+  type ManifestUpdateOptions,
+} from "$effects/manifest.ts";
 import { config } from "$effects/mod.ts";
 import type { ManifestBase } from "$lib/types.d.ts";
 import { stringifyObject } from "$lib/utils/stringify.ts";
 import { Handler, handlerFor, type Plugin } from "@radish/effect-system";
-import { extname, globToRegExp } from "@std/path";
+import { extname, globToRegExp, relative } from "@std/path";
 
 let manifestObject: ManifestBase = {
   imports: {},
@@ -17,10 +21,10 @@ let manifestObject: ManifestBase = {
  * @hooks
  * - `manifest/set`
  */
-export const handleManifestSet = handlerFor(manifest.set, (_manifestObject) => {
+export const onManifestSet = handlerFor(manifest.set, (_manifestObject) => {
   manifestObject = _manifestObject;
 });
-handleManifestSet[Symbol.dispose] = () => {
+onManifestSet[Symbol.dispose] = () => {
   manifestObject = { imports: {} };
 };
 
@@ -30,19 +34,20 @@ handleManifestSet[Symbol.dispose] = () => {
  * @hooks
  * - `manifest/get`
  */
-export const handleManifestGet = handlerFor(manifest.get, () => manifestObject);
+export const onManifestGet = handlerFor(manifest.get, () => manifestObject);
 
 /**
  * Updates the manifest file by extracting imports from .js or .ts files
  *
  * @hooks
- * - manifest/update
+ * - `manifest/update-entry`
  *
  * @performs
- * - fs/read
+ * - `fs/read`
+ * - `manifest/get`
  */
-export const handleManifestUpdateExtractImports = handlerFor(
-  manifest.update,
+export const onManifestUpdateExtractImports = handlerFor(
+  manifest.updateEntry,
   async (entry) => {
     if (entry.isFile && [".js", ".ts"].includes(extname(entry.path))) {
       const manifestObject = await manifest.get();
@@ -57,8 +62,8 @@ export const handleManifestUpdateExtractImports = handlerFor(
 /**
  * Terminal `manifest/update` handler
  */
-export const handleManifestUpdateTerminal = handlerFor(
-  manifest.update,
+export const onManifestUpdateTerminal = handlerFor(
+  manifest.updateEntry,
   () => {},
 );
 
@@ -73,12 +78,49 @@ export const handleManifestUpdateTerminal = handlerFor(
  * @performs
  * - `fs.write`
  */
-const handleManifestWrite = handlerFor(manifest.write, async () => {
+const onManifestWrite = handlerFor(manifest.write, async () => {
   let file = "export const manifest = ";
   file += stringifyObject(manifestObject);
 
   await fs.write(manifestPath, file);
 });
+
+/**
+ * Performs the manifest/update-entries effect on all entries matching the glob
+ *
+ * @hooks
+ * - `manifest/update-entries`
+ *
+ * @performs
+ * - `config/read`
+ * - `fs/walk`
+ * - `manifest/update-entry`
+ */
+export const onManifestUpdateEntries = handlerFor(
+  manifest.updateEntries,
+  async (glob: string, options): Promise<void> => {
+    const optionsWithDefaults: Required<ManifestUpdateOptions> = {
+      root: Deno.cwd(),
+      ...options,
+    };
+
+    const allEntries = await fs.walk(optionsWithDefaults.root, {
+      includeDirs: false,
+      skip: (await config.read()).manifest?.skip ?? [/(\.test|\.spec)\.ts$/],
+    });
+
+    // Not using the `match` option from `walk` as `globToRegExp` returns a RegExp matching from start to end like /^elements...$/
+    // Slicing it is also wrong as it would match against subfolders like build/elements...
+    const match = globToRegExp(glob);
+    const entries = allEntries.filter((e) =>
+      relative(optionsWithDefaults.root, e.path).match(match)
+    );
+
+    for (const entry of entries) {
+      await manifest.updateEntry(entry);
+    }
+  },
+);
 
 /**
  * @hooks
@@ -93,11 +135,12 @@ const handleManifestWrite = handlerFor(manifest.write, async () => {
 export const pluginManifest: Plugin = {
   name: "plugin-manifest",
   handlers: [
-    handleManifestSet,
-    handleManifestGet,
-    handleManifestWrite,
-    handleManifestUpdateExtractImports,
-    handleManifestUpdateTerminal,
+    onManifestSet,
+    onManifestGet,
+    onManifestWrite,
+    onManifestUpdateExtractImports,
+    onManifestUpdateTerminal,
+    onManifestUpdateEntries,
     handlerFor(hmr.update, async ({ event, paths }) => {
       if (event.isFile) {
         const manifestObject = await manifest.get();
@@ -106,34 +149,12 @@ export const pluginManifest: Plugin = {
         if (event.kind === "remove") {
           delete manifestImports[event.path];
         } else if (event.kind === "modify") {
-          await updateManifest(event.path);
+          await manifest.updateEntries(event.path);
         }
       }
       return Handler.continue({ event, paths });
     }),
   ],
-};
-
-/**
- * Performs the manifest/update effect on all entries matching the glob
- *
- * @performs
- * - `config/read`
- * - `fs/walk`
- * - `manifest/update`
- */
-export const updateManifest = async (glob: string): Promise<void> => {
-  const match = globToRegExp(glob);
-
-  const entries = await fs.walk(Deno.cwd(), {
-    match: [new RegExp(match.source.slice(1))],
-    includeDirs: false,
-    skip: (await config.read()).manifest?.skip ?? [/(\.test|\.spec)\.ts$/],
-  });
-
-  for (const entry of entries) {
-    await manifest.update(entry);
-  }
 };
 
 /**

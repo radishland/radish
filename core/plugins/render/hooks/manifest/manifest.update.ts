@@ -5,18 +5,15 @@ import type {
   LayoutManifest,
   RouteManifest,
 } from "$effects/render.ts";
-import {
-  elementsFolder,
-  generatedFolder,
-  routesFolder,
-} from "$lib/conventions.ts";
+import { generatedFolder } from "$lib/conventions.ts";
 import { setScope } from "$lib/utils/stringify.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { fragments, shadowRoot } from "@radish/htmlcrunch";
 import { assert } from "@std/assert";
 import { basename, dirname, extname, relative } from "@std/path";
 import { toPascalCase } from "@std/text";
-import { filename, isParent } from "../../../../utils/path.ts";
+import { filename } from "../../../../utils/path.ts";
+import { getFileKind } from "../../utils/getFileKind.ts";
 import { dependencies } from "../../utils/walk.ts";
 
 /**
@@ -29,33 +26,35 @@ import { dependencies } from "../../utils/walk.ts";
  * - `fs/read`
  */
 export const handleManifestUpdateRenderHook = handlerFor(
-  manifest.update,
+  manifest.updateEntry,
   async (entry) => {
     const manifestObject = await manifest.get();
     const extension = extname(entry.name);
+    const path = entry.path;
 
     if (!entry.isFile || ![".html", ".js", ".ts"].includes(extension)) {
       return Handler.continue(entry);
     }
+    const fileKind = getFileKind(path);
 
-    if (isParent(elementsFolder, entry.path)) {
+    if (fileKind === "element") {
       /**
        * Elements
        */
 
-      const parentFolder = dirname(entry.path);
+      const parentFolder = dirname(path);
       const elementName = filename(entry.name);
 
       if (basename(parentFolder) !== elementName) {
         console.warn(
-          `By convention an element file has the same name as its parent folder. Skipping file ${entry.path}`,
+          `By convention an element file has the same name as its parent folder. Skipping file ${path}`,
         );
         return Handler.continue(entry);
       }
 
       assert(
         elementName.includes("-"),
-        `An element file name must include a dash.\n\nIn: ${entry.path}`,
+        `An element file name must include a dash.\n\nIn: ${path}`,
       );
 
       const elementMetaData: ElementManifest =
@@ -69,24 +68,22 @@ export const handleManifestUpdateRenderHook = handlerFor(
       switch (extension) {
         case ".html":
           {
-            if (!elementMetaData.files.includes(entry.path)) {
-              elementMetaData.files.push(entry.path);
+            if (!elementMetaData.files.includes(path)) {
+              elementMetaData.files.push(path);
             }
 
             let fragment;
             try {
-              const content = await fs.read(entry.path);
+              const content = await fs.read(path);
               fragment = shadowRoot.parseOrThrow(content);
             } catch (error) {
               console.error(
-                `Something went wrong while parsing ${entry.path}`,
+                `Something went wrong while parsing ${path}`,
               );
               throw error;
             }
 
             elementMetaData.dependencies = dependencies(fragment);
-
-            const path = entry.path;
             elementMetaData.templatePath = path;
           }
           break;
@@ -95,7 +92,7 @@ export const handleManifestUpdateRenderHook = handlerFor(
         case ".ts":
           {
             const className = toPascalCase(elementName);
-            const importPath = relative(generatedFolder, entry.path);
+            const importPath = relative(generatedFolder, path);
 
             elementMetaData.classLoader = async () => {
               return (await import(importPath))[className];
@@ -105,15 +102,15 @@ export const handleManifestUpdateRenderHook = handlerFor(
               className,
             });
 
-            if (!elementMetaData.files.includes(entry.path)) {
-              elementMetaData.files.push(entry.path);
+            if (!elementMetaData.files.includes(path)) {
+              elementMetaData.files.push(path);
             }
           }
           break;
       }
 
       manifestObject.elements[elementName] = elementMetaData;
-    } else if (isParent(routesFolder, entry.path)) {
+    } else if (fileKind === "route") {
       /**
        * Routes
        */
@@ -121,14 +118,12 @@ export const handleManifestUpdateRenderHook = handlerFor(
       if (extname(entry.name) === ".html") {
         let fragment;
         try {
-          const content = await fs.read(entry.path);
+          const content = await fs.read(path);
           fragment = fragments.parseOrThrow(content);
         } catch (error) {
-          console.error(`Something went wrong while parsing ${entry.path}`);
+          console.error(`Something went wrong while parsing ${path}`);
           throw error;
         }
-
-        const path = entry.path;
 
         if (entry.name === "_layout.html") {
           // Layout
@@ -153,9 +148,9 @@ export const handleManifestUpdateRenderHook = handlerFor(
         // The extension is .js or .ts
 
         if (entry.name.includes("-")) {
-          const tagName = filename(entry.path);
+          const tagName = filename(path);
           const className = toPascalCase(tagName);
-          const importPath = relative(generatedFolder, entry.path);
+          const importPath = relative(generatedFolder, path);
 
           const classLoader = async () => {
             return (await import(importPath))[className];
@@ -165,8 +160,8 @@ export const handleManifestUpdateRenderHook = handlerFor(
           manifestObject.elements[tagName] = {
             kind: "element",
             tagName,
-            path: entry.path,
-            files: [entry.path],
+            path: path,
+            files: [path],
             classLoader,
           };
         }

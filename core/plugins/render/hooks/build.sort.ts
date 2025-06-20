@@ -5,13 +5,14 @@ import type {
   Manifest,
   RouteManifest,
 } from "$effects/render.ts";
-import { appPath, elementsFolder, routesFolder } from "$lib/conventions.ts";
+import { appPath } from "$lib/conventions.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { assertExists, assertObjectMatch, unreachable } from "@std/assert";
 import type { WalkEntry } from "@std/fs";
 import { extname } from "@std/path";
 import { createWalkEntry } from "../../../utils/fs.ts";
-import { filename, isParent } from "../../../utils/path.ts";
+import { filename } from "../../../utils/path.ts";
+import { getFileKind } from "../utils/getFileKind.ts";
 import { manifestShape } from "./manifest/mod.ts";
 
 /**
@@ -81,8 +82,10 @@ export const handleSort = handlerFor(
     const layouts: WalkEntry[] = [];
 
     for (const entry of entries) {
+      const fileKind = getFileKind(entry.path);
+
       if (extname(entry.name) === ".html") {
-        if (isParent(elementsFolder, entry.path)) {
+        if (fileKind === "element") {
           const tagName = filename(entry.name);
           const elementOrRoute = manifestObject.elements[tagName];
 
@@ -90,18 +93,16 @@ export const handleSort = handlerFor(
             elementsOrRoutes.push(elementOrRoute);
           }
 
-          elementsOrRoutes.push(
-            ...Object.values(
-              manifestObject.elements,
-            ).filter((element) => element.dependencies?.includes(tagName)),
-          );
+          const dependantElements = Object.values(
+            manifestObject.elements,
+          ).filter((element) => element.dependencies?.includes(tagName));
+          elementsOrRoutes.push(...dependantElements);
 
-          elementsOrRoutes.push(
-            ...Object.values(
-              manifestObject.routes,
-            ).filter((element) => element.dependencies?.includes(tagName)),
-          );
-        } else if (isParent(routesFolder, entry.path)) {
+          const dependantRoutes = Object.values(
+            manifestObject.routes,
+          ).filter((element) => element.dependencies?.includes(tagName));
+          elementsOrRoutes.push(...dependantRoutes);
+        } else if (fileKind === "route") {
           const route = manifestObject.routes[entry.path];
           if (route) {
             elementsOrRoutes.push(route);
