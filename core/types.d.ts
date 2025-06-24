@@ -23,7 +23,7 @@ export interface Config {
      * Entries matching the patterns specified by this option are excluded from the build
      *
      * @default
-     * [/(\.test|\.spec)\.ts$/]
+     * [/(\.d|\.test|\.spec)\.ts$/]
      */
     skip?: RegExp[];
   };
@@ -44,7 +44,7 @@ export interface Config {
      * Entries matching the patterns specified by this option are excluded from the manifest
      *
      * @default
-     * [/(\.test|\.spec)\.ts$/]
+     * [/(\/d|\.test|\.spec)\.ts$/]
      */
     skip?: RegExp[];
   };
