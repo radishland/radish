@@ -181,7 +181,7 @@ export class HandlerRegistry extends HTMLElement
     }
   }
 
-  #handleText(e: Event) {
+  #handleTextContent(e: Event) {
     if (e instanceof DirectiveEvent) {
       const { identifier, target } = e.detail;
 
@@ -192,7 +192,7 @@ export class HandlerRegistry extends HTMLElement
           target.textContent = `${ref}`;
         });
 
-        target.removeAttribute("text");
+        target.removeAttribute("textContent");
         e.stopPropagation();
       }
     }
@@ -357,11 +357,11 @@ export class HandlerRegistry extends HTMLElement
       element.dispatchEvent(propRequest);
     }
 
-    const text = element.getAttribute("text");
+    const textContent = element.getAttribute("textContent");
 
-    if (text) {
-      const textRequest = new DirectiveEvent("rad::text", {
-        identifier: text,
+    if (textContent) {
+      const textRequest = new DirectiveEvent("rad::textContent", {
+        identifier: textContent,
         key: "textContent",
         target: element,
       });
@@ -417,7 +417,9 @@ export class HandlerRegistry extends HTMLElement
     this.addEventListener("rad::html", this.#handleHTML, { signal });
     this.addEventListener("rad::on", this.#handleOn, { signal });
     this.addEventListener("rad::prop", this.#handleProp, { signal });
-    this.addEventListener("rad::text", this.#handleText, { signal });
+    this.addEventListener("rad::textContent", this.#handleTextContent, {
+      signal,
+    });
     this.addEventListener("rad::use", this.#handleUse, { signal });
   }
 

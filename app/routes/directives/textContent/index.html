@@ -1,0 +1,15 @@
+<head>
+  <title>The textContent directive</title>
+</head>
+
+<handle-text>
+  <button on:click="toggle" prop:ariaPressed="pressed">
+    Toggle
+  </button>
+  <p>
+    The toggle button is pressed (true/false): <span
+      textContent="pressed"
+      data-testid="span"
+    ></span>
+  </p>
+</handle-text>

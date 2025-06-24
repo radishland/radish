@@ -7,7 +7,7 @@ import { contextLookup } from "../../state.ts";
 export const handleTextDirective = handlerFor(
   render.directive,
   (node, attrKey: string, attrValue: string) => {
-    if (attrKey === "text") {
+    if (attrKey === "textContent") {
       const identifier = attrValue || attrKey;
       const value = contextLookup(identifier);
 
