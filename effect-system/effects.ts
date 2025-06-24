@@ -146,7 +146,8 @@ export function createEffect<Op extends (...payload: any[]) => any>(
  * const transformed = await number.transform("2113");
  * assertEquals(transformed, "122113");
  * ```
- ** @example Suspended handlers
+ *
+ * @example Suspended handlers
  *
  * Recursion is not always wanted: in the case of postprocessing hooks it would result in infinite loops.
  *

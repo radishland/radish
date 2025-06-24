@@ -43,9 +43,11 @@ const onBuildFiles = handlerFor(
       ...options,
     };
 
+    const _config = await config.read();
+    const skip = _config.build?.skip ?? [/(\.d|\.test|\.spec)\.ts$/];
     const allEntries = await fs.walk(optionsWithDefaults.root, {
       includeDirs: false,
-      skip: (await config.read()).build?.skip ?? [/(\.test|\.spec)\.ts$/],
+      skip,
     });
 
     const match = globToRegExp(glob);

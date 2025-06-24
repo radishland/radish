@@ -104,9 +104,11 @@ export const onManifestUpdateEntries = handlerFor(
       ...options,
     };
 
+    const _config = await config.read();
+    const skip = _config.manifest?.skip ?? [/(\.d|\.test|\.spec)\.ts$/];
     const allEntries = await fs.walk(optionsWithDefaults.root, {
       includeDirs: false,
-      skip: (await config.read()).manifest?.skip ?? [/(\.test|\.spec)\.ts$/],
+      skip,
     });
 
     // Not using the `match` option from `walk` as `globToRegExp` returns a RegExp matching from start to end like /^elements...$/
