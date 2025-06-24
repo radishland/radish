@@ -407,7 +407,7 @@ reference it directly:
 
 ```html
 <parent-handler>
-  <span text="name"></span>
+  <span textContent="name"></span>
 </parent-handler>
 ```
 

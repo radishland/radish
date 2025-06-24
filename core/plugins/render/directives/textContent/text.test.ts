@@ -22,7 +22,6 @@ describe("text directive", () => {
           elements: {
             "handle-text": {
               kind: "element",
-              tagName: "handle-bool",
               classLoader: async () =>
                 (await import("./testdata/handle-text.ts"))[
                   "HandleHtml"
