@@ -6,8 +6,7 @@ test.describe("textContent directive", () => {
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage();
 
-    const res =
-      await (page.goto("http://localhost:1235/directives/textContent"));
+    const res = await (page.goto("http://localhost:1235/syntax/mustache"));
     expect(res?.status()).toBe(200);
   });
 
@@ -17,14 +16,14 @@ test.describe("textContent directive", () => {
 
   test("clicking the button toggles the textContent", async () => {
     const button = page.getByRole("button");
-    const span = page.getByTestId("span");
+    const pressed = page.getByTestId("pressed");
 
-    await expect(span).toHaveText("false");
-
-    button.click();
-    await expect(span).toHaveText("true");
+    await expect(pressed).toHaveText("false");
 
     button.click();
-    await expect(span).toHaveText("false");
+    await expect(pressed).toHaveText("true");
+
+    button.click();
+    await expect(pressed).toHaveText("false");
   });
 });

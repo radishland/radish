@@ -406,9 +406,7 @@ Example: given the field `name = signal("Radish")` in a parent handler, we can
 reference it directly:
 
 ```html
-<parent-handler>
-  <span textContent="name"></span>
-</parent-handler>
+<parent-handler>{name}</parent-handler>
 ```
 
 - the `computed(computation: () => void)` helper creates a read-only computed

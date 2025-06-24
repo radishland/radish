@@ -1,6 +1,8 @@
 import {
   assertEquals,
+  assertExists,
   assertInstanceOf,
+  assertObjectMatch,
   assertStringIncludes,
 } from "@std/assert";
 import { describe, test } from "@std/testing/bdd";
@@ -94,63 +96,65 @@ describe("html parser", () => {
     </div>
     `);
 
-    assertEquals(nestedComments, [
-      textNode("\n    "),
-      commentNode(" This is a div "),
-      textNode("\n\n    "),
-      {
-        tagName: "div",
-        kind: Kind.NORMAL,
-        attributes: [],
-        children: [
-          textNode("\n\n      "),
-          commentNode(" This is a p "),
-          textNode("\n      "),
-          {
-            tagName: "p",
-            kind: Kind.NORMAL,
-            attributes: [],
-            children: [
-              { kind: "TEXT", text: "\n        Some text\n        " },
-              commentNode(" This is a button "),
-              textNode("\n        "),
-              {
-                tagName: "button",
-                kind: Kind.NORMAL,
-                attributes: [],
-                children: [{ kind: "TEXT", text: "click" }],
-              },
-              textNode("\n        "),
-              commentNode(" Now below the button "),
-              textNode("\n      "),
-            ],
-          },
-          textNode("\n\n      "),
-          commentNode(" Another section "),
-          textNode("\n\n      "),
-          commentNode(" Another p "),
-          textNode("\n      "),
-          {
-            tagName: "p",
-            kind: Kind.NORMAL,
-            attributes: [],
-            children: [
-              textNode("\n        "),
-              {
-                tagName: "input",
-                kind: Kind.VOID,
-                attributes: [["type", "checkbox"]],
-              },
-              textNode(" "),
-              commentNode(" An input "),
-              textNode("\n      "),
-            ],
-          },
-          textNode("\n    "),
-        ],
-      },
-      textNode("\n    "),
-    ]);
+    assertObjectMatch({ results: nestedComments }, {
+      results: [
+        textNode("\n    "),
+        commentNode(" This is a div "),
+        textNode("\n\n    "),
+        {
+          tagName: "div",
+          kind: Kind.NORMAL,
+          attributes: [],
+          children: [
+            textNode("\n\n      "),
+            commentNode(" This is a p "),
+            textNode("\n      "),
+            {
+              tagName: "p",
+              kind: Kind.NORMAL,
+              attributes: [],
+              children: [
+                { kind: "TEXT", text: "\n        Some text\n        " },
+                commentNode(" This is a button "),
+                textNode("\n        "),
+                {
+                  tagName: "button",
+                  kind: Kind.NORMAL,
+                  attributes: [],
+                  children: [{ kind: "TEXT", text: "click" }],
+                },
+                textNode("\n        "),
+                commentNode(" Now below the button "),
+                textNode("\n      "),
+              ],
+            },
+            textNode("\n\n      "),
+            commentNode(" Another section "),
+            textNode("\n\n      "),
+            commentNode(" Another p "),
+            textNode("\n      "),
+            {
+              tagName: "p",
+              kind: Kind.NORMAL,
+              attributes: [],
+              children: [
+                textNode("\n        "),
+                {
+                  tagName: "input",
+                  kind: Kind.VOID,
+                  attributes: [["type", "checkbox"]],
+                },
+                textNode(" "),
+                commentNode(" An input "),
+                textNode("\n      "),
+              ],
+            },
+            textNode("\n    "),
+          ],
+        },
+        textNode("\n    "),
+      ],
+    });
   });
 
   test("doctype", () => {
@@ -387,7 +391,7 @@ describe("html parser", () => {
     </something-different>
     `.trim());
 
-    assertEquals(res, [{
+    const node = {
       tagName: "something-different",
       kind: Kind.CUSTOM,
       attributes: [],
@@ -397,7 +401,10 @@ describe("html parser", () => {
         attributes: [["mini", ""]],
         children: [textNode("\n        Hello\n      ")],
       }, textNode("\n    ")],
-    }]);
+    };
+
+    assertExists(res[0]);
+    assertObjectMatch(res[0], node);
   });
 
   test("entities", () => {

@@ -1,5 +1,6 @@
 import type { Plugin } from "@radish/effect-system";
 import { handleRenderComponents } from "./components/component.ts";
+import { handleMustache } from "./components/expand-mustache/expand-mustache.ts";
 import { handleDirectives } from "./directives/mod.ts";
 import { handleSort } from "./hooks/build.sort.ts";
 import { handleTransformFile } from "./hooks/build.transform.ts";
@@ -29,12 +30,13 @@ export const pluginRender: Plugin = {
   name: "plugin-render",
   handlers: [
     handleSort,
-    handleTransformFile,
+    handleMustache,
     ...handleDirectives,
     ...handleTransformNode,
     ...handleManifest,
     handleRenderComponents,
     ...handleRoutes,
+    handleTransformFile,
     handleHotUpdate,
   ],
 };

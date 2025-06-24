@@ -41,6 +41,7 @@
   },
   "nodeModulesDir": "auto",
   "imports": {
+    "@fcrozatier/monarch": "jsr:@fcrozatier/monarch@^3.1.0",
     "@fcrozatier/ts-helpers": "npm:@fcrozatier/ts-helpers@^2.10.0",
     "@preact/signals-core": "npm:@preact/signals-core@^1.10.0",
 
