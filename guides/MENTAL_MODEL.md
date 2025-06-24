@@ -121,7 +121,7 @@ customElements.define("handle-input-demo", HandleInputDemo);
 <!-- ...The handler can handle effects in the subtree of elements it wraps -->
 <handle-input-demo>
   <input type="text" bind:value="content">
-  <span textContent="content"></span>
+  {content}
   <!-- This span contains our (SSRd) reactive input content -->
 </handle-input-demo>
 ```
