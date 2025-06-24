@@ -1,6 +1,6 @@
 import { manifest } from "$effects/manifest.ts";
 import { type Manifest, render } from "$effects/render.ts";
-import { isElementNode, type MNode } from "@radish/htmlcrunch";
+import { isCommentNode, isTextNode, type MNode } from "@radish/htmlcrunch";
 import { assertObjectMatch } from "@std/assert";
 import { manifestShape } from "../hooks/manifest/mod.ts";
 import { mountHandlerRegistry } from "../state.ts";
@@ -13,7 +13,8 @@ import { mountHandlerRegistry } from "../state.ts";
  * - `render/transformNode`
  */
 export async function transformNode(node: MNode): Promise<MNode> {
-  if (!isElementNode(node)) return node;
+  if (isCommentNode(node)) return node;
+  if (isTextNode(node)) return await render.transformNode(node);
 
   const { tagName } = node;
   const _manifest = await manifest.get() as Manifest;
