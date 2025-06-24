@@ -276,15 +276,23 @@ export const element: Parser<MElement> = createParser((input, position) => {
   const [result] = res.results;
   assertExists(result);
 
+  const elementNode: MElement = {
+    tagName,
+    kind,
+    attributes,
+    children,
+  };
+
+  for (const child of children) {
+    if (isElementNode(child)) {
+      child.parent = elementNode;
+    }
+  }
+
   return {
     success: true,
     results: [{
-      value: {
-        tagName,
-        kind,
-        attributes,
-        children,
-      } satisfies MElement,
+      value: elementNode,
       remaining: result.remaining,
       position: result.position,
     }],
