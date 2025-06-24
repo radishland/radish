@@ -1,4 +1,4 @@
-import { between, fail, result, seq } from "@fcrozatier/monarch";
+import { between, fail, type Parser, result, seq } from "@fcrozatier/monarch";
 import { literal, regex, whitespaces } from "@fcrozatier/monarch/common";
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#reserved_words
@@ -60,7 +60,7 @@ const reservedWords = [
  *
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#identifiers
  */
-export const identifier = regex(
+export const identifier: Parser<string> = regex(
   // deno-lint-ignore no-control-regex
   /[\p{ID_Start}_$][\p{ID_Continue}\u{200C}\u{200D}\u{0000}$]*/u,
 ).chain((id) => {
@@ -73,7 +73,7 @@ export const identifier = regex(
 /**
  * Parses an HTML TextNode containing a mustache template
  */
-export const identifierInsideMustaches = seq(
+export const identifierInsideMustaches: Parser<[string, string, string]> = seq(
   whitespaces,
   between(
     literal("{").skipTrailing(whitespaces),
