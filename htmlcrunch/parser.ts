@@ -18,11 +18,35 @@ import {
 import { assertExists } from "@std/assert";
 
 /**
+ * The different types of HTML elements
+ */
+export const ElementKind = {
+  VOID: "VOID",
+  RAW_TEXT: "RAW_TEXT",
+  ESCAPABLE_RAW_TEXT: "ESCAPABLE_RAW_TEXT",
+  CUSTOM: "CUSTOM",
+  NORMAL: "NORMAL",
+} as const;
+
+/**
+ * The different types HTML elements
+ */
+type ElementKind = keyof typeof ElementKind;
+
+const NodeKind = {
+  COMMENT: "COMMENT",
+  TEXT: "TEXT",
+  ...ElementKind,
+} as const;
+
+/**
  * A comment node
  */
 export type MCommentNode = {
   kind: "COMMENT";
   text: string;
+  parent?: MElement | undefined;
+  children?: never;
 };
 
 /**
@@ -31,6 +55,8 @@ export type MCommentNode = {
 export type MTextNode = {
   kind: "TEXT";
   text: string;
+  parent?: MElement | undefined;
+  children?: never;
 };
 
 /**
@@ -43,9 +69,9 @@ export type MSpacesAndComments = (MTextNode | MCommentNode)[];
  */
 export type MElement = {
   tagName: string;
-  kind: Kind;
+  kind: ElementKind;
   attributes: [string, string][];
-  parent?: MElement;
+  parent?: MElement | undefined;
   children?: MFragment;
 };
 
@@ -105,7 +131,11 @@ export const doctype: Parser<MTextNode> = regex(/^<!DOCTYPE\s+html\s*>/i)
 
 const singleQuote = literal("'");
 const doubleQuote = literal('"');
-const rawText = regex(/^[^<]+/).map(textNode);
+
+/**
+ * Parses HTML raw text
+ */
+const rawText: Parser<string> = regex(/^[^<]+/);
 
 /**
  * Parses an HTML attribute name
@@ -204,7 +234,7 @@ const startTag: Parser<MElement> = seq(
     const selfClosing = end === "/>";
     const kind = elementKind(tagName);
 
-    if (selfClosing && kind !== Kind.VOID) {
+    if (selfClosing && kind !== ElementKind.VOID) {
       return fail.error("Unexpected self-closing tag on a non-void element");
     }
 
@@ -228,7 +258,7 @@ export const element: Parser<MElement> = createParser((input, position) => {
     position: openTagPosition,
   } = openTagResult;
 
-  if (kind === Kind.VOID || !remaining) {
+  if (kind === ElementKind.VOID || !remaining) {
     return openTag;
   }
 
@@ -237,8 +267,8 @@ export const element: Parser<MElement> = createParser((input, position) => {
     .error(`Expected a '</${tagName}>' end tag`);
 
   if (
-    kind === Kind.RAW_TEXT ||
-    kind === Kind.ESCAPABLE_RAW_TEXT
+    kind === ElementKind.RAW_TEXT ||
+    kind === ElementKind.ESCAPABLE_RAW_TEXT
   ) {
     // https://html.spec.whatwg.org/#cdata-rcdata-restrictions
     const rawText = regex(
@@ -284,9 +314,7 @@ export const element: Parser<MElement> = createParser((input, position) => {
   };
 
   for (const child of children) {
-    if (isElementNode(child)) {
-      child.parent = elementNode;
-    }
+    child.parent = elementNode;
   }
 
   return {
@@ -303,7 +331,7 @@ export const element: Parser<MElement> = createParser((input, position) => {
  * The fragments parser
  */
 export const fragments: Parser<MFragment> = many(
-  alt<MNode>(rawText, element, comment),
+  alt<MNode>(rawText.map(textNode), element, comment),
 );
 
 /**
@@ -395,7 +423,7 @@ export const serializeNode = (
     : "";
   const startTag = `<${node.tagName}${attributesString}>`;
 
-  if (node.kind === Kind.VOID) return startTag;
+  if (node.kind === ElementKind.VOID) return startTag;
 
   const content = node.children
     ? node.children.map((node) => serializeNode(node, options))
@@ -415,51 +443,58 @@ export const serializeFragments = (
 };
 
 /**
- * The different types of HTML elements
- */
-export const Kind = {
-  VOID: "VOID",
-  RAW_TEXT: "RAW_TEXT",
-  ESCAPABLE_RAW_TEXT: "ESCAPABLE_RAW_TEXT",
-  CUSTOM: "CUSTOM",
-  NORMAL: "NORMAL",
-} as const;
-
-/**
- * The different types HTML elements
- */
-type Kind = keyof typeof Kind;
-
-/**
  * Associate a tag name to its corresponding element kind
  */
-const elementKind = (tag: string): Kind => {
-  if (voidElements.includes(tag)) return Kind.VOID;
-  if (rawTextElements.includes(tag)) return Kind.RAW_TEXT;
-  if (escapableRawTextElements.includes(tag)) return Kind.ESCAPABLE_RAW_TEXT;
-  if (tag.includes("-")) return Kind.CUSTOM;
-  return Kind.NORMAL;
+const elementKind = (tag: string): ElementKind => {
+  if (voidElements.includes(tag)) return ElementKind.VOID;
+  if (rawTextElements.includes(tag)) return ElementKind.RAW_TEXT;
+  if (escapableRawTextElements.includes(tag)) {
+    return ElementKind.ESCAPABLE_RAW_TEXT;
+  }
+  if (tag.includes("-")) return ElementKind.CUSTOM;
+  return ElementKind.NORMAL;
 };
 
 /**
  * Checks whether a {@linkcode MNode} is an {@linkcode MTextNode}
  */
-export const isCommentNode = (node: MNode): node is MCommentNode => {
-  return node.kind === "COMMENT";
+export const isCommentNode = (node: unknown): node is MCommentNode => {
+  return isMNode(node) && node.kind === "COMMENT";
 };
 
 /**
  * Checks whether a {@linkcode MNode} is an {@linkcode MTextNode}
  */
-export const isTextNode = (node: MNode): node is MTextNode => {
-  return node.kind === "TEXT";
+export const isTextNode = (node: unknown): node is MTextNode => {
+  return isMNode(node) && node.kind === "TEXT";
 };
 
 /**
  * Checks whether a {@linkcode MNode} is an {@linkcode MElement}
  */
-export const isElementNode = (node: MNode): node is MElement => {
-  return node.kind !== "COMMENT" && node.kind !== "TEXT";
+export const isElementNode = (node: unknown): node is MElement => {
+  return isMNode(node) && Object.keys(ElementKind).includes(node.kind);
+};
+
+/**
+ * An {@linkcode MNode} guard
+ */
+export const isMNode = (node: unknown): node is MNode => {
+  if (node === null) return false;
+  if (typeof node !== "object") return false;
+
+  if (
+    ("kind" in node) && typeof (node.kind) === "string" &&
+    Object.keys(NodeKind).includes(node.kind)
+  ) {
+    if (node.kind === NodeKind.COMMENT || node.kind === NodeKind.TEXT) {
+      return "text" in node;
+    }
+
+    return "tagName" in node && "attributes" in node;
+  }
+
+  return false;
 };
 
 const voidElements = [
