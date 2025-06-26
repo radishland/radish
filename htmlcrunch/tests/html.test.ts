@@ -13,8 +13,8 @@ import {
   customElementName,
   doctype,
   element,
+  ElementKind,
   fragments,
-  Kind,
   serializeFragments,
   spacesAndComments,
   tagName,
@@ -63,8 +63,8 @@ describe("html parser", () => {
     <div><!-- <span>html inside comment</span> --></div>
   `.trim());
 
-    assertEquals(html_inside_comment, {
-      kind: Kind.NORMAL,
+    assertObjectMatch(html_inside_comment, {
+      kind: ElementKind.NORMAL,
       tagName: "div",
       attributes: [],
       children: [
@@ -103,7 +103,7 @@ describe("html parser", () => {
         textNode("\n\n    "),
         {
           tagName: "div",
-          kind: Kind.NORMAL,
+          kind: ElementKind.NORMAL,
           attributes: [],
           children: [
             textNode("\n\n      "),
@@ -111,7 +111,7 @@ describe("html parser", () => {
             textNode("\n      "),
             {
               tagName: "p",
-              kind: Kind.NORMAL,
+              kind: ElementKind.NORMAL,
               attributes: [],
               children: [
                 { kind: "TEXT", text: "\n        Some text\n        " },
@@ -119,7 +119,7 @@ describe("html parser", () => {
                 textNode("\n        "),
                 {
                   tagName: "button",
-                  kind: Kind.NORMAL,
+                  kind: ElementKind.NORMAL,
                   attributes: [],
                   children: [{ kind: "TEXT", text: "click" }],
                 },
@@ -135,13 +135,13 @@ describe("html parser", () => {
             textNode("\n      "),
             {
               tagName: "p",
-              kind: Kind.NORMAL,
+              kind: ElementKind.NORMAL,
               attributes: [],
               children: [
                 textNode("\n        "),
                 {
                   tagName: "input",
-                  kind: Kind.VOID,
+                  kind: ElementKind.VOID,
                   attributes: [["type", "checkbox"]],
                 },
                 textNode(" "),
@@ -186,7 +186,7 @@ describe("html parser", () => {
     );
     assertEquals(hangingBracket, {
       tagName: "input",
-      kind: Kind.VOID,
+      kind: ElementKind.VOID,
       attributes: [
         [
           "disabled",
@@ -200,7 +200,7 @@ describe("html parser", () => {
     );
     assertEquals(recoverFromMissingWhiteSpace, {
       tagName: "input",
-      kind: Kind.VOID,
+      kind: ElementKind.VOID,
       attributes: [
         ["value", "yes"],
         ["class", "a b c"],
@@ -212,7 +212,7 @@ describe("html parser", () => {
     );
     assertEquals(allowDuplicateAttributes, {
       tagName: "input",
-      kind: Kind.VOID,
+      kind: ElementKind.VOID,
       attributes: [
         ["on:click", "handleClick"],
         ["on:click", "log"],
@@ -224,7 +224,7 @@ describe("html parser", () => {
     );
     assertEquals(keepAttributesCasing, {
       tagName: "input",
-      kind: Kind.VOID,
+      kind: ElementKind.VOID,
       attributes: [
         ["prop:ariaChecked", "checked"],
       ],
@@ -258,7 +258,7 @@ describe("html parser", () => {
     const input = element.parseOrThrow('<input type="text">');
     assertEquals(input, {
       tagName: "input",
-      kind: Kind.VOID,
+      kind: ElementKind.VOID,
       attributes: [["type", "text"]],
     });
 
@@ -267,7 +267,7 @@ describe("html parser", () => {
     const unquoted_attr_then_slash = element.parseOrThrow("<input type=text/>");
     assertEquals(unquoted_attr_then_slash, {
       tagName: "input",
-      kind: Kind.VOID,
+      kind: ElementKind.VOID,
       attributes: [["type", "text/"]],
     });
   });
@@ -279,13 +279,13 @@ describe("html parser", () => {
     assertEquals(content, [
       {
         tagName: "img",
-        kind: Kind.VOID,
+        kind: ElementKind.VOID,
         attributes: [["src", "something.png"]],
       },
-      { tagName: "br", kind: Kind.VOID, attributes: [] },
+      { tagName: "br", kind: ElementKind.VOID, attributes: [] },
       {
         tagName: "input",
-        kind: Kind.VOID,
+        kind: ElementKind.VOID,
         attributes: [["type", "submit"], ["value", "Ok"]],
       },
     ]);
@@ -300,9 +300,9 @@ describe("html parser", () => {
     </style>
     `.trim());
 
-    assertEquals(style, {
+    assertObjectMatch(style, {
       tagName: "style",
-      kind: Kind.RAW_TEXT,
+      kind: ElementKind.RAW_TEXT,
       attributes: [],
       children: [{
         kind: "TEXT",
@@ -327,9 +327,9 @@ describe("html parser", () => {
     </script>
     `.trim());
 
-    assertEquals(script, {
+    assertObjectMatch(script, {
       tagName: "script",
-      kind: Kind.RAW_TEXT,
+      kind: ElementKind.RAW_TEXT,
       attributes: [],
       children: [{
         kind: "TEXT",
@@ -354,7 +354,7 @@ describe("html parser", () => {
 
     assertEquals(script, {
       tagName: "script",
-      kind: Kind.RAW_TEXT,
+      kind: ElementKind.RAW_TEXT,
       attributes: [["type", "module"], ["src", "/src/module.js"]],
       children: [],
     });
@@ -364,9 +364,9 @@ describe("html parser", () => {
     const empty_span = element.parseOrThrow(
       `<span class="icon"></span>`,
     );
-    assertEquals(empty_span, {
+    assertObjectMatch(empty_span, {
       tagName: "span",
-      kind: Kind.NORMAL,
+      kind: ElementKind.NORMAL,
       attributes: [["class", "icon"]],
       children: [],
     });
@@ -374,9 +374,9 @@ describe("html parser", () => {
     const p = element.parseOrThrow(
       `<p>lorem</p>`,
     );
-    assertEquals(p, {
+    assertObjectMatch(p, {
       tagName: "p",
-      kind: Kind.NORMAL,
+      kind: ElementKind.NORMAL,
       attributes: [],
       children: [{ kind: "TEXT", text: "lorem" }],
     });
@@ -393,11 +393,11 @@ describe("html parser", () => {
 
     const node = {
       tagName: "something-different",
-      kind: Kind.CUSTOM,
+      kind: ElementKind.CUSTOM,
       attributes: [],
       children: [textNode("\n      "), {
         tagName: "atom-text-editor",
-        kind: Kind.CUSTOM,
+        kind: ElementKind.CUSTOM,
         attributes: [["mini", ""]],
         children: [textNode("\n        Hello\n      ")],
       }, textNode("\n    ")],
@@ -414,37 +414,39 @@ describe("html parser", () => {
     <p>Misc entities: &#xA0; dolor &#xa0; sit &nbsp; amet.</p>
   `.trim());
 
-    assertEquals(entities, [
-      {
-        tagName: "p",
-        kind: Kind.NORMAL,
-        attributes: [],
-        children: [{
-          kind: "TEXT",
-          text: `Named entities: &nbsp; dolor sit &copy; amet.`,
-        }],
-      },
-      textNode("\n    "),
-      {
-        tagName: "p",
-        kind: Kind.NORMAL,
-        attributes: [],
-        children: [{
-          kind: "TEXT",
-          text: "Numeric entities: &#160; dolor sit &#8212; amet.",
-        }],
-      },
-      textNode("\n    "),
-      {
-        tagName: "p",
-        kind: Kind.NORMAL,
-        attributes: [],
-        children: [{
-          kind: "TEXT",
-          text: "Misc entities: &#xA0; dolor &#xa0; sit &nbsp; amet.",
-        }],
-      },
-    ]);
+    assertObjectMatch({ entities }, {
+      entities: [
+        {
+          tagName: "p",
+          kind: ElementKind.NORMAL,
+          attributes: [],
+          children: [{
+            kind: "TEXT",
+            text: `Named entities: &nbsp; dolor sit &copy; amet.`,
+          }],
+        },
+        textNode("\n    "),
+        {
+          tagName: "p",
+          kind: ElementKind.NORMAL,
+          attributes: [],
+          children: [{
+            kind: "TEXT",
+            text: "Numeric entities: &#160; dolor sit &#8212; amet.",
+          }],
+        },
+        textNode("\n    "),
+        {
+          tagName: "p",
+          kind: ElementKind.NORMAL,
+          attributes: [],
+          children: [{
+            kind: "TEXT",
+            text: "Misc entities: &#xA0; dolor &#xa0; sit &nbsp; amet.",
+          }],
+        },
+      ],
+    });
   });
 
   test("serialize", () => {
