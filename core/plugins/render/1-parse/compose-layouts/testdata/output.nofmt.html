@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    %radish.head%
+
+    <script type="module">
+      import "/build/elements/my-component/my-component.js";
+    </script>
+
+  </head>
+  <body>
+    <template shadowrootmode="open">
+  <nav>
+    <a href="/1">1</a>
+    <a href="/2">2</a>
+    <a href="/3">3</a>
+  </nav>
+
+  <main>
+    <slot></slot>
+  </main>
+</template>
+<my-component><template shadowrootmode="open">
+  <p>Description</p>
+  <slot></slot>
+</template>
+  <span>lorem</span>
+</my-component>
+
+  </body>
+</html>

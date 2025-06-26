@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    %radish.head%
+
+    <script type="module">
+      import "/build/elements/my-component/my-component.ts";
+    </script>
+
+  </head>
+  <body>
+    <my-component><template shadowrootmode="open">
+  <input type="checkbox" bind:checked="" checked>
+  <slot></slot>
+</template>
+  <span>hi</span>
+</my-component>
+
+  </body>
+</html>

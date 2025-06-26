@@ -16,7 +16,7 @@ import { manifestShape } from "./manifest/mod.ts";
  * - `manifest/get`
  * - `manifest/update`
  */
-export const handleHotUpdate = handlerFor(
+export const onHotUpdate = handlerFor(
   hmr.update,
   async ({ event, paths }) => {
     const extension = extname(event.path);
