@@ -1,0 +1,30 @@
+import { render } from "$effects/render.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
+import { isElementNode, Kind, textNode } from "@radish/htmlcrunch";
+import { assert } from "@std/assert";
+import { contextLookup } from "../../../utils/contextLookup.ts";
+
+export const onRenderTransformTextContentDirective = handlerFor(
+  render.transformNode,
+  (node) => {
+    if (!isElementNode(node)) return Handler.continue(node);
+
+    const [textContentDirective] = node.attributes.filter(([key, _value]) =>
+      key === ("textContent")
+    );
+
+    if (textContentDirective) {
+      const identifier = textContentDirective[1];
+      const value = contextLookup(node, identifier);
+
+      assert(isElementNode(node));
+      assert(node.kind !== Kind.VOID, "Void elements can't have textContent");
+
+      if (value !== null && value !== undefined) {
+        node.children = [textNode(`${value}`)];
+      }
+    }
+
+    return Handler.continue(node);
+  },
+);

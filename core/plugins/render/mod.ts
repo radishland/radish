@@ -1,13 +1,24 @@
 import type { Plugin } from "@radish/effect-system";
-import { handleRenderComponents } from "./components/component.ts";
-import { handleMustache } from "./components/expand-mustache/expand-mustache.ts";
-import { handleDirectives } from "./directives/mod.ts";
-import { handleSort } from "./hooks/build.sort.ts";
-import { handleTransformFile } from "./hooks/build.transform.ts";
-import { handleHotUpdate } from "./hooks/hmr.update.ts";
+import { onRenderParseComposeLayouts } from "./1-parse/compose-layouts/compose-layouts.ts";
+import { onRenderParse } from "./1-parse/parse.ts";
+import { onRenderSerializeAutoImport } from "./2-transform/auto-import/auto-import.ts";
+import { onRenderTransformAttrDirective } from "./2-transform/directives/attr/attr.ts";
+import { onRenderTransformBindDirective } from "./2-transform/directives/bind/bind.ts";
+import { onRenderTransformBoolDirective } from "./2-transform/directives/bool/bool.ts";
+import { onRenderTransformClassListDirective } from "./2-transform/directives/classList/classList.ts";
+import { onRenderTransformHtmlDirective } from "./2-transform/directives/innerHTML/html.ts";
+import { onRenderTransformTextContentDirective } from "./2-transform/directives/textContent/textContent.ts";
+import { handleMustache } from "./2-transform/expand-mustache/expand-mustache.ts";
+import { onRenderTransformNodeInsertTemplate } from "./2-transform/insert-template/insert-templates.ts";
+import { onRenderTransformNodeMountRegistries } from "./2-transform/mount-registries/mount-registries.ts";
+import { onRenderTransformNodesRecurse } from "./2-transform/recurse.ts";
+import { onRenderTransformNodeTerminal } from "./2-transform/terminal.ts";
+import { onRenderSerialize } from "./3-serialize/serialize.ts";
+import { onRenderSerializeSpeculationRules } from "./3-serialize/speculation-rules/speculation-rules.ts";
+import { onBuildSort } from "./hooks/build.sort.ts";
+import { onBuildTransform } from "./hooks/build.transform.ts";
+import { onHotUpdate } from "./hooks/hmr.update.ts";
 import { handleManifest } from "./hooks/manifest/mod.ts";
-import { handleRoutes } from "./routes/mod.ts";
-import { handleTransformNode } from "./transforms/mod.ts";
 
 /**
  * The render plugin
@@ -29,14 +40,30 @@ import { handleTransformNode } from "./transforms/mod.ts";
 export const pluginRender: Plugin = {
   name: "plugin-render",
   handlers: [
-    handleSort,
+    // Parse
+    onRenderParseComposeLayouts,
+    onRenderParse,
+    // Transform Node
+    onRenderTransformNodeMountRegistries,
     handleMustache,
-    ...handleDirectives,
-    ...handleTransformNode,
+    onRenderTransformAttrDirective,
+    onRenderTransformBindDirective,
+    onRenderTransformBoolDirective,
+    onRenderTransformClassListDirective,
+    onRenderTransformHtmlDirective,
+    onRenderTransformTextContentDirective,
+    onRenderTransformNodeInsertTemplate,
+    onRenderTransformNodeTerminal,
+    // Transform Nodes
+    onRenderTransformNodesRecurse,
+    // Serialize
+    onRenderSerializeAutoImport,
+    onRenderSerializeSpeculationRules,
+    onRenderSerialize,
+    // Hooks
     ...handleManifest,
-    handleRenderComponents,
-    ...handleRoutes,
-    handleTransformFile,
-    handleHotUpdate,
+    onBuildSort,
+    onBuildTransform,
+    onHotUpdate,
   ],
 };

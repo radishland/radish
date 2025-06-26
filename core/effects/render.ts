@@ -1,5 +1,4 @@
 import { createEffect, type Effect } from "@radish/effect-system";
-import type { MNode } from "@radish/htmlcrunch";
 import type { AnyConstructor } from "@std/assert";
 import type { ManifestBase } from "../types.d.ts";
 
@@ -34,37 +33,29 @@ export type Manifest = ManifestBase & {
   layouts: Record<string, LayoutManifest>;
 };
 
+export type Tree = {
+  children?: Tree[] | undefined;
+};
+
 interface RenderOps {
-  transformNode: (node: MNode) => MNode;
-  component: (element: ElementManifest) => string;
-  route: (
-    route: RouteManifest,
-    insertHead: string,
-    insertBody: string,
-  ) => string;
-  directive: (node: MNode, key: string, value: string) => void;
+  parse: (path: string, content: string) => Tree[];
+  transformNodes: (nodes: Tree[]) => Tree[];
+  transformNode: (node: Tree) => Tree | Tree[];
+  serialize: (path: string, nodes: Tree[]) => string;
 }
 
 export const render: {
-  /**
-   * Prepares a node to be serialized
-   */
-  transformNode: (node: MNode) => Effect<MNode>;
-  component: (element: ElementManifest) => Effect<string>;
-  route: (
-    route: RouteManifest,
-    insertHead: string,
-    insertBody: string,
-  ) => Effect<string>;
-  /**
-   * Asks for the interpretation of element attribute directives
-   */
-  directive: (node: MNode, key: string, value: string) => Effect<void>;
+  parse: (path: string, content: string) => Effect<Tree[]>;
+  transformNodes: (nodes: Tree[]) => Effect<Tree[]>;
+  transformNode: (node: Tree) => Effect<Tree | Tree[]>;
+  serialize: (path: string, nodes: Tree[]) => Effect<string>;
 } = {
-  transformNode: createEffect<RenderOps["transformNode"]>(
-    "render/transformNode",
+  parse: createEffect<RenderOps["parse"]>("render/parse"),
+  transformNodes: createEffect<RenderOps["transformNodes"]>(
+    "render/transform-nodes",
   ),
-  component: createEffect<RenderOps["component"]>("render/component"),
-  route: createEffect<RenderOps["route"]>("render/route"),
-  directive: createEffect<RenderOps["directive"]>("render/directive"),
+  transformNode: createEffect<RenderOps["transformNode"]>(
+    "render/transform-node",
+  ),
+  serialize: createEffect<RenderOps["serialize"]>("render/serialize"),
 };

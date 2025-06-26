@@ -71,7 +71,7 @@ const sortComponents = <T extends ElementManifest | RouteManifest>(
  * @performs
  * - `manifest/get`
  */
-export const handleSort = handlerFor(
+export const onBuildSort = handlerFor(
   build.sort,
   async (entries) => {
     const manifestObject = await manifest.get() as Manifest;

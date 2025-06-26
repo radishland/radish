@@ -3,6 +3,7 @@ import { importmapPath, manifestPath, onDispose, startApp } from "@radish/core";
 import { fs, hmr, importmap, manifest, router } from "@radish/core/effects";
 import { dev } from "@radish/core/environment";
 import {
+  onRenderSerializeCleanupHead,
   pluginBuild,
   pluginConfig,
   pluginEnv,
@@ -124,6 +125,7 @@ const scope = new HandlerScope(
     );
   }),
   pluginStdElements,
+  onRenderSerializeCleanupHead,
   pluginWS,
   pluginServer,
   pluginRouter,
