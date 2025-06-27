@@ -1,7 +1,7 @@
 import { manifest } from "$effects/manifest.ts";
 import { build, fs } from "$effects/mod.ts";
 import { globals } from "$lib/globals.ts";
-import { pluginFS, pluginRender } from "$lib/plugins/mod.ts";
+import { pluginBuild, pluginFS, pluginRender } from "$lib/plugins/mod.ts";
 import type { ManifestBase } from "@radish/core";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals } from "@std/assert";
@@ -40,6 +40,7 @@ describe("expands mustache syntax", () => {
         _manifest = newManifest;
       }),
       pluginRender,
+      pluginBuild,
       pluginFS,
     );
 

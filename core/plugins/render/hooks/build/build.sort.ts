@@ -6,14 +6,14 @@ import type {
   RouteManifest,
 } from "$effects/render.ts";
 import { appPath } from "$lib/conventions.ts";
+import { createWalkEntry } from "$lib/utils/fs.ts";
+import { filename } from "$lib/utils/path.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { assertExists, assertObjectMatch, unreachable } from "@std/assert";
 import type { WalkEntry } from "@std/fs";
 import { extname } from "@std/path";
-import { createWalkEntry } from "../../../utils/fs.ts";
-import { filename } from "../../../utils/path.ts";
-import { getFileKind } from "../utils/getFileKind.ts";
-import { manifestShape } from "./manifest/mod.ts";
+import { getFileKind } from "../../utils/getFileKind.ts";
+import { manifestShape } from "../manifest/mod.ts";
 
 /**
  * Return the build order of a list of components, taking their relative dependencies into

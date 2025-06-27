@@ -32,6 +32,7 @@ describe("render", () => {
           },
         })),
         pluginRender,
+        pluginBuild,
         pluginFS,
       );
 

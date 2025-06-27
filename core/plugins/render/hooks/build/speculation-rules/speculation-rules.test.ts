@@ -7,7 +7,7 @@ import { Handler, handlerFor, HandlerScope } from "@radish/effect-system";
 import { assertEquals } from "@std/assert";
 import { join } from "@std/path";
 import { describe, test } from "@std/testing/bdd";
-import { manifestShape } from "../../hooks/manifest/mod.ts";
+import { manifestShape } from "../../../hooks/manifest/mod.ts";
 
 const moduleDir = import.meta.dirname!;
 const testDataDir = join(moduleDir, "testdata");

@@ -14,9 +14,11 @@ import { onRenderTransformNodeMountRegistries } from "./2-transform/mount-regist
 import { onRenderTransformNodesRecurse } from "./2-transform/recurse.ts";
 import { onRenderTransformNodeTerminal } from "./2-transform/terminal.ts";
 import { onRenderSerialize } from "./3-serialize/serialize.ts";
-import { onRenderSerializeSpeculationRules } from "./3-serialize/speculation-rules/speculation-rules.ts";
-import { onBuildSort } from "./hooks/build.sort.ts";
-import { onBuildTransform } from "./hooks/build.transform.ts";
+import { onBuildSort } from "./hooks/build/build.sort.ts";
+import { onBuildTransformCleanupHead } from "./hooks/build/cleanup-head.ts";
+import { onBuildTransformRenderPipeline } from "./hooks/build/render-pipeline.ts";
+import { onBuildTransformSkipAppSkeleton } from "./hooks/build/skip-app-skeleton.ts";
+import { onBuildTransformInsertSpeculationRules } from "./hooks/build/speculation-rules/speculation-rules.ts";
 import { onHotUpdate } from "./hooks/hmr.update.ts";
 import { handleManifest } from "./hooks/manifest/mod.ts";
 
@@ -58,12 +60,14 @@ export const pluginRender: Plugin = {
     onRenderTransformNodesRecurse,
     // Serialize
     onRenderSerializeAutoImport,
-    onRenderSerializeSpeculationRules,
     onRenderSerialize,
     // Hooks
     ...handleManifest,
     onBuildSort,
-    onBuildTransform,
+    onBuildTransformSkipAppSkeleton,
+    onBuildTransformRenderPipeline,
+    onBuildTransformInsertSpeculationRules,
+    onBuildTransformCleanupHead,
     onHotUpdate,
   ],
 };

@@ -39,15 +39,15 @@ export type Tree = {
 
 interface RenderOps {
   parse: (path: string, content: string) => Tree[];
-  transformNodes: (nodes: Tree[]) => Tree[];
-  transformNode: (node: Tree) => Tree | Tree[];
+  transformNodes: (path: string, nodes: Tree[]) => Tree[];
+  transformNode: (path: string, node: Tree) => Tree | Tree[];
   serialize: (path: string, nodes: Tree[]) => string;
 }
 
 export const render: {
   parse: (path: string, content: string) => Effect<Tree[]>;
-  transformNodes: (nodes: Tree[]) => Effect<Tree[]>;
-  transformNode: (node: Tree) => Effect<Tree | Tree[]>;
+  transformNodes: (path: string, nodes: Tree[]) => Effect<Tree[]>;
+  transformNode: (path: string, node: Tree) => Effect<Tree | Tree[]>;
   serialize: (path: string, nodes: Tree[]) => Effect<string>;
 } = {
   parse: createEffect<RenderOps["parse"]>("render/parse"),

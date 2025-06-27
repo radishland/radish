@@ -6,8 +6,8 @@ import { contextLookup } from "../../../utils/contextLookup.ts";
 
 export const onRenderTransformTextContentDirective = handlerFor(
   render.transformNode,
-  (node) => {
-    if (!isElementNode(node)) return Handler.continue(node);
+  (path, node) => {
+    if (!isElementNode(node)) return Handler.continue(path, node);
 
     const [textContentDirective] = node.attributes.filter(([key, _value]) =>
       key === ("textContent")
@@ -25,6 +25,6 @@ export const onRenderTransformTextContentDirective = handlerFor(
       }
     }
 
-    return Handler.continue(node);
+    return Handler.continue(path, node);
   },
 );

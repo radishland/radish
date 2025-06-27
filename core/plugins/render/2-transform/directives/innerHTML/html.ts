@@ -6,8 +6,8 @@ import { contextLookup } from "../../../utils/contextLookup.ts";
 
 export const onRenderTransformHtmlDirective = handlerFor(
   render.transformNode,
-  (node) => {
-    if (!isElementNode(node)) return Handler.continue(node);
+  (path, node) => {
+    if (!isElementNode(node)) return Handler.continue(path, node);
 
     const [innerHtmlDirective] = node.attributes.filter(([key, _value]) =>
       key === ("html")
@@ -28,6 +28,6 @@ export const onRenderTransformHtmlDirective = handlerFor(
       }
     }
 
-    return Handler.continue(node);
+    return Handler.continue(path, node);
   },
 );

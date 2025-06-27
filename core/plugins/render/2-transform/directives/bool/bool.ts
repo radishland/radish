@@ -1,13 +1,13 @@
+import { render } from "$effects/render.ts";
+import { Handler, handlerFor } from "@radish/effect-system";
 import { isElementNode } from "@radish/htmlcrunch";
 import { assert, assertExists } from "@std/assert";
-import { Handler, handlerFor } from "@radish/effect-system";
-import { render } from "$effects/render.ts";
 import { contextLookup } from "../../../utils/contextLookup.ts";
 
 export const onRenderTransformBoolDirective = handlerFor(
   render.transformNode,
-  (node) => {
-    if (!isElementNode(node)) return Handler.continue(node);
+  (path, node) => {
+    if (!isElementNode(node)) return Handler.continue(path, node);
 
     const boolDirectives = node.attributes.filter(([key, _value]) =>
       key.startsWith("bool:")
@@ -26,6 +26,6 @@ export const onRenderTransformBoolDirective = handlerFor(
       value && node.attributes.push([attribute, ""]);
     }
 
-    return Handler.continue(node);
+    return Handler.continue(path, node);
   },
 );

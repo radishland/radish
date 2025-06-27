@@ -29,9 +29,9 @@ import { contextLookup } from "../../utils/contextLookup.ts";
  */
 export const handleMustache = handlerFor(
   render.transformNode,
-  async (node) => {
-    if (!isMNode(node)) return Handler.continue(node);
-    if (!isTextNode(node)) return Handler.continue(node);
+  async (path, node) => {
+    if (!isMNode(node)) return Handler.continue(path, node);
+    if (!isTextNode(node)) return Handler.continue(path, node);
 
     const parse = rawTextAndInterpolatedIdentifiers.parse(node.text);
 
@@ -87,6 +87,6 @@ export const handleMustache = handlerFor(
       return nodes;
     }
 
-    return Handler.continue(node);
+    return Handler.continue(path, node);
   },
 );

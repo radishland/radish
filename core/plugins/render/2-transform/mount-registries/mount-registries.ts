@@ -3,8 +3,10 @@ import { type Manifest, render } from "$effects/render.ts";
 import { Handler, handlerFor } from "@radish/effect-system";
 import { isElementNode, isMNode } from "@radish/htmlcrunch";
 import { assertObjectMatch } from "@std/assert";
+import { filename } from "../../../../utils/path.ts";
 import { manifestShape } from "../../hooks/manifest/mod.ts";
 import { HANDLER_INSTANCE } from "../../utils/contextLookup.ts";
+import { getFileKind } from "../../utils/getFileKind.ts";
 
 /**
  * Instantiates handler registries
@@ -13,13 +15,22 @@ import { HANDLER_INSTANCE } from "../../utils/contextLookup.ts";
  */
 export const onRenderTransformNodeMountRegistries = handlerFor(
   render.transformNode,
-  async (node) => {
-    if (!isMNode(node)) return Handler.continue(node);
-    if (!isElementNode(node)) return Handler.continue(node);
+  async (path, node) => {
+    if (!isMNode(node)) return Handler.continue(path, node);
+    if (!isElementNode(node)) return Handler.continue(path, node);
 
-    const { tagName } = node;
     const _manifest = await manifest.get() as Manifest;
     assertObjectMatch(_manifest, manifestShape);
+
+    let { tagName } = node;
+
+    // The root template of an element node is instanciated
+    if (
+      tagName === "template" && node.parent === undefined &&
+      getFileKind(path) === "element"
+    ) {
+      tagName = filename(path);
+    }
 
     const element = _manifest.elements[tagName];
     if (element?.classLoader) {
@@ -32,6 +43,6 @@ export const onRenderTransformNodeMountRegistries = handlerFor(
       });
     }
 
-    return Handler.continue(node);
+    return Handler.continue(path, node);
   },
 );

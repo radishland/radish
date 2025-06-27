@@ -1,8 +1,15 @@
 import { elementsFolder, libFolder, routesFolder } from "$lib/conventions.ts";
+import { filename } from "$lib/utils/path.ts";
 import { unreachable } from "@std/assert";
 import { SEPARATOR } from "@std/path";
 
-export type FileKind = "element" | "route" | "lib" | "unknown";
+export type FileKind =
+  | "element"
+  | "route"
+  | "layout"
+  | "app"
+  | "lib"
+  | "unknown";
 
 /**
  * Determines the kind of a file based on its path.
@@ -26,7 +33,14 @@ export const getFileKind = (path: string): FileKind => {
     case "elements":
       return "element";
     case "routes":
-      return "route";
+      switch (filename(path)) {
+        case "_layout":
+          return "layout";
+        case "_app":
+          return "app";
+        default:
+          return "route";
+      }
     case "lib":
       return "lib";
     default:
