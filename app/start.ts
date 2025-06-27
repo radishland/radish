@@ -1,23 +1,14 @@
 import type { Config } from "@radish/core";
-import { importmapPath, manifestPath, onDispose, startApp } from "@radish/core";
+import {
+  importmapPath,
+  manifestPath,
+  onDispose,
+  radishPlugins,
+  startApp,
+} from "@radish/core";
 import { fs, hmr, importmap, manifest, router } from "@radish/core/effects";
 import { dev } from "@radish/core/environment";
-import {
-  pluginBuild,
-  pluginConfig,
-  pluginEnv,
-  pluginFS,
-  pluginHMR,
-  pluginImportmap,
-  pluginManifest,
-  pluginRender,
-  pluginRouter,
-  pluginServer,
-  pluginStripTypes,
-  pluginWS,
-} from "@radish/core/plugins";
 import { Handler, handlerFor, HandlerScope } from "@radish/effect-system";
-import { pluginStdElements } from "@radish/std-elements";
 import { serveDir, UserAgent } from "@std/http";
 import { join } from "@std/path";
 
@@ -123,20 +114,8 @@ const scope = new HandlerScope(
       }),
     );
   }),
-  pluginStdElements,
-  pluginWS,
-  pluginServer,
-  pluginRouter,
-  pluginImportmap,
-  pluginRender,
   handleManifestLoad,
-  pluginManifest,
-  pluginHMR,
-  pluginStripTypes,
-  pluginBuild,
-  pluginEnv,
-  pluginConfig,
-  pluginFS,
+  ...radishPlugins,
 );
 onDispose(scope[Symbol.asyncDispose]);
 

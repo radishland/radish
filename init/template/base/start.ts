@@ -2,22 +2,8 @@ import type { Config } from "@radish/core";
 import { manifestPath, onDispose, startApp } from "@radish/core";
 import { hmr, manifest } from "@radish/core/effects";
 import { dev } from "@radish/core/environment";
-import {
-  pluginBuild,
-  pluginConfig,
-  pluginEnv,
-  pluginFS,
-  pluginHMR,
-  pluginImportmap,
-  pluginManifest,
-  pluginRender,
-  pluginRouter,
-  pluginServer,
-  pluginStripTypes,
-  pluginWS,
-} from "@radish/core/plugins";
+import { radishPlugins } from "@radish/core";
 import { handlerFor, HandlerScope } from "@radish/effect-system";
-import { pluginStdElements } from "@radish/std-elements";
 
 const config: Config = {
   importmap: {
@@ -68,22 +54,7 @@ const handleManifestLoad = handlerFor(manifest.load, async () => {
   }
 });
 
-const scope = new HandlerScope(
-  pluginStdElements,
-  pluginWS,
-  pluginServer,
-  pluginRouter,
-  pluginRender,
-  pluginImportmap,
-  handleManifestLoad,
-  pluginManifest,
-  pluginHMR,
-  pluginStripTypes,
-  pluginBuild,
-  pluginEnv,
-  pluginConfig,
-  pluginFS,
-);
+const scope = new HandlerScope(handleManifestLoad, ...radishPlugins);
 onDispose(scope[Symbol.asyncDispose]);
 
 await startApp(config);
