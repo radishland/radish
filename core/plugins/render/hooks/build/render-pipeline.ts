@@ -1,7 +1,8 @@
-import { build } from "$effects/mod.ts";
+import { extname } from "@std/path/extname";
+import { handlerFor } from "../../../../../effect-system/effects.ts";
+import { Handler } from "../../../../../effect-system/handlers.ts";
+import { build } from "@radish/core/effects";
 import { render } from "$effects/render.ts";
-import { Handler, handlerFor } from "@radish/effect-system";
-import { extname } from "@std/path";
 
 /**
  * @handles `build/transform`
@@ -9,22 +10,16 @@ import { extname } from "@std/path";
  * @performs `render/transform`
  * @performs `render/serialize`
  */
-export const onBuildTransform = handlerFor(
+
+export const onBuildTransformRenderPipeline = handlerFor(
   build.transform,
   async (path, content) => {
     if (extname(path) !== ".html") return Handler.continue(path, content);
 
     const parsed = await render.parse(path, content);
-    const transformed = await render.transformNodes(parsed);
+    const transformed = await render.transformNodes(path, parsed);
     const serialized = await render.serialize(path, transformed);
-    return serialized;
-  },
-);
 
-/**
- * @handles `build/transform`
- */
-export const onBuildTransformTerminal = handlerFor(
-  build.transform,
-  (_path, content) => content,
+    return Handler.continue(path, serialized);
+  },
 );

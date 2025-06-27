@@ -8,8 +8,8 @@ import { contextLookup } from "../../../utils/contextLookup.ts";
 
 export const onRenderTransformBindDirective = handlerFor(
   render.transformNode,
-  (node) => {
-    if (!isElementNode(node)) return Handler.continue(node);
+  (path, node) => {
+    if (!isElementNode(node)) return Handler.continue(path, node);
 
     const bindDirectives = node.attributes.filter(([key, _value]) =>
       key.startsWith("bind:")
@@ -37,6 +37,6 @@ export const onRenderTransformBindDirective = handlerFor(
       setAttribute(node.attributes, property, value);
     }
 
-    return Handler.continue(node);
+    return Handler.continue(path, node);
   },
 );

@@ -6,8 +6,8 @@ import { contextLookup } from "../../../utils/contextLookup.ts";
 
 export const onRenderTransformClassListDirective = handlerFor(
   render.transformNode,
-  (node) => {
-    if (!isElementNode(node)) return Handler.continue(node);
+  (path, node) => {
+    if (!isElementNode(node)) return Handler.continue(path, node);
 
     const [classListDirective] = node.attributes.filter(([key, _value]) =>
       key === ("classList")
@@ -41,6 +41,6 @@ export const onRenderTransformClassListDirective = handlerFor(
       }
     }
 
-    return Handler.continue(node);
+    return Handler.continue(path, node);
   },
 );

@@ -13,8 +13,8 @@ import { manifestShape } from "../../hooks/manifest/mod.ts";
  */
 export const onRenderTransformNodeInsertTemplate = handlerFor(
   render.transformNode,
-  async (node) => {
-    if (!isElementNode(node)) return Handler.continue(node);
+  async (path, node) => {
+    if (!isElementNode(node)) return Handler.continue(path, node);
 
     const _manifest = await manifest.get() as Manifest;
     assertObjectMatch(_manifest, manifestShape);
@@ -33,6 +33,6 @@ export const onRenderTransformNodeInsertTemplate = handlerFor(
       node.children = [...fragments, ...children];
     }
 
-    return Handler.continue(node);
+    return Handler.continue(path, node);
   },
 );

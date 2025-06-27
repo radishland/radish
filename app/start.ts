@@ -3,7 +3,6 @@ import { importmapPath, manifestPath, onDispose, startApp } from "@radish/core";
 import { fs, hmr, importmap, manifest, router } from "@radish/core/effects";
 import { dev } from "@radish/core/environment";
 import {
-  onRenderSerializeCleanupHead,
   pluginBuild,
   pluginConfig,
   pluginEnv,
@@ -61,7 +60,7 @@ const handleManifestLoad = handlerFor(manifest.load, async () => {
       error.message.includes("manifest.ts")
     ) {
       await manifest.write();
-      return await manifest.load();
+      return;
     }
     throw error;
   }
@@ -125,12 +124,11 @@ const scope = new HandlerScope(
     );
   }),
   pluginStdElements,
-  onRenderSerializeCleanupHead,
   pluginWS,
   pluginServer,
   pluginRouter,
-  pluginRender,
   pluginImportmap,
+  pluginRender,
   handleManifestLoad,
   pluginManifest,
   pluginHMR,

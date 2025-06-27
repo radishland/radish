@@ -1,0 +1,23 @@
+<head>
+  <title>Text expressions</title>
+</head>
+
+<handle-text>
+  <p>Values can be inserted inside text by wrapping them in curly braces</p>
+
+  <section>
+    <button on:click="toggle">Toggle</button>
+    <p data-testid="pressed">Pressed (true/false): {pressed}</p>
+  </section>
+
+  <label>
+    a
+    <input type="number" bind:value="a" />
+  </label>
+  <label>
+    b
+    <input type="number" bind:value="b" />
+  </label>
+
+  <p data-testid="expression">{a} + {b} = {c}</p>
+</handle-text>

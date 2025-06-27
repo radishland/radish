@@ -30,5 +30,15 @@ export const onRenderParse = handlerFor(render.parse, async (path, content) => {
     return nodes;
   }
 
+  if (fileKind === "layout") {
+    const layout = manifestObject.layouts[path];
+    assertExists(layout?.templatePath);
+
+    const template = await fs.read(layout.templatePath);
+    const nodes = fragments.parseOrThrow(template);
+
+    return nodes;
+  }
+
   return Handler.continue(path, content);
 });

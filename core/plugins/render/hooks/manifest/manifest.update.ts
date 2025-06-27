@@ -110,7 +110,7 @@ export const handleManifestUpdateRenderHook = handlerFor(
       }
 
       manifestObject.elements[elementName] = elementMetaData;
-    } else if (fileKind === "route") {
+    } else if (fileKind === "route" || fileKind === "layout") {
       /**
        * Routes
        */

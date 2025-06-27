@@ -7,8 +7,8 @@ import { setAttribute } from "../../../utils/setAttribute.ts";
 
 export const onRenderTransformAttrDirective = handlerFor(
   render.transformNode,
-  (node) => {
-    if (!isElementNode(node)) return Handler.continue(node);
+  (path, node) => {
+    if (!isElementNode(node)) return Handler.continue(path, node);
 
     const attrDirectives = node.attributes.filter(([key, _value]) =>
       key.startsWith("attr:")
@@ -29,6 +29,6 @@ export const onRenderTransformAttrDirective = handlerFor(
       }
     }
 
-    return Handler.continue(node);
+    return Handler.continue(path, node);
   },
 );
