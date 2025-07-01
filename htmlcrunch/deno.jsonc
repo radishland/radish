@@ -1,6 +1,6 @@
 {
   "name": "@radish/htmlcrunch",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "license": "MIT",
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts"

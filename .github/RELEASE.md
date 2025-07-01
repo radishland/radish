@@ -14,14 +14,13 @@ To cut a release, follow these steps:
 
 2. Create a release branch and run the version bump script from the root:
    ```sh
-   deno run -A jsr:@deno/bump-workspaces@0.1.22/cli
+   deno run -A scripts/bump-versions.ts
    ```
    Note: it will throw a "No target files found" error but this may be in
    prerelease only
 
 3. Review the changes and manually update the following version numbers if
    relevant:
-   - runtime/package.json if @radish/runtime was bumped
    - init/template/base/denojsonc if core, runtime, std-elements or
      effect-system were bumped
    - (ensure init/deno.jsonc is bumped if the previous step was executed)

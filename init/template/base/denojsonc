@@ -13,9 +13,9 @@
   "imports": {
     "$env": "./_generated/env.ts",
 
-    "@radish/core": "jsr:@radish/core@^1.0.0-alpha.45",
+    "@radish/core": "jsr:@radish/core@^1.0.0-alpha.46",
     "@radish/effect-system": "jsr:@radish/effect-system@^0.5.0",
-    "@radish/runtime": "npm:@radishland/runtime@^0.5.0",
+    "@radish/runtime": "npm:@radishland/runtime@^0.6.0",
     "@radish/std-elements": "jsr:@radishland/std-elements@^0.1.0"
   }
 }

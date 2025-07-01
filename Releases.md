@@ -1,3 +1,21 @@
+### 2025.07.01
+
+#### @radish/core 1.0.0-alpha.46 (prerelease)
+
+- BREAKING(core): support interpolated identifiers
+- feat(core): support mustache syntax in text nodes (#154)
+- test(core): test text-expressions
+- chore(core): reexport plugins (#156)
+- chore(core): skip declarations files during manifest and build (#152)
+
+#### @radish/htmlcrunch 1.3.0 (minor)
+
+- feat(htmlcrunch): isMNode guard
+
+#### @radish/runtime 0.6.0 (minor)
+
+- BREAKING(runtime): rename directive `text` to `textContent` (#153)
+
 ### 2025.06.20
 
 #### @radish/core 1.0.0-alpha.45 (prerelease)
