@@ -12,7 +12,6 @@ import {
   pluginStripTypes,
   pluginWS,
 } from "@radish/core/plugins";
-import { pluginStdElements } from "@radish/std-elements";
 
 export { importmapPath } from "$effects/importmap.ts";
 export { manifestPath } from "$effects/manifest.ts";
@@ -22,7 +21,6 @@ export { startApp } from "./start.ts";
 export type { Config, ManifestBase } from "./types.d.ts";
 
 export const radishPlugins = [
-  pluginStdElements,
   pluginWS,
   pluginServer,
   pluginRouter,
